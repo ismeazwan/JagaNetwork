@@ -316,6 +316,7 @@
                         <input type="checkbox" id="prorate-checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
                         <span class="ml-2 text-sm text-gray-700">Buat tagihan prorata untuk bulan pertama?</span>
                     </label>
+                    <p id="prorate-price-display" class="text-sm text-indigo-800 font-semibold mt-2 text-center"></p>
                 </div>
                 <div class="flex justify-end gap-4">
                     <button type="button" id="btn-cancel-pelanggan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
@@ -394,7 +395,7 @@
             projectId: "database-jaganetwork",
             storageBucket: "database-jaganetwork.firebasestorage.app",
             messagingSenderId: "912989992875",
-            appId: "1:912989992875:web:8c6cda77171889e1e644ee",
+            appId: "1:91289992875:web:8c6cda77171889e1e644ee",
             measurementId: "G-6D9L4WXKMY"
         };
 
@@ -548,20 +549,8 @@
                 return;
             }
 
-            const dateParts = customerData.joinDate.split('-').map(Number);
-            const joinDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-            const year = joinDate.getFullYear();
-            const month = joinDate.getMonth();
-            const dayOfMonth = joinDate.getDate();
-
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysOfService = daysInMonth - dayOfMonth + 1;
-
-            if (daysOfService <= 0) return;
-
-            const dailyRate = pkg.harga / daysInMonth;
-            const proratedAmount = Math.round(dailyRate * daysOfService);
-            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
+            const { proratedAmount, periodeDate } = calculateProrate(customerData.joinDate, pkg.harga);
+            if(proratedAmount <= 0) return;
 
             try {
                 await addDoc(getCollectionRef('invoices'), {
@@ -612,6 +601,12 @@
             if (unsubscribeInvoices) unsubscribeInvoices();
             listenersAttached = false; // Reset listener flag on logout
         }
+        
+        function loadData() {
+            loadPackages();
+            loadCustomers();
+            loadInvoices();
+        }
 
         function initApp() {
             if (!userIsLoggedIn) {
@@ -644,6 +639,27 @@
             setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         }
         function formatRupiah(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
+        
+        function calculateProrate(joinDateStr, packagePrice) {
+            if (!joinDateStr || !packagePrice) return { proratedAmount: 0 };
+            
+            const dateParts = joinDateStr.split('-').map(Number);
+            const joinDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const year = joinDate.getFullYear();
+            const month = joinDate.getMonth();
+            const dayOfMonth = joinDate.getDate();
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysOfService = daysInMonth - dayOfMonth + 1;
+            
+            if (daysOfService <= 0) return { proratedAmount: 0 };
+
+            const dailyRate = packagePrice / daysInMonth;
+            const proratedAmount = Math.round(dailyRate * daysOfService);
+            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
+            
+            return { proratedAmount, periodeDate };
+        }
         
         // --- RENDER FUNCTIONS ---
         function renderCustomers() {
@@ -777,6 +793,9 @@
             const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
             const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
             const prorateContainer = document.getElementById('prorate-container');
+            const proratePriceDisplay = document.getElementById('prorate-price-display');
+            const paketPelangganSelect = document.getElementById('paket-pelanggan');
+            const joinDateInput = document.getElementById('join-date');
 
             // Auth Listeners
             toggleAuthMode.addEventListener('click', (e) => { e.preventDefault(); isLoginMode = !isLoginMode; authError.textContent = ''; if (isLoginMode) { loginForm.classList.remove('hidden'); registerForm.classList.add('hidden'); authTitle.textContent = 'Login ke Akun Anda'; toggleAuthMode.textContent = 'Belum punya akun? Daftar sekarang'; } else { loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authTitle.textContent = 'Buat Akun Baru'; toggleAuthMode.textContent = 'Sudah punya akun? Login'; } });
@@ -792,6 +811,7 @@
                 document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
                 document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
                 prorateContainer.classList.remove('hidden');
+                proratePriceDisplay.textContent = '';
                 populatePaketOptions(); 
                 openModal(modalPelanggan); 
             });
@@ -807,12 +827,32 @@
                     nama: document.getElementById('nama').value, 
                     alamat: document.getElementById('alamat').value, 
                     hp: document.getElementById('hp').value, 
-                    paketId: document.getElementById('paket-pelanggan').value,
-                    joinDate: document.getElementById('join-date').value,
+                    paketId: paketPelangganSelect.value,
+                    joinDate: joinDateInput.value,
                     createProrate: document.getElementById('prorate-checkbox').checked
                 }; 
                 saveCustomer(data); 
             });
+            
+            function updateProrateDisplay() {
+                const selectedPkgId = paketPelangganSelect.value;
+                const joinDateStr = joinDateInput.value;
+                const selectedPkg = allPackages.find(p => p.id === selectedPkgId);
+
+                if (selectedPkg && joinDateStr) {
+                    const { proratedAmount } = calculateProrate(joinDateStr, selectedPkg.harga);
+                    if (proratedAmount > 0) {
+                        proratePriceDisplay.textContent = `Perkiraan Tagihan Prorata: ${formatRupiah(proratedAmount)}`;
+                    } else {
+                        proratePriceDisplay.textContent = '';
+                    }
+                } else {
+                    proratePriceDisplay.textContent = '';
+                }
+            }
+
+            paketPelangganSelect.addEventListener('change', updateProrateDisplay);
+            joinDateInput.addEventListener('change', updateProrateDisplay);
 
             formPaket.addEventListener('submit', (e) => { e.preventDefault(); const data = { id: document.getElementById('paket-id').value, nama: document.getElementById('nama-paket').value, kecepatan: document.getElementById('kecepatan').value, harga: document.getElementById('harga').value, }; savePackage(data); });
             document.body.addEventListener('click', (e) => {
