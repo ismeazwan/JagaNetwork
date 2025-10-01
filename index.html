@@ -612,6 +612,12 @@
             if (unsubscribeInvoices) unsubscribeInvoices();
             listenersAttached = false; // Reset listener flag on logout
         }
+        
+        function loadData() {
+            loadPackages();
+            loadCustomers();
+            loadInvoices();
+        }
 
         function initApp() {
             if (!userIsLoggedIn) {
