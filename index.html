@@ -340,8 +340,18 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'jaganetwork-default';
+        // --- KONFIGURASI FIREBASE ---
+// Ganti dengan konfigurasi dari proyek Firebase Anda
+const firebaseConfig = {
+    apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
+    authDomain: "database-jaganetwork.firebaseapp.com",
+    projectId: "database-jaganetwork",
+    storageBucket: "database-jaganetwork.firebasestorage.app",
+    messagingSenderId: "912989992875",
+    appId: "1:912989992875:web:8c6cda77171889e1e644ee",
+    measurementId: "G-6D9L4WXKMY"
+};
+const appId = firebaseConfig.projectId; // Kita gunakan projectId sebagai appId
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -392,23 +402,20 @@
         // --- FUNGSI UTAMA ---
 
         // Otentikasi dan Inisialisasi
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                initApp();
-            } else {
-                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Authentication failed:", error);
-                    showToast("Gagal terhubung ke server.", "error");
-                }
-            }
-        });
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        userId = user.uid;
+        initApp();
+    } else {
+         try {
+            // Langsung gunakan sign-in anonim untuk Vercel
+            await signInAnonymously(auth);
+        } catch (error) {
+            console.error("Authentication failed:", error);
+            showToast("Gagal terhubung ke server.", "error");
+        }
+    }
+});
 
         function initApp() {
             if (!userId) return;
