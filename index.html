@@ -9,42 +9,78 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .tab-active {
-            border-color: #4f46e5;
-            color: #4f46e5;
-            background-color: #eef2ff;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
+        .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Container Utama -->
-    <div class="flex flex-col md:flex-row min-h-screen">
+    <!-- Container Autentikasi -->
+    <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <h1 class="text-center text-4xl font-extrabold text-indigo-600">JagaNetwork</h1>
+                <h2 id="auth-title" class="mt-2 text-center text-2xl font-bold text-gray-900">
+                    Login ke Akun Anda
+                </h2>
+            </div>
+            <!-- Form Login -->
+            <form id="login-form" class="mt-8 space-y-6" action="#" method="POST">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <input id="login-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Alamat email">
+                    </div>
+                    <div>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Login
+                    </button>
+                </div>
+            </form>
+            <!-- Form Registrasi -->
+            <form id="register-form" class="mt-8 space-y-6 hidden" action="#" method="POST">
+                 <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <input id="register-email" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Alamat email">
+                    </div>
+                    <div>
+                        <input id="register-password" name="password" type="password" autocomplete="new-password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password">
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Daftar
+                    </button>
+                </div>
+            </form>
+            <p id="auth-error" class="text-center text-sm text-red-600"></p>
+            <div class="text-center">
+                <a href="#" id="toggle-auth-mode" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Belum punya akun? Daftar sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Container Aplikasi Utama (hidden by default) -->
+    <div id="app-container" class="hidden flex-col md:flex-row min-h-screen">
         
         <!-- Sidebar -->
-        <aside class="w-full md:w-64 bg-white shadow-md">
+        <aside class="w-full md:w-64 bg-white shadow-md flex flex-col">
             <div class="p-6">
                 <h1 class="text-2xl font-bold text-indigo-600">JagaNetwork</h1>
                 <p class="text-sm text-gray-500">Billing & Management</p>
+                <p id="user-email" class="text-xs text-gray-400 mt-2 truncate"></p>
             </div>
-            <nav class="mt-6">
+            <nav class="mt-6 flex-1">
                 <a href="#" id="tab-dashboard" class="tab-item tab-active flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
                 </a>
@@ -61,11 +97,16 @@
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
                 </a>
             </nav>
+            <div class="p-6">
+                <button id="btn-logout" class="w-full flex items-center justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    <i data-lucide="log-out" class="w-5 h-5 mr-2"></i> Logout
+                </button>
+            </div>
         </aside>
 
         <!-- Konten Utama -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            
+            <!-- Konten dinamis (dashboard, pelanggan, etc) akan dimuat di sini -->
             <!-- Halaman Dashboard -->
             <div id="content-dashboard" class="tab-content">
                 <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
@@ -130,7 +171,6 @@
                         </thead>
                         <tbody id="pelanggan-table-body">
                            <!-- Data pelanggan akan dimuat di sini -->
-                           <tr><td colspan="5" class="text-center p-8 text-gray-500">Memuat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -156,7 +196,6 @@
                         </thead>
                         <tbody id="paket-table-body">
                            <!-- Data paket akan dimuat di sini -->
-                           <tr><td colspan="4" class="text-center p-8 text-gray-500">Memuat data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -192,7 +231,6 @@
                         </thead>
                         <tbody id="tagihan-table-body">
                            <!-- Data tagihan akan dimuat di sini -->
-                            <tr><td colspan="5" class="text-center p-8 text-gray-500">Pilih periode untuk menampilkan tagihan.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -207,8 +245,6 @@
                          <select id="laporan-filter-tahun" class="p-2 border rounded-lg bg-white"></select>
                     </div>
                 </div>
-
-                <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow">
                         <p class="text-sm text-gray-500">Total Pemasukan</p>
@@ -227,8 +263,6 @@
                         <p id="laporan-tagihan-tertunggak" class="text-3xl font-bold">0</p>
                     </div>
                 </div>
-
-                <!-- Detail Transaksi -->
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h3 class="text-xl font-bold mb-4">Detail Pemasukan (Transaksi Lunas)</h3>
                     <table class="w-full text-left">
@@ -241,15 +275,14 @@
                         </thead>
                         <tbody id="laporan-table-body">
                            <!-- Data laporan akan dimuat di sini -->
-                           <tr><td colspan="3" class="text-center p-8 text-gray-500">Pilih periode untuk menampilkan laporan.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            
         </main>
     </div>
 
+    <!-- Modals (Pelanggan, Paket, Konfirmasi) -->
     <!-- Modal Tambah/Edit Pelanggan -->
     <div id="modal-pelanggan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg">
@@ -330,29 +363,32 @@
         <p id="toast-message"></p>
     </div>
 
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
             collection, query, where, getDocs, writeBatch, serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
-        // --- KONFIGURASI FIREBASE ---
-// Ganti dengan konfigurasi dari proyek Firebase Anda
-const firebaseConfig = {
-    apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
-    authDomain: "database-jaganetwork.firebaseapp.com",
-    projectId: "database-jaganetwork",
-    storageBucket: "database-jaganetwork.firebasestorage.app",
-    messagingSenderId: "912989992875",
-    appId: "1:912989992875:web:8c6cda77171889e1e644ee",
-    measurementId: "G-6D9L4WXKMY"
-};
-const appId = firebaseConfig.projectId; // Kita gunakan projectId sebagai appId
-        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
+            authDomain: "database-jaganetwork.firebaseapp.com",
+            projectId: "database-jaganetwork",
+            storageBucket: "database-jaganetwork.firebasestorage.app",
+            messagingSenderId: "912989992875",
+            appId: "1:912989992875:web:8c6cda77171889e1e644ee",
+            measurementId: "G-6D9L4WXKMY"
+        };
+        const appId = firebaseConfig.projectId;
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -366,56 +402,76 @@ const appId = firebaseConfig.projectId; // Kita gunakan projectId sebagai appId
         let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
         
         let deleteCallback = null;
+        let isLoginMode = true;
 
         // --- ELEMEN DOM ---
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const toggleAuthMode = document.getElementById('toggle-auth-mode');
+        const authTitle = document.getElementById('auth-title');
+        const authError = document.getElementById('auth-error');
+        const btnLogout = document.getElementById('btn-logout');
+
         const contentDivs = document.querySelectorAll('.tab-content');
         const tabItems = document.querySelectorAll('.tab-item');
         
-        // Modal Pelanggan
         const modalPelanggan = document.getElementById('modal-pelanggan');
         const formPelanggan = document.getElementById('form-pelanggan');
         const btnAddPelanggan = document.getElementById('btn-add-pelanggan');
         const btnCancelPelanggan = document.getElementById('btn-cancel-pelanggan');
 
-        // Modal Paket
         const modalPaket = document.getElementById('modal-paket');
         const formPaket = document.getElementById('form-paket');
         const btnAddPaket = document.getElementById('btn-add-paket');
         const btnCancelPaket = document.getElementById('btn-cancel-paket');
         
-        // Modal Konfirmasi
         const modalKonfirmasi = document.getElementById('modal-konfirmasi');
         const btnCancelHapus = document.getElementById('btn-cancel-hapus');
         const btnConfirmHapus = document.getElementById('btn-confirm-hapus');
         const konfirmasiPesan = document.getElementById('konfirmasi-pesan');
 
-        // Tagihan
         const btnGenerateTagihan = document.getElementById('btn-generate-tagihan');
         const filterBulan = document.getElementById('filter-bulan');
         const filterTahun = document.getElementById('filter-tahun');
         const filterStatus = document.getElementById('filter-status');
 
-        // Laporan
         const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
         const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
 
         // --- FUNGSI UTAMA ---
 
-        // Otentikasi dan Inisialisasi
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        userId = user.uid;
-        initApp();
-    } else {
-         try {
-            // Langsung gunakan sign-in anonim untuk Vercel
-            await signInAnonymously(auth);
-        } catch (error) {
-            console.error("Authentication failed:", error);
-            showToast("Gagal terhubung ke server.", "error");
+        // Cek status login saat aplikasi dimuat
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in.
+                userId = user.uid;
+                showApp(user);
+            } else {
+                // User is signed out.
+                userId = null;
+                showAuth();
+            }
+        });
+
+        function showApp(user) {
+            authContainer.classList.add('hidden');
+            appContainer.classList.add('flex');
+            appContainer.classList.remove('hidden');
+            document.getElementById('user-email').textContent = user.email;
+            initApp();
         }
-    }
-});
+
+        function showAuth() {
+            authContainer.classList.remove('hidden');
+            appContainer.classList.remove('flex');
+            appContainer.classList.add('hidden');
+            // Hentikan listener data jika user logout
+            if (unsubscribeCustomers) unsubscribeCustomers();
+            if (unsubscribePackages) unsubscribePackages();
+            if (unsubscribeInvoices) unsubscribeInvoices();
+        }
 
         function initApp() {
             if (!userId) return;
@@ -471,8 +527,7 @@ onAuthStateChanged(auth, async (user) => {
             }).format(angka);
         }
 
-        // --- RENDER DATA ---
-        
+        // --- RENDER DATA (Fungsi renderCustomers, renderPackages, dst. tetap sama) ---
         function renderCustomers() {
             const tbody = document.getElementById('pelanggan-table-body');
             tbody.innerHTML = '';
@@ -634,7 +689,6 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // --- MANAJEMEN DATA (FIRESTORE) ---
-
         // Pelanggan
         function loadCustomers() {
             const customersCol = collection(db, `artifacts/${appId}/users/${userId}/customers`);
@@ -642,11 +696,10 @@ onAuthStateChanged(auth, async (user) => {
             unsubscribeCustomers = onSnapshot(customersCol, (snapshot) => {
                 allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCustomers();
-                renderInvoices(); // Update invoices if customer name changes
+                renderInvoices();
                 renderLaporan();
             });
         }
-
         async function saveCustomer(data) {
             try {
                 if (data.id) {
@@ -665,7 +718,6 @@ onAuthStateChanged(auth, async (user) => {
                 showToast("Gagal menyimpan data pelanggan.");
             }
         }
-        
         async function deleteCustomer(id) {
             try {
                 await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/customers`, id));
@@ -675,7 +727,6 @@ onAuthStateChanged(auth, async (user) => {
                 showToast("Gagal menghapus data pelanggan.");
             }
         }
-
         // Paket
         function loadPackages() {
             const packagesCol = collection(db, `artifacts/${appId}/users/${userId}/packages`);
@@ -683,11 +734,10 @@ onAuthStateChanged(auth, async (user) => {
             unsubscribePackages = onSnapshot(packagesCol, (snapshot) => {
                 allPackages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPackages();
-                renderCustomers(); // Update customer view if package name changes
+                renderCustomers();
                 populatePaketOptions();
             });
         }
-        
         async function savePackage(data) {
             try {
                 const pkgData = { nama: data.nama, kecepatan: data.kecepatan, harga: Number(data.harga) };
@@ -705,9 +755,7 @@ onAuthStateChanged(auth, async (user) => {
                 showToast("Gagal menyimpan data paket.");
             }
         }
-
         async function deletePackage(id) {
-            // Cek apakah paket masih digunakan
             const usedByCustomer = allCustomers.some(c => c.paketId === id);
             if (usedByCustomer) {
                 showToast("Paket tidak bisa dihapus karena masih digunakan oleh pelanggan.");
@@ -721,7 +769,6 @@ onAuthStateChanged(auth, async (user) => {
                 showToast("Gagal menghapus data paket.");
             }
         }
-        
         // Tagihan
         function loadInvoices() {
             const invoicesCol = collection(db, `artifacts/${appId}/users/${userId}/invoices`);
@@ -732,31 +779,24 @@ onAuthStateChanged(auth, async (user) => {
                 renderLaporan();
             });
         }
-        
         async function generateInvoices() {
             const month = parseInt(filterBulan.value);
             const year = parseInt(filterTahun.value);
-            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0]; // Ambil tanggal 15
-            
+            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
             if (allCustomers.length === 0) {
                 showToast("Tidak ada pelanggan untuk dibuatkan tagihan.");
                 return;
             }
-
             const batch = writeBatch(db);
             let generatedCount = 0;
-            
             for (const customer of allCustomers) {
                 const pkg = allPackages.find(p => p.id === customer.paketId);
                 if (!pkg) continue;
-
-                // Cek apakah tagihan sudah ada
                 const q = query(collection(db, `artifacts/${appId}/users/${userId}/invoices`), 
                     where("pelangganId", "==", customer.id),
                     where("periode", "==", periodeDate)
                 );
                 const existingInvoice = await getDocs(q);
-
                 if (existingInvoice.empty) {
                     const newInvoiceRef = doc(collection(db, `artifacts/${appId}/users/${userId}/invoices`));
                     batch.set(newInvoiceRef, {
@@ -769,7 +809,6 @@ onAuthStateChanged(auth, async (user) => {
                     generatedCount++;
                 }
             }
-            
             if (generatedCount > 0) {
                 await batch.commit();
                 showToast(`${generatedCount} tagihan baru berhasil digenerate.`);
@@ -777,7 +816,6 @@ onAuthStateChanged(auth, async (user) => {
                 showToast("Semua tagihan untuk periode ini sudah ada.");
             }
         }
-        
         async function updateInvoiceStatus(id, newStatus) {
             try {
                 const docRef = doc(db, `artifacts/${appId}/users/${userId}/invoices`, id);
@@ -789,7 +827,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
         
-
         // --- EVENT LISTENERS ---
         function setupEventListeners() {
             // Navigasi Tab
@@ -827,24 +864,13 @@ onAuthStateChanged(auth, async (user) => {
             // Form Submit
             formPelanggan.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const data = {
-                    id: document.getElementById('pelanggan-id').value,
-                    nama: document.getElementById('nama').value,
-                    alamat: document.getElementById('alamat').value,
-                    hp: document.getElementById('hp').value,
-                    paketId: document.getElementById('paket-pelanggan').value
-                };
+                const data = { id: document.getElementById('pelanggan-id').value, nama: document.getElementById('nama').value, alamat: document.getElementById('alamat').value, hp: document.getElementById('hp').value, paketId: document.getElementById('paket-pelanggan').value };
                 saveCustomer(data);
             });
 
             formPaket.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const data = {
-                    id: document.getElementById('paket-id').value,
-                    nama: document.getElementById('nama-paket').value,
-                    kecepatan: document.getElementById('kecepatan').value,
-                    harga: document.getElementById('harga').value,
-                };
+                const data = { id: document.getElementById('paket-id').value, nama: document.getElementById('nama-paket').value, kecepatan: document.getElementById('kecepatan').value, harga: document.getElementById('harga').value, };
                 savePackage(data);
             });
             
@@ -852,8 +878,6 @@ onAuthStateChanged(auth, async (user) => {
             document.body.addEventListener('click', (e) => {
                 const target = e.target.closest('button');
                 if (!target) return;
-
-                // Edit Pelanggan
                 if (target.classList.contains('btn-edit-pelanggan')) {
                     const id = target.dataset.id;
                     const customer = allCustomers.find(c => c.id === id);
@@ -867,16 +891,12 @@ onAuthStateChanged(auth, async (user) => {
                         openModal(modalPelanggan);
                     }
                 }
-                
-                // Delete Pelanggan
                 if (target.classList.contains('btn-delete-pelanggan')) {
                     const id = target.dataset.id;
                     konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus pelanggan ini? Semua tagihan terkait TIDAK akan dihapus.";
                     deleteCallback = () => deleteCustomer(id);
                     openModal(modalKonfirmasi);
                 }
-                
-                // Edit Paket
                 if (target.classList.contains('btn-edit-paket')) {
                     const id = target.dataset.id;
                     const pkg = allPackages.find(p => p.id === id);
@@ -889,16 +909,12 @@ onAuthStateChanged(auth, async (user) => {
                         openModal(modalPaket);
                     }
                 }
-
-                // Delete Paket
                 if (target.classList.contains('btn-delete-paket')) {
                     const id = target.dataset.id;
                     konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus paket ini? Paket tidak bisa dihapus jika masih digunakan oleh pelanggan.";
                     deleteCallback = () => deletePackage(id);
                     openModal(modalKonfirmasi);
                 }
-
-                // Bayar Tagihan
                 if (target.classList.contains('btn-bayar-tagihan')) {
                     const id = target.dataset.id;
                     updateInvoiceStatus(id, 'lunas');
@@ -914,16 +930,13 @@ onAuthStateChanged(auth, async (user) => {
                 closeModal(modalKonfirmasi);
             });
             
-            // Filter Tagihan
+            // Filter
             btnGenerateTagihan.addEventListener('click', generateInvoices);
             filterBulan.addEventListener('change', renderInvoices);
             filterTahun.addEventListener('change', renderInvoices);
             filterStatus.addEventListener('change', renderInvoices);
-
-            // Filter Laporan
             laporanFilterBulan.addEventListener('change', renderLaporan);
             laporanFilterTahun.addEventListener('change', renderLaporan);
-
         }
         
         // --- FUNGSI HELPERS ---
@@ -934,59 +947,79 @@ onAuthStateChanged(auth, async (user) => {
                 const option = document.createElement('option');
                 option.value = pkg.id;
                 option.textContent = `${pkg.nama} (${formatRupiah(pkg.harga)})`;
-                if(pkg.id === selectedId) {
-                    option.selected = true;
-                }
+                if(pkg.id === selectedId) option.selected = true;
                 select.appendChild(option);
             });
         }
-        
         function populateDateFilters() {
             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth();
-
+            const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
             months.forEach((month, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = month;
-                if(index === currentMonth) option.selected = true;
-                filterBulan.appendChild(option);
+                const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true;
+                filterBulan.appendChild(option.cloneNode(true));
             });
-            
             for (let i = currentYear - 2; i <= currentYear + 1; i++) {
-                 const option = document.createElement('option');
-                 option.value = i;
-                 option.textContent = i;
-                 if (i === currentYear) option.selected = true;
-                 filterTahun.appendChild(option);
+                 const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true;
+                 filterTahun.appendChild(option.cloneNode(true));
             }
         }
-
         function populateLaporanDateFilters() {
-            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const currentYear = new Date().getFullYear();
-            const currentMonth = new Date().getMonth();
-
+             const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
             months.forEach((month, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = month;
-                if(index === currentMonth) option.selected = true;
-                laporanFilterBulan.appendChild(option);
+                const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true;
+                laporanFilterBulan.appendChild(option.cloneNode(true));
             });
-            
             for (let i = currentYear - 2; i <= currentYear + 1; i++) {
-                 const option = document.createElement('option');
-                 option.value = i;
-                 option.textContent = i;
-                 if (i === currentYear) option.selected = true;
-                 laporanFilterTahun.appendChild(option);
+                 const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true;
+                 laporanFilterTahun.appendChild(option.cloneNode(true));
             }
         }
 
+        // --- Event Listeners untuk Autentikasi ---
+        toggleAuthMode.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLoginMode = !isLoginMode;
+            authError.textContent = '';
+            if (isLoginMode) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                authTitle.textContent = 'Login ke Akun Anda';
+                toggleAuthMode.textContent = 'Belum punya akun? Daftar sekarang';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                authTitle.textContent = 'Buat Akun Baru';
+                toggleAuthMode.textContent = 'Sudah punya akun? Login';
+            }
+        });
 
-        // Inisialisasi Ikon
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            signInWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    authError.textContent = "Email atau password salah.";
+                    console.error("Login error:", error.message);
+                });
+        });
+
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .catch((error) => {
+                    authError.textContent = "Gagal mendaftar. Pastikan email valid dan password minimal 6 karakter.";
+                    console.error("Register error:", error.message);
+                });
+        });
+
+        btnLogout.addEventListener('click', () => {
+            signOut(auth);
+        });
+
         lucide.createIcons();
 
     </script>
