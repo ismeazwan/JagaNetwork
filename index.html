@@ -373,512 +373,529 @@
         <p id="toast-message"></p>
     </div>
 
-    <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-        getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-        signInWithEmailAndPassword, signOut
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-        getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
-        collection, query, where, getDocs, writeBatch, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // --- KONFIGURASI FIREBASE ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
-        authDomain: "database-jaganetwork.firebaseapp.com",
-        projectId: "database-jaganetwork",
-        storageBucket: "database-jaganetwork.firebasestorage.app",
-        messagingSenderId: "912989992875",
-        appId: "1:912989992875:web:8c6cda77171889e1e644ee",
-        measurementId: "G-6D9L4WXKMY"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // --- STATE APLIKASI ---
-    let userIsLoggedIn = false;
-    let appListenersAttached = false; // Diubah namanya untuk kejelasan
-    let currentTab = 'dashboard';
-    let allCustomers = [];
-    let allPackages = [];
-    let allInvoices = [];
-    let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
-    
-    let deleteCallback = null;
-    let isLoginMode = true;
-    
-    // --- DOM ELEMENTS ---
-    const authContainer = document.getElementById('auth-container');
-    const appContainer = document.getElementById('app-container');
-    
-    // --- MANAJEMEN DATA (FIRESTORE) ---
-    // ... (Semua fungsi data seperti loadCustomers, saveCustomer, dll. tetap sama) ...
-    const dataContainerPath = "jaganetwork_data/shared_workspace";
-
-    function getCollectionRef(collectionName) {
-        return collection(db, dataContainerPath, collectionName);
-    }
-
-    function getDocRef(collectionName, docId) {
-        return doc(db, dataContainerPath, collectionName, docId);
-    }
-
-    // Pelanggan
-    function loadCustomers() {
-        const customersCol = getCollectionRef('customers');
-        if (unsubscribeCustomers) unsubscribeCustomers();
-        unsubscribeCustomers = onSnapshot(customersCol, (snapshot) => {
-            allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderCustomers(); renderInvoices(); renderLaporan();
-        });
-    }
-    async function saveCustomer(data) {
-        try {
-            const customerData = { 
-                nama: data.nama, 
-                alamat: data.alamat, 
-                hp: data.hp, 
-                paketId: data.paketId,
-                joinDate: data.joinDate
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+            import { 
+                getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+                signInWithEmailAndPassword, signOut
+            } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+            import { 
+                getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
+                collection, query, where, getDocs, writeBatch, serverTimestamp
+            } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+            // --- KONFIGURASI FIREBASE ---
+            const firebaseConfig = {
+                apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
+                authDomain: "database-jaganetwork.firebaseapp.com",
+                projectId: "database-jaganetwork",
+                storageBucket: "database-jaganetwork.firebasestorage.app",
+                messagingSenderId: "912989992875",
+                appId: "1:912989992875:web:8c6cda77171889e1e644ee",
+                measurementId: "G-6D9L4WXKMY"
             };
-            if (data.id) {
-                await setDoc(getDocRef('customers', data.id), customerData, { merge: true });
-                showToast("Data pelanggan berhasil diperbarui.");
-            } else {
-                const newCustomerRef = await addDoc(getCollectionRef('customers'), customerData);
-                showToast("Pelanggan baru berhasil ditambahkan.");
-                if (data.createProrate) {
-                    await generateProratedInvoice(newCustomerRef.id, customerData);
+        
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+        
+            // --- STATE APLIKASI ---
+            let userIsLoggedIn = false;
+            let appListenersAttached = false; // Diubah namanya untuk kejelasan
+            let currentTab = 'dashboard';
+            let allCustomers = [];
+            let allPackages = [];
+            let allInvoices = [];
+            let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
+            
+            let deleteCallback = null;
+            let isLoginMode = true;
+            
+            // --- DOM ELEMENTS ---
+            const authContainer = document.getElementById('auth-container');
+            const appContainer = document.getElementById('app-container');
+            
+            // --- MANAJEMEN DATA (FIRESTORE) ---
+            // ... (Semua fungsi data seperti loadCustomers, saveCustomer, dll. tetap sama) ...
+            const dataContainerPath = "jaganetwork_data/shared_workspace";
+        
+            function getCollectionRef(collectionName) {
+                return collection(db, dataContainerPath, collectionName);
+            }
+        
+            function getDocRef(collectionName, docId) {
+                return doc(db, dataContainerPath, collectionName, docId);
+            }
+        
+            // Pelanggan
+            function loadCustomers() {
+                const customersCol = getCollectionRef('customers');
+                if (unsubscribeCustomers) unsubscribeCustomers();
+                unsubscribeCustomers = onSnapshot(customersCol, (snapshot) => {
+                    allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderCustomers(); renderInvoices(); renderLaporan();
+                });
+            }
+            async function saveCustomer(data) {
+                try {
+                    const customerData = { 
+                        nama: data.nama, 
+                        alamat: data.alamat, 
+                        hp: data.hp, 
+                        paketId: data.paketId,
+                        joinDate: data.joinDate
+                    };
+                    if (data.id) {
+                        await setDoc(getDocRef('customers', data.id), customerData, { merge: true });
+                        showToast("Data pelanggan berhasil diperbarui.");
+                    } else {
+                        const newCustomerRef = await addDoc(getCollectionRef('customers'), customerData);
+                        showToast("Pelanggan baru berhasil ditambahkan.");
+                        if (data.createProrate) {
+                            await generateProratedInvoice(newCustomerRef.id, customerData);
+                        }
+                    }
+                    closeModal(document.getElementById('modal-pelanggan'));
+                } catch (error) { console.error("Error saving customer: ", error); showToast("Gagal menyimpan data pelanggan.", "error"); }
+            }
+            async function deleteCustomer(id) {
+                try {
+                    await deleteDoc(getDocRef('customers', id));
+                    showToast("Data pelanggan berhasil dihapus.");
+                } catch (e) { console.error("Error deleting customer: ", e); showToast("Gagal menghapus data pelanggan.", "error"); }
+            }
+            
+            // Paket
+            function loadPackages() {
+                const packagesCol = getCollectionRef('packages');
+                if (unsubscribePackages) unsubscribePackages();
+                unsubscribePackages = onSnapshot(packagesCol, (snapshot) => {
+                    allPackages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderPackages(); renderCustomers(); populatePaketOptions();
+                });
+            }
+            async function savePackage(data) {
+                try {
+                    const pkgData = { nama: data.nama, kecepatan: data.kecepatan, harga: Number(data.harga) };
+                    if (data.id) {
+                        await setDoc(getDocRef('packages', data.id), pkgData);
+                        showToast("Data paket berhasil diperbarui.");
+                    } else {
+                        await addDoc(getCollectionRef('packages'), pkgData);
+                        showToast("Paket baru berhasil ditambahkan.");
+                    }
+                    closeModal(document.getElementById('modal-paket'));
+                } catch (error) { console.error("Error saving package: ", error); showToast("Gagal menyimpan data paket.", "error"); }
+            }
+            async function deletePackage(id) {
+                const usedByCustomer = allCustomers.some(c => c.paketId === id);
+                if (usedByCustomer) { showToast("Paket tidak bisa dihapus karena masih digunakan oleh pelanggan."); return; }
+                try {
+                    await deleteDoc(getDocRef('packages', id));
+                    showToast("Data paket berhasil dihapus.");
+                } catch (e) { console.error("Error deleting package: ", e); showToast("Gagal menghapus data paket.", "error"); }
+            }
+        
+            // Tagihan
+            function loadInvoices() {
+                const invoicesCol = getCollectionRef('invoices');
+                if (unsubscribeInvoices) unsubscribeInvoices();
+                unsubscribeInvoices = onSnapshot(invoicesCol, (snapshot) => {
+                    allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderInvoices(); renderLaporan();
+                });
+            }
+            async function generateInvoices() {
+                const month = parseInt(document.getElementById('filter-bulan').value);
+                const year = parseInt(document.getElementById('filter-tahun').value);
+                const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
+                if (allCustomers.length === 0) { showToast("Tidak ada pelanggan untuk dibuatkan tagihan."); return; }
+                
+                const batch = writeBatch(db);
+                let generatedCount = 0;
+                
+                const invoicesColRef = getCollectionRef('invoices');
+        
+                for (const customer of allCustomers) {
+                    const pkg = allPackages.find(p => p.id === customer.paketId);
+                    if (!pkg) continue;
+        
+                    const q = query(invoicesColRef, 
+                        where("pelangganId", "==", customer.id),
+                        where("periode", "==", periodeDate)
+                    );
+        
+                    const existingInvoice = await getDocs(q);
+                    if (existingInvoice.empty) {
+                        const newInvoiceRef = doc(invoicesColRef);
+                        batch.set(newInvoiceRef, {
+                            pelangganId: customer.id, jumlah: pkg.harga, periode: periodeDate, status: 'belum lunas', createdAt: serverTimestamp()
+                        });
+                        generatedCount++;
+                    }
+                }
+                if (generatedCount > 0) {
+                    await batch.commit(); showToast(`${generatedCount} tagihan baru berhasil digenerate.`);
+                } else { showToast("Semua tagihan untuk periode ini sudah ada."); }
+            }
+        
+            async function generateProratedInvoice(customerId, customerData) {
+                const pkg = allPackages.find(p => p.id === customerData.paketId);
+                if (!pkg) {
+                    showToast("Paket tidak ditemukan untuk perhitungan prorata.", "error");
+                    return;
+                }
+        
+                const dateParts = customerData.joinDate.split('-').map(Number);
+                const joinDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const year = joinDate.getFullYear();
+                const month = joinDate.getMonth();
+                const dayOfMonth = joinDate.getDate();
+        
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysOfService = daysInMonth - dayOfMonth + 1;
+        
+                if (daysOfService <= 0) return;
+        
+                const dailyRate = pkg.harga / daysInMonth;
+                const proratedAmount = Math.round(dailyRate * daysOfService);
+                const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
+        
+                try {
+                    await addDoc(getCollectionRef('invoices'), {
+                        pelangganId: customerId,
+                        jumlah: proratedAmount,
+                        periode: periodeDate,
+                        status: 'belum lunas',
+                        createdAt: serverTimestamp(),
+                        isProrated: true
+                    });
+                    showToast(`Tagihan prorata sebesar ${formatRupiah(proratedAmount)} berhasil dibuat.`);
+                } catch (error) {
+                    console.error("Error generating prorated invoice: ", error);
+                    showToast("Gagal membuat tagihan prorata.", "error");
                 }
             }
-            closeModal(document.getElementById('modal-pelanggan'));
-        } catch (error) { console.error("Error saving customer: ", error); showToast("Gagal menyimpan data pelanggan.", "error"); }
-    }
-    async function deleteCustomer(id) {
-        try {
-            await deleteDoc(getDocRef('customers', id));
-            showToast("Data pelanggan berhasil dihapus.");
-        } catch (e) { console.error("Error deleting customer: ", e); showToast("Gagal menghapus data pelanggan.", "error"); }
-    }
-    
-    // Paket
-    function loadPackages() {
-        const packagesCol = getCollectionRef('packages');
-        if (unsubscribePackages) unsubscribePackages();
-        unsubscribePackages = onSnapshot(packagesCol, (snapshot) => {
-            allPackages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderPackages(); renderCustomers(); populatePaketOptions();
-        });
-    }
-    async function savePackage(data) {
-        try {
-            const pkgData = { nama: data.nama, kecepatan: data.kecepatan, harga: Number(data.harga) };
-            if (data.id) {
-                await setDoc(getDocRef('packages', data.id), pkgData);
-                showToast("Data paket berhasil diperbarui.");
-            } else {
-                await addDoc(getCollectionRef('packages'), pkgData);
-                showToast("Paket baru berhasil ditambahkan.");
-            }
-            closeModal(document.getElementById('modal-paket'));
-        } catch (error) { console.error("Error saving package: ", error); showToast("Gagal menyimpan data paket.", "error"); }
-    }
-    async function deletePackage(id) {
-        const usedByCustomer = allCustomers.some(c => c.paketId === id);
-        if (usedByCustomer) { showToast("Paket tidak bisa dihapus karena masih digunakan oleh pelanggan."); return; }
-        try {
-            await deleteDoc(getDocRef('packages', id));
-            showToast("Data paket berhasil dihapus.");
-        } catch (e) { console.error("Error deleting package: ", e); showToast("Gagal menghapus data paket.", "error"); }
-    }
-
-    // Tagihan
-    function loadInvoices() {
-        const invoicesCol = getCollectionRef('invoices');
-        if (unsubscribeInvoices) unsubscribeInvoices();
-        unsubscribeInvoices = onSnapshot(invoicesCol, (snapshot) => {
-            allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderInvoices(); renderLaporan();
-        });
-    }
-    async function generateInvoices() {
-        const month = parseInt(document.getElementById('filter-bulan').value);
-        const year = parseInt(document.getElementById('filter-tahun').value);
-        const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
-        if (allCustomers.length === 0) { showToast("Tidak ada pelanggan untuk dibuatkan tagihan."); return; }
         
-        const batch = writeBatch(db);
-        let generatedCount = 0;
-        
-        const invoicesColRef = getCollectionRef('invoices');
-
-        for (const customer of allCustomers) {
-            const pkg = allPackages.find(p => p.id === customer.paketId);
-            if (!pkg) continue;
-
-            const q = query(invoicesColRef, 
-                where("pelangganId", "==", customer.id),
-                where("periode", "==", periodeDate)
-            );
-
-            const existingInvoice = await getDocs(q);
-            if (existingInvoice.empty) {
-                const newInvoiceRef = doc(invoicesColRef);
-                batch.set(newInvoiceRef, {
-                    pelangganId: customer.id, jumlah: pkg.harga, periode: periodeDate, status: 'belum lunas', createdAt: serverTimestamp()
-                });
-                generatedCount++;
+            async function updateInvoiceStatus(id, newStatus) {
+                try {
+                    await updateDoc(getDocRef('invoices', id), { status: newStatus });
+                    showToast("Status tagihan berhasil diperbarui.");
+                } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
             }
-        }
-        if (generatedCount > 0) {
-            await batch.commit(); showToast(`${generatedCount} tagihan baru berhasil digenerate.`);
-        } else { showToast("Semua tagihan untuk periode ini sudah ada."); }
-    }
-
-    async function generateProratedInvoice(customerId, customerData) {
-        const pkg = allPackages.find(p => p.id === customerData.paketId);
-        if (!pkg) {
-            showToast("Paket tidak ditemukan untuk perhitungan prorata.", "error");
-            return;
-        }
-
-        const dateParts = customerData.joinDate.split('-').map(Number);
-        const joinDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        const year = joinDate.getFullYear();
-        const month = joinDate.getMonth();
-        const dayOfMonth = joinDate.getDate();
-
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const daysOfService = daysInMonth - dayOfMonth + 1;
-
-        if (daysOfService <= 0) return;
-
-        const dailyRate = pkg.harga / daysInMonth;
-        const proratedAmount = Math.round(dailyRate * daysOfService);
-        const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
-
-        try {
-            await addDoc(getCollectionRef('invoices'), {
-                pelangganId: customerId,
-                jumlah: proratedAmount,
-                periode: periodeDate,
-                status: 'belum lunas',
-                createdAt: serverTimestamp(),
-                isProrated: true
+        
+            // --- AUTHENTICATION & APP FLOW ---
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    showApp(user);
+                } else {
+                    showAuth();
+                }
             });
-            showToast(`Tagihan prorata sebesar ${formatRupiah(proratedAmount)} berhasil dibuat.`);
-        } catch (error) {
-            console.error("Error generating prorated invoice: ", error);
-            showToast("Gagal membuat tagihan prorata.", "error");
-        }
-    }
-
-    async function updateInvoiceStatus(id, newStatus) {
-        try {
-            await updateDoc(getDocRef('invoices', id), { status: newStatus });
-            showToast("Status tagihan berhasil diperbarui.");
-        } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
-    }
-
-    // --- AUTHENTICATION & APP FLOW ---
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            showApp(user);
-        } else {
-            showAuth();
-        }
-    });
-
-    function showApp(user) {
-        authContainer.classList.add('hidden');
-        appContainer.classList.add('flex');
-        appContainer.classList.remove('hidden');
-        document.getElementById('user-email').textContent = user.email;
-        initApp();
-    }
-
-    function showAuth() {
-        authContainer.classList.remove('hidden');
-        appContainer.classList.remove('flex');
-        appContainer.classList.add('hidden');
-        if (unsubscribeCustomers) unsubscribeCustomers();
-        if (unsubscribePackages) unsubscribePackages();
-        if (unsubscribeInvoices) unsubscribeInvoices();
-        userIsLoggedIn = false; // Reset status login
-        appListenersAttached = false; // Reset flag listener aplikasi
-    }
-
-    function initApp() {
-        if (!userIsLoggedIn) {
-            userIsLoggedIn = true;
-            setupAppListeners(); // SEKARANG HANYA MEMASANG LISTENER APLIKASI
-            populateDateFilters();
-            populateLaporanDateFilters();
-            loadData(); // PERUBAHAN: Pindahkan loadData ke sini
-            switchTab('dashboard');
-        }
-    }
-
-    function loadData() { // Buat fungsi baru untuk memuat semua data
-        loadCustomers();
-        loadPackages();
-        loadInvoices();
-    }
-
-    // --- UI FUNCTIONS ---
-    // ... (Semua fungsi UI seperti switchTab, openModal, formatRupiah, dll. tetap sama) ...
-    function switchTab(tabId) {
-        currentTab = tabId;
-        document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-        document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('tab-active'));
-        document.getElementById(`content-${tabId}`).classList.remove('hidden');
-        document.getElementById(`tab-${tabId}`).classList.add('tab-active');
-    }
-    function openModal(modal) { modal.style.display = 'flex'; }
-    function closeModal(modal) { modal.style.display = 'none'; }
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        toast.classList.toggle('bg-red-600', type === 'error');
-        toast.classList.toggle('bg-gray-800', type !== 'error');
-        toastMessage.textContent = message;
-        toast.classList.remove('translate-y-20', 'opacity-0');
-        setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
-    }
-    function formatRupiah(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
-    
-    // --- RENDER FUNCTIONS ---
-    // ... (Semua fungsi render seperti renderCustomers, renderPackages, dll. tetap sama) ...
-    function renderCustomers() {
-        const tbody = document.getElementById('pelanggan-table-body');
-        tbody.innerHTML = '';
-        if (allCustomers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">Belum ada data pelanggan.</td></tr>'; return; }
-        allCustomers.sort((a,b) => (a.nama.toLowerCase() > b.nama.toLowerCase()) ? 1 : -1).forEach(customer => {
-            const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A' };
-            const tr = document.createElement('tr');
-            tr.className = 'border-b hover:bg-gray-50';
-            tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${customer.alamat}</td><td class="p-4">${customer.hp}</td><td class="p-4">${pkg.nama}</td><td class="p-4 flex gap-2"><button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${customer.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${customer.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
-            tbody.appendChild(tr);
-        });
-        lucide.createIcons(); updateDashboard();
-    }
-    function renderPackages() {
-        const tbody = document.getElementById('paket-table-body');
-        tbody.innerHTML = '';
-        if (allPackages.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-500">Belum ada data paket.</td></tr>'; return; }
-        allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => {
-            const tr = document.createElement('tr');
-            tr.className = 'border-b hover:bg-gray-50';
-            tr.innerHTML = `<td class="p-4">${pkg.nama}</td><td class="p-4">${pkg.kecepatan}</td><td class="p-4">${formatRupiah(pkg.harga)}</td><td class="p-4 flex gap-2"><button class="btn-edit-paket text-blue-600 hover:text-blue-800" data-id="${pkg.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-paket text-red-600 hover:text-red-800" data-id="${pkg.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
-            tbody.appendChild(tr);
-        });
-        lucide.createIcons();
-    }
-    function renderInvoices() {
-        const tbody = document.getElementById('tagihan-table-body');
-        tbody.innerHTML = '';
-        const filterBulan = document.getElementById('filter-bulan');
-        const filterTahun = document.getElementById('filter-tahun');
-        const filterStatus = document.getElementById('filter-status');
-        const selectedMonth = parseInt(filterBulan.value); const selectedYear = parseInt(filterTahun.value); const selectedStatus = filterStatus.value;
-        const filteredInvoices = allInvoices.filter(inv => {
-            const periode = new Date(inv.periode + "T00:00:00");
-            return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear && (selectedStatus === 'semua' || inv.status === selectedStatus);
-        });
-        if (filteredInvoices.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">Tidak ada data tagihan untuk periode ini.</td></tr>'; return; }
-        filteredInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
-            const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
-            const statusClass = invoice.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            const buttonAction = invoice.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600" data-id="${invoice.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
-            const tr = document.createElement('tr');
-            tr.className = 'border-b hover:bg-gray-50';
-            tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)} ${invoice.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td><td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${invoice.status}</span></td><td class="p-4">${buttonAction}</td>`;
-            tbody.appendChild(tr);
-        });
-        updateDashboard();
-    }
-    function renderLaporan() {
-        const tbody = document.getElementById('laporan-table-body');
-        const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-        const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-        tbody.innerHTML = '';
-        const selectedMonth = parseInt(laporanFilterBulan.value); const selectedYear = parseInt(laporanFilterTahun.value);
-        const filteredInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
-        const lunasInvoices = filteredInvoices.filter(inv => inv.status === 'lunas');
-        const totalPemasukan = lunasInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
-        const potensiPemasukan = filteredInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
-        document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(totalPemasukan);
-        document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(potensiPemasukan);
-        document.getElementById('laporan-transaksi-lunas').textContent = lunasInvoices.length;
-        document.getElementById('laporan-tagihan-tertunggak').textContent = filteredInvoices.filter(inv => inv.status === 'belum lunas').length;
-        if (lunasInvoices.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center p-8 text-gray-500">Tidak ada transaksi lunas untuk periode ini.</td></tr>'; return; }
-        lunasInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
-            const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
-            const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
-            tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)}</td>`;
-            tbody.appendChild(tr);
-        });
-    }
-    function updateDashboard() {
-        document.getElementById('total-pelanggan').textContent = allCustomers.length;
-        const selectedMonth = new Date().getMonth(); const selectedYear = new Date().getFullYear();
-        const currentMonthInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
-        const totalPemasukan = currentMonthInvoices.filter(inv => inv.status === 'lunas').reduce((sum, inv) => sum + inv.jumlah, 0);
-        document.getElementById('total-pemasukan').textContent = formatRupiah(totalPemasukan);
-        document.getElementById('tagihan-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'lunas').length;
-        document.getElementById('tagihan-belum-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'belum lunas').length;
-    }
-
-    function populatePaketOptions(selectedId = null) {
-        const select = document.getElementById('paket-pelanggan'); select.innerHTML = '<option value="">-- Pilih Paket --</option>';
-        allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => { const option = document.createElement('option'); option.value = pkg.id; option.textContent = `${pkg.nama} (${formatRupiah(pkg.harga)})`; if(pkg.id === selectedId) option.selected = true; select.appendChild(option); });
-    }
-    function populateDateFilters() {
-        const filterBulan = document.getElementById('filter-bulan');
-        const filterTahun = document.getElementById('filter-tahun');
-        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
-        months.forEach((month, index) => { const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true; filterBulan.appendChild(option.cloneNode(true)); });
-        for (let i = currentYear - 2; i <= currentYear + 1; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true; filterTahun.appendChild(option.cloneNode(true)); }
-    }
-    function populateLaporanDateFilters() {
-        const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-        const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-        const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
-        months.forEach((month, index) => { const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true; laporanFilterBulan.appendChild(option.cloneNode(true)); });
-        for (let i = currentYear - 2; i <= currentYear + 1; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true; laporanFilterTahun.appendChild(option.cloneNode(true)); }
-    }
-
-    // --- EVENT LISTENERS ---
-
-    // PERUBAHAN: Fungsi baru HANYA untuk listener Autentikasi
-    function setupAuthListeners() {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const toggleAuthMode = document.getElementById('toggle-auth-mode');
-        const authTitle = document.getElementById('auth-title');
-        const authError = document.getElementById('auth-error');
-
-        toggleAuthMode.addEventListener('click', (e) => { e.preventDefault(); isLoginMode = !isLoginMode; authError.textContent = ''; if (isLoginMode) { loginForm.classList.remove('hidden'); registerForm.classList.add('hidden'); authTitle.textContent = 'Login ke Akun Anda'; toggleAuthMode.textContent = 'Belum punya akun? Daftar sekarang'; } else { loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authTitle.textContent = 'Buat Akun Baru'; toggleAuthMode.textContent = 'Sudah punya akun? Login'; } });
         
-        loginForm.addEventListener('submit', (e) => { 
-            e.preventDefault(); // Ini sekarang akan berjalan dengan benar
-            const email = document.getElementById('login-email').value; 
-            const password = document.getElementById('login-password').value; 
-            signInWithEmailAndPassword(auth, email, password)
-                .catch((error) => { authError.textContent = "Email atau password salah."; console.error("Login error:", error.message); }); 
-        });
-        
-        registerForm.addEventListener('submit', (e) => { 
-            e.preventDefault(); // Ini sekarang akan berjalan dengan benar
-            const email = document.getElementById('register-email').value; 
-            const password = document.getElementById('register-password').value; 
-            createUserWithEmailAndPassword(auth, email, password)
-                .catch((error) => { authError.textContent = "Gagal mendaftar. Pastikan email valid dan password minimal 6 karakter."; console.error("Register error:", error.message); }); 
-        });
-    }
-
-    // PERUBAHAN: Fungsi baru HANYA untuk listener Aplikasi (setelah login)
-    function setupAppListeners() {
-        if (appListenersAttached) return; 
-
-        const btnLogout = document.getElementById('btn-logout');
-        const tabItems = document.querySelectorAll('.tab-item');
-        const modalPelanggan = document.getElementById('modal-pelanggan');
-        const formPelanggan = document.getElementById('form-pelanggan');
-        const btnAddPelanggan = document.getElementById('btn-add-pelanggan');
-        const btnCancelPelanggan = document.getElementById('btn-cancel-pelanggan');
-        const modalPaket = document.getElementById('modal-paket');
-        const formPaket = document.getElementById('form-paket');
-        const btnAddPaket = document.getElementById('btn-add-paket');
-        const btnCancelPaket = document.getElementById('btn-cancel-paket');
-        const modalKonfirmasi = document.getElementById('modal-konfirmasi');
-        const btnCancelHapus = document.getElementById('btn-cancel-hapus');
-        const btnConfirmHapus = document.getElementById('btn-confirm-hapus');
-        const konfirmasiPesan = document.getElementById('konfirmasi-pesan');
-        const btnGenerateTagihan = document.getElementById('btn-generate-tagihan');
-        const filterBulan = document.getElementById('filter-bulan');
-        const filterTahun = document.getElementById('filter-tahun');
-        const filterStatus = document.getElementById('filter-status');
-        const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-        const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-        const prorateContainer = document.getElementById('prorate-container');
-
-        btnLogout.addEventListener('click', () => { signOut(auth); });
-        tabItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); switchTab(item.id.split('-')[1]); }); });
-        
-        btnAddPelanggan.addEventListener('click', () => { 
-            formPelanggan.reset(); 
-            document.getElementById('pelanggan-id').value = ''; 
-            document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
-            document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
-            prorateContainer.classList.remove('hidden');
-            populatePaketOptions(); 
-            openModal(modalPelanggan); 
-        });
-        btnAddPaket.addEventListener('click', () => { formPaket.reset(); document.getElementById('paket-id').value = ''; document.getElementById('modal-paket-title').textContent = 'Tambah Paket Baru'; openModal(modalPaket); });
-        
-        btnCancelPelanggan.addEventListener('click', () => closeModal(modalPelanggan));
-        btnCancelPaket.addEventListener('click', () => closeModal(modalPaket));
-        btnCancelHapus.addEventListener('click', () => { deleteCallback = null; closeModal(modalKonfirmasi); });
-        
-        formPelanggan.addEventListener('submit', (e) => { 
-            e.preventDefault(); 
-            const data = { 
-                id: document.getElementById('pelanggan-id').value, 
-                nama: document.getElementById('nama').value, 
-                alamat: document.getElementById('alamat').value, 
-                hp: document.getElementById('hp').value, 
-                paketId: document.getElementById('paket-pelanggan').value,
-                joinDate: document.getElementById('join-date').value,
-                createProrate: document.getElementById('prorate-checkbox').checked
-            }; 
-            saveCustomer(data); 
-        });
-        
-        formPaket.addEventListener('submit', (e) => { e.preventDefault(); const data = { id: document.getElementById('paket-id').value, nama: document.getElementById('nama-paket').value, kecepatan: document.getElementById('kecepatan').value, harga: document.getElementById('harga').value, }; savePackage(data); });
-        
-        document.body.addEventListener('click', (e) => {
-            const target = e.target.closest('button'); if (!target) return;
-            if (target.classList.contains('btn-edit-pelanggan')) { 
-                const id = target.dataset.id; 
-                const customer = allCustomers.find(c => c.id === id); 
-                if (customer) { 
-                    document.getElementById('pelanggan-id').value = customer.id; 
-                    document.getElementById('nama').value = customer.nama; 
-                    document.getElementById('alamat').value = customer.alamat; 
-                    document.getElementById('hp').value = customer.hp; 
-                    document.getElementById('join-date').value = customer.joinDate || '';
-                    prorateContainer.classList.add('hidden'); 
-                    populatePaketOptions(customer.paketId); 
-                    document.getElementById('modal-pelanggan-title').textContent = 'Edit Data Pelanggan'; 
-                    openModal(modalPelanggan); 
-                } 
+            function showApp(user) {
+                authContainer.classList.add('hidden');
+                appContainer.classList.add('flex');
+                appContainer.classList.remove('hidden');
+                document.getElementById('user-email').textContent = user.email;
+                initApp();
             }
-            if (target.classList.contains('btn-delete-pelanggan')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus pelanggan ini? Semua tagihan terkait TIDAK akan dihapus."; deleteCallback = () => deleteCustomer(id); openModal(modalKonfirmasi); }
-            if (target.classList.contains('btn-edit-paket')) { const id = target.dataset.id; const pkg = allPackages.find(p => p.id === id); if (pkg) { document.getElementById('paket-id').value = pkg.id; document.getElementById('nama-paket').value = pkg.nama; document.getElementById('kecepatan').value = pkg.kecepatan; document.getElementById('harga').value = pkg.harga; document.getElementById('modal-paket-title').textContent = 'Edit Data Paket'; openModal(modalPaket); } }
-            if (target.classList.contains('btn-delete-paket')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus paket ini? Paket tidak bisa dihapus jika masih digunakan oleh pelanggan."; deleteCallback = () => deletePackage(id); openModal(modalKonfirmasi); }
-            if (target.classList.contains('btn-bayar-tagihan')) { const id = target.dataset.id; updateInvoiceStatus(id, 'lunas'); }
-        });
-
-        btnConfirmHapus.addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } deleteCallback = null; closeModal(modalKonfirmasi); });
-        btnGenerateTagihan.addEventListener('click', generateInvoices);
-        filterBulan.addEventListener('change', renderInvoices); filterTahun.addEventListener('change', renderInvoices); filterStatus.addEventListener('change', renderInvoices);
-        laporanFilterBulan.addEventListener('change', renderLaporan); laporanFilterTahun.addEventListener('change', renderLaporan);
-
-        appListenersAttached = true;
-    }
-
-    // --- Inisialisasi awal ---
-    lucide.createIcons();
-    setupAuthListeners(); // PERUBAHAN: Panggil listener auth di sini, saat script pertama kali dimuat.
-
-</script>
+        
+            function showAuth() {
+                authContainer.classList.remove('hidden');
+                appContainer.classList.remove('flex');
+                appContainer.classList.add('hidden');
+                if (unsubscribeCustomers) unsubscribeCustomers();
+                if (unsubscribePackages) unsubscribePackages();
+                if (unsubscribeInvoices) unsubscribeInvoices();
+                userIsLoggedIn = false; // Reset status login
+                appListenersAttached = false; // Reset flag listener aplikasi
+            }
+        
+            function initApp() {
+                if (!userIsLoggedIn) {
+                    userIsLoggedIn = true;
+                    setupAppListeners(); // SEKARANG HANYA MEMASANG LISTENER APLIKASI
+                    populateDateFilters();
+                    populateLaporanDateFilters();
+                    loadData(); // PERUBAHAN: Pindahkan loadData ke sini
+                    switchTab('dashboard');
+                }
+            }
+        
+            function loadData() { // Buat fungsi baru untuk memuat semua data
+                loadCustomers();
+                loadPackages();
+                loadInvoices();
+            }
+        
+            // --- UI FUNCTIONS ---
+            // ... (Semua fungsi UI seperti switchTab, openModal, formatRupiah, dll. tetap sama) ...
+            function switchTab(tabId) {
+                currentTab = tabId;
+                document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
+                document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('tab-active'));
+                document.getElementById(`content-${tabId}`).classList.remove('hidden');
+                document.getElementById(`tab-${tabId}`).classList.add('tab-active');
+            }
+            function openModal(modal) { modal.style.display = 'flex'; }
+            function closeModal(modal) { modal.style.display = 'none'; }
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                toast.classList.toggle('bg-red-600', type === 'error');
+                toast.classList.toggle('bg-gray-800', type !== 'error');
+                toastMessage.textContent = message;
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+            }
+            function formatRupiah(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); }
+            
+            // --- RENDER FUNCTIONS ---
+            // ... (Semua fungsi render seperti renderCustomers, renderPackages, dll. tetap sama) ...
+            function renderCustomers() {
+                const tbody = document.getElementById('pelanggan-table-body');
+                tbody.innerHTML = '';
+                if (allCustomers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">Belum ada data pelanggan.</td></tr>'; return; }
+                allCustomers.sort((a,b) => (a.nama.toLowerCase() > b.nama.toLowerCase()) ? 1 : -1).forEach(customer => {
+                    const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A' };
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${customer.alamat}</td><td class="p-4">${customer.hp}</td><td class="p-4">${pkg.nama}</td><td class="p-4 flex gap-2"><button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${customer.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${customer.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons(); updateDashboard();
+            }
+            function renderPackages() {
+                const tbody = document.getElementById('paket-table-body');
+                tbody.innerHTML = '';
+                if (allPackages.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-gray-500">Belum ada data paket.</td></tr>'; return; }
+                allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `<td class="p-4">${pkg.nama}</td><td class="p-4">${pkg.kecepatan}</td><td class="p-4">${formatRupiah(pkg.harga)}</td><td class="p-4 flex gap-2"><button class="btn-edit-paket text-blue-600 hover:text-blue-800" data-id="${pkg.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-paket text-red-600 hover:text-red-800" data-id="${pkg.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+            }
+            function renderInvoices() {
+                const tbody = document.getElementById('tagihan-table-body');
+                tbody.innerHTML = '';
+                const filterBulan = document.getElementById('filter-bulan');
+                const filterTahun = document.getElementById('filter-tahun');
+                const filterStatus = document.getElementById('filter-status');
+                const selectedMonth = parseInt(filterBulan.value); const selectedYear = parseInt(filterTahun.value); const selectedStatus = filterStatus.value;
+                const filteredInvoices = allInvoices.filter(inv => {
+                    const periode = new Date(inv.periode + "T00:00:00");
+                    return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear && (selectedStatus === 'semua' || inv.status === selectedStatus);
+                });
+                if (filteredInvoices.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-gray-500">Tidak ada data tagihan untuk periode ini.</td></tr>'; return; }
+                filteredInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
+                    const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
+                    const statusClass = invoice.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const buttonAction = invoice.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600" data-id="${invoice.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)} ${invoice.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td><td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${invoice.status}</span></td><td class="p-4">${buttonAction}</td>`;
+                    tbody.appendChild(tr);
+                });
+                updateDashboard();
+            }
+            function renderLaporan() {
+                const tbody = document.getElementById('laporan-table-body');
+                const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
+                const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
+                tbody.innerHTML = '';
+                const selectedMonth = parseInt(laporanFilterBulan.value); const selectedYear = parseInt(laporanFilterTahun.value);
+                const filteredInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
+                const lunasInvoices = filteredInvoices.filter(inv => inv.status === 'lunas');
+                const totalPemasukan = lunasInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
+                const potensiPemasukan = filteredInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
+                document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(totalPemasukan);
+                document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(potensiPemasukan);
+                document.getElementById('laporan-transaksi-lunas').textContent = lunasInvoices.length;
+                document.getElementById('laporan-tagihan-tertunggak').textContent = filteredInvoices.filter(inv => inv.status === 'belum lunas').length;
+                if (lunasInvoices.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="text-center p-8 text-gray-500">Tidak ada transaksi lunas untuk periode ini.</td></tr>'; return; }
+                lunasInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
+                    const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
+                    const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
+                    tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
+            function updateDashboard() {
+                document.getElementById('total-pelanggan').textContent = allCustomers.length;
+                const selectedMonth = new Date().getMonth(); const selectedYear = new Date().getFullYear();
+                const currentMonthInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
+                const totalPemasukan = currentMonthInvoices.filter(inv => inv.status === 'lunas').reduce((sum, inv) => sum + inv.jumlah, 0);
+                document.getElementById('total-pemasukan').textContent = formatRupiah(totalPemasukan);
+                document.getElementById('tagihan-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'lunas').length;
+                document.getElementById('tagihan-belum-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'belum lunas').length;
+            }
+        
+            function populatePaketOptions(selectedId = null) {
+                const select = document.getElementById('paket-pelanggan'); select.innerHTML = '<option value="">-- Pilih Paket --</option>';
+                allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => { const option = document.createElement('option'); option.value = pkg.id; option.textContent = `${pkg.nama} (${formatRupiah(pkg.harga)})`; if(pkg.id === selectedId) option.selected = true; select.appendChild(option); });
+            }
+            function populateDateFilters() {
+                const filterBulan = document.getElementById('filter-bulan');
+                const filterTahun = document.getElementById('filter-tahun');
+                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
+                months.forEach((month, index) => { const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true; filterBulan.appendChild(option.cloneNode(true)); });
+                for (let i = currentYear - 2; i <= currentYear + 1; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true; filterTahun.appendChild(option.cloneNode(true)); }
+            }
+            function populateLaporanDateFilters() {
+                const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
+                const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
+                const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
+                months.forEach((month, index) => { const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true; laporanFilterBulan.appendChild(option.cloneNode(true)); });
+                for (let i = currentYear - 2; i <= currentYear + 1; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true; laporanFilterTahun.appendChild(option.cloneNode(true)); }
+            }
+        
+            // --- EVENT LISTENERS ---
+        
+            // PERUBAHAN: Fungsi baru HANYA untuk listener Autentikasi
+            function setupAuthListeners() {
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                const toggleAuthMode = document.getElementById('toggle-auth-mode');
+                const authTitle = document.getElementById('auth-title');
+                const authError = document.getElementById('auth-error');
+        
+                toggleAuthMode.addEventListener('click', (e) => { e.preventDefault(); isLoginMode = !isLoginMode; authError.textContent = ''; if (isLoginMode) { loginForm.classList.remove('hidden'); registerForm.classList.add('hidden'); authTitle.textContent = 'Login ke Akun Anda'; toggleAuthMode.textContent = 'Belum punya akun? Daftar sekarang'; } else { loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authTitle.textContent = 'Buat Akun Baru'; toggleAuthMode.textContent = 'Sudah punya akun? Login'; } });
+                
+                loginForm.addEventListener('submit', (e) => { 
+                    e.preventDefault(); // Ini sekarang akan berjalan dengan benar
+                    const email = document.getElementById('login-email').value; 
+                    const password = document.getElementById('login-password').value; 
+                    signInWithEmailAndPassword(auth, email, password)
+                        .catch((error) => { authError.textContent = "Email atau password salah."; console.error("Login error:", error.message); }); 
+                });
+                
+                registerForm.addEventListener('submit', (e) => { 
+                    e.preventDefault(); // Ini sekarang akan berjalan dengan benar
+                    const email = document.getElementById('register-email').value; 
+                    const password = document.getElementById('register-password').value; 
+                    createUserWithEmailAndPassword(auth, email, password)
+                        // Ganti blok .catch di atas dengan yang ini
+                        .catch((error) => {
+                            // Log error code ke console untuk debugging
+                            console.error("Register error:", error.code, error.message);
+                            
+                            let pesanError = "Terjadi kesalahan saat mendaftar."; // Pesan default
+                        
+                            if (error.code === 'auth/email-already-in-use') {
+                                pesanError = "Email ini sudah terdaftar. Silakan login atau gunakan email lain.";
+                            } else if (error.code === 'auth/weak-password') {
+                                pesanError = "Password terlalu lemah. Gunakan minimal 6 karakter.";
+                            } else if (error.code === 'auth/invalid-email') {
+                                pesanError = "Format email yang Anda masukkan tidak valid.";
+                            }
+                            
+                            // Tampilkan pesan error yang lebih spesifik ke pengguna
+                            const authError = document.getElementById('auth-error');
+                            authError.textContent = pesanError;
+                        });
+            }
+        
+            // PERUBAHAN: Fungsi baru HANYA untuk listener Aplikasi (setelah login)
+            function setupAppListeners() {
+                if (appListenersAttached) return; 
+        
+                const btnLogout = document.getElementById('btn-logout');
+                const tabItems = document.querySelectorAll('.tab-item');
+                const modalPelanggan = document.getElementById('modal-pelanggan');
+                const formPelanggan = document.getElementById('form-pelanggan');
+                const btnAddPelanggan = document.getElementById('btn-add-pelanggan');
+                const btnCancelPelanggan = document.getElementById('btn-cancel-pelanggan');
+                const modalPaket = document.getElementById('modal-paket');
+                const formPaket = document.getElementById('form-paket');
+                const btnAddPaket = document.getElementById('btn-add-paket');
+                const btnCancelPaket = document.getElementById('btn-cancel-paket');
+                const modalKonfirmasi = document.getElementById('modal-konfirmasi');
+                const btnCancelHapus = document.getElementById('btn-cancel-hapus');
+                const btnConfirmHapus = document.getElementById('btn-confirm-hapus');
+                const konfirmasiPesan = document.getElementById('konfirmasi-pesan');
+                const btnGenerateTagihan = document.getElementById('btn-generate-tagihan');
+                const filterBulan = document.getElementById('filter-bulan');
+                const filterTahun = document.getElementById('filter-tahun');
+                const filterStatus = document.getElementById('filter-status');
+                const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
+                const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
+                const prorateContainer = document.getElementById('prorate-container');
+        
+                btnLogout.addEventListener('click', () => { signOut(auth); });
+                tabItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); switchTab(item.id.split('-')[1]); }); });
+                
+                btnAddPelanggan.addEventListener('click', () => { 
+                    formPelanggan.reset(); 
+                    document.getElementById('pelanggan-id').value = ''; 
+                    document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
+                    document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
+                    prorateContainer.classList.remove('hidden');
+                    populatePaketOptions(); 
+                    openModal(modalPelanggan); 
+                });
+                btnAddPaket.addEventListener('click', () => { formPaket.reset(); document.getElementById('paket-id').value = ''; document.getElementById('modal-paket-title').textContent = 'Tambah Paket Baru'; openModal(modalPaket); });
+                
+                btnCancelPelanggan.addEventListener('click', () => closeModal(modalPelanggan));
+                btnCancelPaket.addEventListener('click', () => closeModal(modalPaket));
+                btnCancelHapus.addEventListener('click', () => { deleteCallback = null; closeModal(modalKonfirmasi); });
+                
+                formPelanggan.addEventListener('submit', (e) => { 
+                    e.preventDefault(); 
+                    const data = { 
+                        id: document.getElementById('pelanggan-id').value, 
+                        nama: document.getElementById('nama').value, 
+                        alamat: document.getElementById('alamat').value, 
+                        hp: document.getElementById('hp').value, 
+                        paketId: document.getElementById('paket-pelanggan').value,
+                        joinDate: document.getElementById('join-date').value,
+                        createProrate: document.getElementById('prorate-checkbox').checked
+                    }; 
+                    saveCustomer(data); 
+                });
+                
+                formPaket.addEventListener('submit', (e) => { e.preventDefault(); const data = { id: document.getElementById('paket-id').value, nama: document.getElementById('nama-paket').value, kecepatan: document.getElementById('kecepatan').value, harga: document.getElementById('harga').value, }; savePackage(data); });
+                
+                document.body.addEventListener('click', (e) => {
+                    const target = e.target.closest('button'); if (!target) return;
+                    if (target.classList.contains('btn-edit-pelanggan')) { 
+                        const id = target.dataset.id; 
+                        const customer = allCustomers.find(c => c.id === id); 
+                        if (customer) { 
+                            document.getElementById('pelanggan-id').value = customer.id; 
+                            document.getElementById('nama').value = customer.nama; 
+                            document.getElementById('alamat').value = customer.alamat; 
+                            document.getElementById('hp').value = customer.hp; 
+                            document.getElementById('join-date').value = customer.joinDate || '';
+                            prorateContainer.classList.add('hidden'); 
+                            populatePaketOptions(customer.paketId); 
+                            document.getElementById('modal-pelanggan-title').textContent = 'Edit Data Pelanggan'; 
+                            openModal(modalPelanggan); 
+                        } 
+                    }
+                    if (target.classList.contains('btn-delete-pelanggan')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus pelanggan ini? Semua tagihan terkait TIDAK akan dihapus."; deleteCallback = () => deleteCustomer(id); openModal(modalKonfirmasi); }
+                    if (target.classList.contains('btn-edit-paket')) { const id = target.dataset.id; const pkg = allPackages.find(p => p.id === id); if (pkg) { document.getElementById('paket-id').value = pkg.id; document.getElementById('nama-paket').value = pkg.nama; document.getElementById('kecepatan').value = pkg.kecepatan; document.getElementById('harga').value = pkg.harga; document.getElementById('modal-paket-title').textContent = 'Edit Data Paket'; openModal(modalPaket); } }
+                    if (target.classList.contains('btn-delete-paket')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus paket ini? Paket tidak bisa dihapus jika masih digunakan oleh pelanggan."; deleteCallback = () => deletePackage(id); openModal(modalKonfirmasi); }
+                    if (target.classList.contains('btn-bayar-tagihan')) { const id = target.dataset.id; updateInvoiceStatus(id, 'lunas'); }
+                });
+        
+                btnConfirmHapus.addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } deleteCallback = null; closeModal(modalKonfirmasi); });
+                btnGenerateTagihan.addEventListener('click', generateInvoices);
+                filterBulan.addEventListener('change', renderInvoices); filterTahun.addEventListener('change', renderInvoices); filterStatus.addEventListener('change', renderInvoices);
+                laporanFilterBulan.addEventListener('change', renderLaporan); laporanFilterTahun.addEventListener('change', renderLaporan);
+        
+                appListenersAttached = true;
+            }
+        
+            // --- Inisialisasi awal ---
+            lucide.createIcons();
+            setupAuthListeners(); // PERUBAHAN: Panggil listener auth di sini, saat script pertama kali dimuat.
+    
+    </script>
 </body>
 </html>
 
