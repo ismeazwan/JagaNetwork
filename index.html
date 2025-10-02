@@ -190,7 +190,7 @@
                                 <th class="p-4">Kecepatan</th>
                                 <th class="p-4">Harga</th>
                                 <!-- PERUBAHAN: Label di tabel diubah -->
-                                <th class="p-4">Harga Harian Prorate</th>
+                                <th class="p-4">Harga Prorate (Fixed)</th>
                                 <th class="p-4">Aksi</th>
                             </tr>
                         </thead>
@@ -344,10 +344,10 @@
                     <label for="harga" class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
                     <input type="number" id="harga" class="w-full p-2 border rounded-lg" required>
                 </div>
-                <!-- PERUBAHAN: Label di modal diubah -->
+                <!-- PERUBAHAN: Label dan placeholder di modal diubah -->
                 <div class="mb-6">
-                    <label for="harga-prorate" class="block text-sm font-medium text-gray-700 mb-1">Harga Harian Prorate (Rp) - Opsional</label>
-                    <input type="number" id="harga-prorate" class="w-full p-2 border rounded-lg" placeholder="Isi jika ada tarif prorata harian">
+                    <label for="harga-prorate" class="block text-sm font-medium text-gray-700 mb-1">Harga Prorate (Fixed) - Opsional</label>
+                    <input type="number" id="harga-prorate" class="w-full p-2 border rounded-lg" placeholder="Jumlah tagihan tetap untuk bulan pertama">
                 </div>
                 <div class="flex justify-end gap-4">
                     <button type="button" id="btn-cancel-paket" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
@@ -561,18 +561,18 @@
             const year = joinDate.getFullYear();
             const month = joinDate.getMonth();
             
-            // PERUBAHAN: Logika kalkulasi prorata diubah
-            const dayOfMonth = joinDate.getDate();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysOfService = daysInMonth - dayOfMonth + 1;
-            if (daysOfService <= 0) return;
-
+            // PERUBAHAN: Logika kalkulasi prorata diperbaiki
             let proratedAmount = 0;
             if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                // Kalkulasi baru: Harga Harian Prorate * Jumlah Hari Layanan
-                proratedAmount = pkg.hargaProrate * daysOfService;
+                // Logika baru: Gunakan harga prorate sebagai BIAYA TETAP (fixed cost).
+                proratedAmount = pkg.hargaProrate;
             } else {
-                // Fallback: Kalkulasi lama jika harga harian tidak di-set
+                // Fallback: Hitung harian jika harga prorate tetap tidak di-set.
+                const dayOfMonth = joinDate.getDate();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysOfService = daysInMonth - dayOfMonth + 1;
+                if (daysOfService <= 0) return;
+
                 const dailyRate = pkg.harga / daysInMonth;
                 proratedAmount = Math.round(dailyRate * daysOfService);
             }
@@ -623,16 +623,15 @@
                     const pkg = allPackages.find(p => p.id === customer.paketId);
                     if (!pkg) continue;
 
-                    // PERUBAHAN: Logika kalkulasi prorata diubah juga di sini
-                    const dayOfMonth = joinDate.getDate();
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const daysOfService = daysInMonth - dayOfMonth + 1;
-                    if (daysOfService <= 0) continue;
-
+                    // PERUBAHAN: Logika kalkulasi prorata diperbaiki juga di sini
                     let proratedAmount = 0;
                     if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                        proratedAmount = pkg.hargaProrate * daysOfService;
+                        proratedAmount = pkg.hargaProrate;
                     } else {
+                        const dayOfMonth = joinDate.getDate();
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        const daysOfService = daysInMonth - dayOfMonth + 1;
+                        if (daysOfService <= 0) continue;
                         const dailyRate = pkg.harga / daysInMonth;
                         proratedAmount = Math.round(dailyRate * daysOfService);
                     }
