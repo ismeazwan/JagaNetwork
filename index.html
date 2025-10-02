@@ -463,8 +463,7 @@
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
 
-        // --- Sisa kode JavaScript (fungsi-fungsi load, save, delete, dll.) sama seperti sebelumnya ---
-        // ... (Kode lengkap ada di bawah)
+        // ... Sisa kode JavaScript akan sama seperti sebelumnya ...
         function loadCustomers() {
             const q = query(getCollectionRef('customers'));
             if (unsubscribeCustomers) unsubscribeCustomers();
@@ -808,6 +807,97 @@
             let yearOptions = '';
             for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
             tahun.innerHTML = yearOptions;
+        }
+
+        function renderCharts() {
+            const lineCtx = document.getElementById('lineChart').getContext('2d');
+            lineChartInstance = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Pendapatan', data: [],
+                        borderColor: 'rgb(79, 70, 229)', backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.1, yAxisID: 'y'
+                    }, {
+                        label: 'Pelanggan Baru', data: [],
+                        borderColor: 'rgb(22, 163, 74)', backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                        tension: 0.1, yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Pendapatan (Rp)' } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Jumlah Pelanggan' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+
+            const pieCtx = document.getElementById('pieChart').getContext('2d');
+            pieChartInstance = new Chart(pieCtx, {
+                type: 'pie',
+                data: { labels: [], datasets: [{ label: 'Pelanggan', data: [], backgroundColor: [] }] },
+                options: { responsive: true }
+            });
+        }
+
+        function updateCharts() {
+            if (!lineChartInstance || !pieChartInstance || !allCustomers.length || !allPackages.length) return;
+
+            const monthLabels = [];
+            const revenueData = [];
+            const newCustomerData = [];
+            const today = new Date();
+
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthName = date.toLocaleString('id-ID', { month: 'short' });
+                const year = date.getFullYear();
+                monthLabels.push(`${monthName} ${year}`);
+
+                const monthRevenue = allInvoices
+                    .filter(inv => {
+                        const invDate = new Date(inv.periode);
+                        return inv.status === 'lunas' && invDate.getFullYear() === year && invDate.getMonth() === date.getMonth();
+                    })
+                    .reduce((sum, inv) => sum + inv.jumlah, 0);
+                revenueData.push(monthRevenue);
+
+                const newCustomers = allCustomers.filter(c => {
+                    if (!c.joinDate) return false;
+                    const joinDate = new Date(c.joinDate);
+                    return joinDate.getFullYear() === year && joinDate.getMonth() === date.getMonth();
+                }).length;
+                newCustomerData.push(newCustomers);
+            }
+
+            lineChartInstance.data.labels = monthLabels;
+            lineChartInstance.data.datasets[0].data = revenueData;
+            lineChartInstance.data.datasets[1].data = newCustomerData;
+            lineChartInstance.update();
+
+            const packageCounts = {};
+            allCustomers.forEach(customer => {
+                packageCounts[customer.paketId] = (packageCounts[customer.paketId] || 0) + 1;
+            });
+
+            const pieLabels = [];
+            const pieData = [];
+            const pieColors = [];
+            for (const pkgId in packageCounts) {
+                const pkg = allPackages.find(p => p.id === pkgId);
+                if (pkg) {
+                    pieLabels.push(pkg.nama);
+                    pieData.push(packageCounts[pkgId]);
+                    pieColors.push(`hsl(${Math.random() * 360}, 70%, 50%)`);
+                }
+            }
+
+            pieChartInstance.data.labels = pieLabels;
+            pieChartInstance.data.datasets[0].data = pieData;
+            pieChartInstance.data.datasets[0].backgroundColor = pieColors;
+            pieChartInstance.update();
         }
     
         function setupAuthListeners() {
