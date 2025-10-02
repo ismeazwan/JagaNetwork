@@ -618,15 +618,46 @@
 
             for (const customer of targetCustomers) {
                 const pkg = allPackages.find(p => p.id === customer.paketId);
-                if (!pkg) { skippedCount++; continue; }
+                if (!pkg) { 
+                    skippedCount++; 
+                    continue; 
+                }
 
                 const lastInvoice = allInvoices.filter(inv => inv.pelangganId === customer.id)
                     .sort((a, b) => new Date(b.periode) - new Date(a.periode))[0];
                 
-                if (!lastInvoice) { skippedCount++; continue; }
+                let nextPeriodEndDate;
 
-                const lastPeriodEndDate = new Date(lastInvoice.periode);
-                const nextPeriodEndDate = new Date(lastPeriodEndDate.getFullYear(), lastPeriodEndDate.getMonth() + 1, 7);
+                if (lastInvoice) {
+                    // Customer has previous invoices, calculate next period from the last one.
+                    const lastPeriodEndDate = new Date(lastInvoice.periode);
+                    nextPeriodEndDate = new Date(lastPeriodEndDate.getFullYear(), lastPeriodEndDate.getMonth() + 1, 7);
+                } else {
+                    // This is a new customer without any invoices.
+                    // Generate their first monthly bill.
+                    if (!customer.joinDate) {
+                        skippedCount++;
+                        continue; // Cannot generate first bill without join date.
+                    }
+                    const joinDate = new Date(customer.joinDate + 'T00:00:00');
+                    const today = new Date();
+                    
+                    // Determine the end of the current billing cycle
+                    let currentCycleEnd = new Date(today.getFullYear(), today.getMonth(), 7);
+                    if (today.getDate() > 7) {
+                        // If we are past the 7th, the current cycle ends next month.
+                        currentCycleEnd = new Date(today.getFullYear(), today.getMonth() + 1, 7);
+                    }
+
+                    // If the customer joined after this cycle ends, they are too new. Skip.
+                    if (joinDate > currentCycleEnd) {
+                        skippedCount++;
+                        continue;
+                    }
+                    
+                    nextPeriodEndDate = currentCycleEnd;
+                }
+
                 const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
                 
                 const alreadyExists = allInvoices.some(inv => inv.pelangganId === customer.id && inv.periode === nextPeriodString);
@@ -637,12 +668,14 @@
                         status: 'belum lunas', createdAt: serverTimestamp(), isProrated: false
                     });
                     generatedCount++;
+                } else {
+                    skippedCount++;
                 }
             }
 
             if (generatedCount > 0) await batch.commit();
-            showToast(generatedCount > 0 ? `${generatedCount} tagihan bulanan baru digenerate.` : "Semua tagihan bulanan sudah ada.");
-            if (skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (mungkin belum punya tagihan awal).`, 'info');
+            showToast(generatedCount > 0 ? `${generatedCount} tagihan bulanan baru digenerate.` : "Tidak ada tagihan baru untuk digenerate.");
+            if (skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (tagihan sudah ada atau data tidak lengkap).`, 'info');
         }
         
         async function generateProrateInvoices() {
@@ -1131,4 +1164,5 @@
     </script>
 </body>
 </html>
+
 
