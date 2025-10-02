@@ -28,7 +28,6 @@
                     Login ke Akun Anda
                 </h2>
             </div>
-            <!-- Form Login -->
             <form id="login-form" class="mt-8 space-y-6" action="#" method="POST">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
@@ -44,7 +43,6 @@
                     </button>
                 </div>
             </form>
-            <!-- Form Registrasi -->
             <form id="register-form" class="mt-8 space-y-6 hidden" action="#" method="POST">
                  <div class="rounded-md shadow-sm -space-y-px">
                     <div>
@@ -73,7 +71,6 @@
     <!-- Container Aplikasi Utama (hidden by default) -->
     <div id="app-container" class="hidden flex-col md:flex-row min-h-screen">
         
-        <!-- Sidebar -->
         <aside class="w-full md:w-64 bg-white shadow-md flex flex-col">
             <div class="p-6">
                 <h1 class="text-2xl font-bold text-indigo-600">JagaNetwork</h1>
@@ -104,9 +101,7 @@
             </div>
         </aside>
 
-        <!-- Konten Utama -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <!-- Halaman Dashboard -->
             <div id="content-dashboard" class="tab-content">
                 <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -149,7 +144,6 @@
                 </div>
             </div>
 
-            <!-- Halaman Pelanggan -->
             <div id="content-pelanggan" class="tab-content hidden">
                  <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold">Manajemen Pelanggan</h2>
@@ -174,7 +168,6 @@
                 </div>
             </div>
 
-            <!-- Halaman Paket -->
             <div id="content-paket" class="tab-content hidden">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-3xl font-bold">Manajemen Paket Internet</h2>
@@ -199,26 +192,24 @@
                 </div>
             </div>
 
-            <!-- Halaman Tagihan -->
             <div id="content-tagihan" class="tab-content hidden">
                  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <h2 class="text-3xl font-bold">Manajemen Tagihan</h2>
-                    <div class="flex flex-wrap items-center gap-2">
-                         <label for="filter-tanggal-awal" class="text-sm font-medium">Dari:</label>
-                         <input type="date" id="filter-tanggal-awal" class="p-2 border rounded-lg bg-white">
-                         <label for="filter-tanggal-akhir" class="text-sm font-medium">Sampai:</label>
-                         <input type="date" id="filter-tanggal-akhir" class="p-2 border rounded-lg bg-white">
-                         <select id="filter-status" class="p-2 border rounded-lg bg-white">
-                             <option value="semua">Semua Status</option>
-                             <option value="lunas">Lunas</option>
-                             <option value="belum lunas">Belum Lunas</option>
-                         </select>
-                        <button id="btn-generate-tagihan" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
-                            <i data-lucide="refresh-cw" class="w-5 h-5 mr-2"></i> Generate Tagihan
-                        </button>
-                        <button id="btn-generate-prorate" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Prorate
-                        </button>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-grow">
+                            <label for="pelanggan-filter" class="text-sm font-medium text-gray-700">Pilih Pelanggan</label>
+                            <select id="pelanggan-filter" class="w-full md:w-auto mt-1 p-2 border rounded-lg bg-white">
+                                <option value="semua">Semua Pelanggan</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2 self-end">
+                            <button id="btn-generate-prorate" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center">
+                                <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Prorate
+                            </button>
+                            <button id="btn-generate-tagihan" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+                                <i data-lucide="refresh-cw" class="w-5 h-5 mr-2"></i> Generate Tagihan Bulanan
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow">
@@ -226,7 +217,7 @@
                         <thead>
                             <tr class="border-b">
                                 <th class="p-4">Pelanggan</th>
-                                <th class="p-4">Periode</th>
+                                <th class="p-4">Periode Layanan</th>
                                 <th class="p-4">Jumlah</th>
                                 <th class="p-4">Status</th>
                                 <th class="p-4">Aksi</th>
@@ -238,7 +229,6 @@
                 </div>
             </div>
             
-            <!-- Halaman Laporan Keuangan -->
             <div id="content-laporan" class="tab-content hidden">
                  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <h2 class="text-3xl font-bold">Laporan Keuangan</h2>
@@ -283,8 +273,7 @@
         </main>
     </div>
 
-    <!-- Modals (Pelanggan, Paket, Konfirmasi) -->
-    <!-- Modal Tambah/Edit Pelanggan -->
+    <!-- Modals -->
     <div id="modal-pelanggan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg">
             <h3 id="modal-pelanggan-title" class="text-2xl font-bold mb-6">Tambah Pelanggan Baru</h3>
@@ -311,12 +300,6 @@
                     <label for="join-date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Bergabung</label>
                     <input type="date" id="join-date" class="w-full p-2 border rounded-lg" required>
                 </div>
-                <div id="prorate-container" class="mb-6 bg-indigo-50 p-3 rounded-lg hidden">
-                    <label class="flex items-center">
-                        <input type="checkbox" id="prorate-checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                        <span class="ml-2 text-sm text-gray-700">Buat tagihan prorata untuk bulan pertama?</span>
-                    </label>
-                </div>
                 <div class="flex justify-end gap-4">
                     <button type="button" id="btn-cancel-pelanggan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
@@ -325,7 +308,6 @@
         </div>
     </div>
     
-    <!-- Modal Tambah/Edit Paket -->
     <div id="modal-paket" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg">
             <h3 id="modal-paket-title" class="text-2xl font-bold mb-6">Tambah Paket Baru</h3>
@@ -340,7 +322,7 @@
                     <input type="text" id="kecepatan" class="w-full p-2 border rounded-lg" required>
                 </div>
                 <div class="mb-6">
-                    <label for="harga" class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
+                    <label for="harga" class="block text-sm font-medium text-gray-700 mb-1">Harga Bulanan (Rp)</label>
                     <input type="number" id="harga" class="w-full p-2 border rounded-lg" required>
                 </div>
                 <div class="mb-6">
@@ -355,7 +337,6 @@
         </div>
     </div>
     
-    <!-- Modal Konfirmasi Hapus -->
     <div id="modal-konfirmasi" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
              <div class="text-center">
@@ -372,7 +353,6 @@
         </div>
     </div>
 
-    <!-- Notifikasi Toast -->
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
         <p id="toast-message"></p>
     </div>
@@ -384,627 +364,423 @@
             signInWithEmailAndPassword, signOut
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
-            getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
+            getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
             collection, query, where, getDocs, writeBatch, serverTimestamp
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
-        // --- KONFIGURASI FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
             authDomain: "database-jaganetwork.firebaseapp.com",
             projectId: "database-jaganetwork",
             storageBucket: "database-jaganetwork.firebasestorage.app",
             messagingSenderId: "912989992875",
-            appId: "1:912989992875:web:8c6cda77171889e1e644ee",
-            measurementId: "G-6D9L4WXKMY"
+            appId: "1:912989992875:web:8c6cda77171889e1e644ee"
         };
     
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
     
-        // --- STATE APLIKASI ---
         let userIsLoggedIn = false;
         let appListenersAttached = false;
-        let currentTab = 'dashboard';
-        let allCustomers = [];
-        let allPackages = [];
-        let allInvoices = [];
+        let allCustomers = [], allPackages = [], allInvoices = [];
         let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
-        
         let deleteCallback = null;
-        let isLoginMode = true;
-        
-        // --- DOM ELEMENTS ---
-        const authContainer = document.getElementById('auth-container');
-        const appContainer = document.getElementById('app-container');
         
         const dataContainerPath = "jaganetwork_data/shared_workspace";
+        const getCollectionRef = (name) => collection(db, dataContainerPath, name);
 
-        function getCollectionRef(collectionName) {
-            return collection(db, dataContainerPath, collectionName);
-        }
-
-        function getDocRef(collectionName, docId) {
-            return doc(db, dataContainerPath, collectionName, docId);
-        }
-
-        // Pelanggan
         function loadCustomers() {
-            const customersCol = getCollectionRef('customers');
+            const q = query(getCollectionRef('customers'));
             if (unsubscribeCustomers) unsubscribeCustomers();
-            unsubscribeCustomers = onSnapshot(customersCol, (snapshot) => {
+            unsubscribeCustomers = onSnapshot(q, (snapshot) => {
                 allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderCustomers(); renderInvoices(); renderLaporan();
+                renderCustomers(); 
+                populatePelangganFilter();
             });
         }
         async function saveCustomer(data) {
             try {
                 const customerData = { 
-                    nama: data.nama, 
-                    alamat: data.alamat, 
-                    hp: data.hp, 
-                    paketId: data.paketId,
-                    joinDate: data.joinDate
+                    nama: data.nama, alamat: data.alamat, hp: data.hp, 
+                    paketId: data.paketId, joinDate: data.joinDate
                 };
                 if (data.id) {
-                    await setDoc(getDocRef('customers', data.id), customerData, { merge: true });
+                    await setDoc(doc(db, dataContainerPath, 'customers', data.id), customerData, { merge: true });
                     showToast("Data pelanggan berhasil diperbarui.");
                 } else {
-                    const newCustomerRef = await addDoc(getCollectionRef('customers'), customerData);
-                    showToast("Pelanggan baru berhasil ditambahkan.");
-                    if (data.createProrate) {
-                        await generateProratedInvoice(newCustomerRef.id, customerData);
-                    }
+                    await addDoc(getCollectionRef('customers'), customerData);
+                    showToast("Pelanggan baru berhasil ditambahkan. Gunakan 'Generate Prorate' untuk tagihan pertama.");
                 }
                 closeModal(document.getElementById('modal-pelanggan'));
-            } catch (error) { console.error("Error saving customer: ", error); showToast("Gagal menyimpan data pelanggan.", "error"); }
+            } catch (error) { console.error("Error saving customer:", error); showToast("Gagal menyimpan data.", "error"); }
         }
         async function deleteCustomer(id) {
+            const q = query(getCollectionRef('invoices'), where("pelangganId", "==", id));
+            if (!(await getDocs(q)).empty) return showToast("Pelanggan tidak bisa dihapus karena memiliki tagihan.", "error");
             try {
-                await deleteDoc(getDocRef('customers', id));
+                await deleteDoc(doc(db, dataContainerPath, 'customers', id));
                 showToast("Data pelanggan berhasil dihapus.");
-            } catch (e) { console.error("Error deleting customer: ", e); showToast("Gagal menghapus data pelanggan.", "error"); }
+            } catch (e) { console.error("Error deleting customer:", e); showToast("Gagal menghapus data.", "error"); }
         }
         
-        // Paket
         function loadPackages() {
-            const packagesCol = getCollectionRef('packages');
             if (unsubscribePackages) unsubscribePackages();
-            unsubscribePackages = onSnapshot(packagesCol, (snapshot) => {
+            unsubscribePackages = onSnapshot(query(getCollectionRef('packages')), (snapshot) => {
                 allPackages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPackages(); renderCustomers(); populatePaketOptions();
+                renderPackages();
             });
         }
         async function savePackage(data) {
             try {
                 const pkgData = { 
-                    nama: data.nama, 
-                    kecepatan: data.kecepatan, 
-                    harga: Number(data.harga),
-                    hargaProrate: Number(data.hargaProrate) || 0
+                    nama: data.nama, kecepatan: data.kecepatan, 
+                    harga: Number(data.harga), hargaProrate: Number(data.hargaProrate) || 0
                 };
                 if (data.id) {
-                    await setDoc(getDocRef('packages', data.id), pkgData);
+                    await setDoc(doc(db, dataContainerPath, 'packages', data.id), pkgData);
                     showToast("Data paket berhasil diperbarui.");
                 } else {
                     await addDoc(getCollectionRef('packages'), pkgData);
                     showToast("Paket baru berhasil ditambahkan.");
                 }
                 closeModal(document.getElementById('modal-paket'));
-            } catch (error) { console.error("Error saving package: ", error); showToast("Gagal menyimpan data paket.", "error"); }
+            } catch (error) { console.error("Error saving package:", error); showToast("Gagal menyimpan data.", "error"); }
         }
         async function deletePackage(id) {
-            const usedByCustomer = allCustomers.some(c => c.paketId === id);
-            if (usedByCustomer) { showToast("Paket tidak bisa dihapus karena masih digunakan oleh pelanggan."); return; }
+            if (allCustomers.some(c => c.paketId === id)) return showToast("Paket tidak bisa dihapus, masih digunakan pelanggan.", "error");
             try {
-                await deleteDoc(getDocRef('packages', id));
+                await deleteDoc(doc(db, dataContainerPath, 'packages', id));
                 showToast("Data paket berhasil dihapus.");
-            } catch (e) { console.error("Error deleting package: ", e); showToast("Gagal menghapus data paket.", "error"); }
+            } catch (e) { console.error("Error deleting package:", e); showToast("Gagal menghapus data.", "error"); }
         }
 
-        // Tagihan
         function loadInvoices() {
-            const invoicesCol = getCollectionRef('invoices');
             if (unsubscribeInvoices) unsubscribeInvoices();
-            unsubscribeInvoices = onSnapshot(invoicesCol, (snapshot) => {
+            unsubscribeInvoices = onSnapshot(query(getCollectionRef('invoices')), (snapshot) => {
                 allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderInvoices(); renderLaporan();
+                renderInvoices(); renderLaporan(); updateDashboard();
             });
         }
+        
+        // --- LOGIKA BARU GENERATE TAGIHAN ---
+        function getBillingPeriodText(invoice, customer) {
+            const endDate = new Date(invoice.periode + 'T00:00:00');
+            let startDate;
+            if (invoice.isProrated && customer?.joinDate) {
+                startDate = new Date(customer.joinDate + 'T00:00:00');
+            } else {
+                startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 8);
+            }
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return `${startDate.toLocaleDateString('id-ID', options)} - ${endDate.toLocaleDateString('id-ID', options)}`;
+        }
+
         async function generateInvoices() {
-            const startDate = new Date(document.getElementById('filter-tanggal-awal').value);
-            const month = startDate.getMonth();
-            const year = startDate.getFullYear();
-            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
+            const customerId = document.getElementById('pelanggan-filter').value;
+            const targetCustomers = customerId === 'semua' ? allCustomers : allCustomers.filter(c => c.id === customerId);
 
-            if (allCustomers.length === 0) { showToast("Tidak ada pelanggan untuk dibuatkan tagihan."); return; }
+            if (!targetCustomers.length) return showToast("Tidak ada pelanggan yang dipilih.", "error");
+            if (!confirm(`Generate tagihan bulanan untuk ${targetCustomers.length} pelanggan?\nIni untuk pembayaran periode berikutnya.`)) return;
             
+            showToast("Memeriksa dan membuat tagihan bulanan...", "info");
             const batch = writeBatch(db);
-            let generatedCount = 0;
-            const invoicesColRef = getCollectionRef('invoices');
+            let generatedCount = 0, skippedCount = 0;
 
-            for (const customer of allCustomers) {
+            for (const customer of targetCustomers) {
                 const pkg = allPackages.find(p => p.id === customer.paketId);
-                if (!pkg) continue;
+                if (!pkg) { skippedCount++; continue; }
 
-                const q = query(invoicesColRef, 
-                    where("pelangganId", "==", customer.id),
-                    where("periode", "==", periodeDate)
-                );
+                const lastInvoice = allInvoices.filter(inv => inv.pelangganId === customer.id)
+                    .sort((a, b) => new Date(b.periode) - new Date(a.periode))[0];
+                
+                if (!lastInvoice) { skippedCount++; continue; }
 
-                const existingInvoice = await getDocs(q);
-                if (existingInvoice.empty) {
-                    const newInvoiceRef = doc(invoicesColRef);
-                    batch.set(newInvoiceRef, {
-                        pelangganId: customer.id, jumlah: pkg.harga, periode: periodeDate, status: 'belum lunas', createdAt: serverTimestamp()
+                const lastPeriodEndDate = new Date(lastInvoice.periode);
+                const nextPeriodEndDate = new Date(lastPeriodEndDate.getFullYear(), lastPeriodEndDate.getMonth() + 1, 7);
+                const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
+                
+                const alreadyExists = allInvoices.some(inv => inv.pelangganId === customer.id && inv.periode === nextPeriodString);
+
+                if (!alreadyExists) {
+                    batch.set(doc(getCollectionRef('invoices')), {
+                        pelangganId: customer.id, jumlah: pkg.harga, periode: nextPeriodString,
+                        status: 'belum lunas', createdAt: serverTimestamp(), isProrated: false
                     });
                     generatedCount++;
                 }
             }
-            if (generatedCount > 0) {
-                await batch.commit(); showToast(`${generatedCount} tagihan reguler berhasil digenerate.`);
-            } else { showToast("Semua tagihan reguler untuk periode ini sudah ada."); }
-        }
 
-        async function generateProratedInvoice(customerId, customerData) {
-            const pkg = allPackages.find(p => p.id === customerData.paketId);
-            if (!pkg) {
-                showToast("Paket tidak ditemukan untuk perhitungan prorata.", "error");
-                return;
-            }
-
-            const dateParts = customerData.joinDate.split('-').map(Number);
-            const joinDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-            const year = joinDate.getFullYear();
-            const month = joinDate.getMonth();
-            
-            let proratedAmount = 0;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysOfService = daysInMonth - joinDate.getDate() + 1;
-             
-            if (daysOfService <= 0) return;
-
-            if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                proratedAmount = pkg.hargaProrate * daysOfService;
-            } else {
-                const dailyRate = pkg.harga / daysInMonth;
-                proratedAmount = Math.round(dailyRate * daysOfService);
-            }
-
-            const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
-
-            try {
-                await addDoc(getCollectionRef('invoices'), {
-                    pelangganId: customerId,
-                    jumlah: proratedAmount,
-                    periode: periodeDate,
-                    status: 'belum lunas',
-                    createdAt: serverTimestamp(),
-                    isProrated: true
-                });
-                showToast(`Tagihan prorata sebesar ${formatRupiah(proratedAmount)} berhasil dibuat.`);
-            } catch (error) {
-                console.error("Error generating prorated invoice: ", error);
-                showToast("Gagal membuat tagihan prorata.", "error");
-            }
+            if (generatedCount > 0) await batch.commit();
+            showToast(generatedCount > 0 ? `${generatedCount} tagihan bulanan baru digenerate.` : "Semua tagihan bulanan sudah ada.");
+            if (skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (mungkin belum punya tagihan awal).`, 'info');
         }
         
-        async function generateProrateInvoicesForAll() {
-            if (!confirm("Anda yakin ingin generate tagihan prorata untuk semua pelanggan baru yang belum ditagih?")) {
-                return;
-            }
+        async function generateProrateInvoices() {
+            const customerId = document.getElementById('pelanggan-filter').value;
+            const targetCustomers = customerId === 'semua' ? allCustomers : allCustomers.filter(c => c.id === customerId);
+
+            if (!targetCustomers.length) return showToast("Tidak ada pelanggan yang dipilih.", "error");
+            if (!confirm(`Generate tagihan prorata untuk ${targetCustomers.length} pelanggan?\nHanya untuk yang belum pernah ditagih.`)) return;
+            
             showToast("Memeriksa pelanggan baru...", "info");
-
             const batch = writeBatch(db);
-            let generatedCount = 0;
-            const invoicesColRef = getCollectionRef('invoices');
+            let generatedCount = 0, skippedCount = 0;
 
-            for (const customer of allCustomers) {
-                if (!customer.joinDate) continue;
-
-                const joinDate = new Date(customer.joinDate + "T00:00:00");
-                const year = joinDate.getFullYear();
-                const month = joinDate.getMonth();
-                const periodeDate = new Date(year, month, 15).toISOString().split('T')[0];
-
-                const q = query(invoicesColRef,
-                    where("pelangganId", "==", customer.id),
-                    where("periode", "==", periodeDate)
-                );
-                const existingInvoice = await getDocs(q);
-
-                if (existingInvoice.empty) {
-                    const pkg = allPackages.find(p => p.id === customer.paketId);
-                    if (!pkg) continue;
-
-                    let proratedAmount = 0;
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const daysOfService = daysInMonth - joinDate.getDate() + 1;
-                    
-                    if (daysOfService <= 0) continue;
-
-                    if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                        proratedAmount = pkg.hargaProrate * daysOfService;
-                    } else {
-                        const dailyRate = pkg.harga / daysInMonth;
-                        proratedAmount = Math.round(dailyRate * daysOfService);
-                    }
-
-                    const newInvoiceRef = doc(invoicesColRef);
-                    batch.set(newInvoiceRef, {
-                        pelangganId: customer.id,
-                        jumlah: proratedAmount,
-                        periode: periodeDate,
-                        status: 'belum lunas',
-                        createdAt: serverTimestamp(),
-                        isProrated: true
-                    });
-                    generatedCount++;
+            for (const customer of targetCustomers) {
+                if (!customer.joinDate || allInvoices.some(inv => inv.pelangganId === customer.id)) {
+                    skippedCount++; continue;
                 }
+
+                const pkg = allPackages.find(p => p.id === customer.paketId);
+                if (!pkg) { skippedCount++; continue; }
+
+                const joinDate = new Date(customer.joinDate + 'T00:00:00');
+                const joinDay = joinDate.getDate();
+                
+                let endDateProrate = new Date(joinDate.getFullYear(), joinDate.getMonth() + (joinDay > 7 ? 1 : 0), 7);
+                const daysOfService = Math.round((endDateProrate - joinDate) / (1000 * 60 * 60 * 24)) + 1;
+
+                if (daysOfService <= 0) { skippedCount++; continue; }
+                
+                const dailyProratePrice = pkg.hargaProrate > 0 ? pkg.hargaProrate : (pkg.harga / 30);
+                const proratedAmount = Math.round(dailyProratePrice * daysOfService);
+                
+                batch.set(doc(getCollectionRef('invoices')), {
+                    pelangganId: customer.id, jumlah: proratedAmount, periode: endDateProrate.toISOString().split('T')[0],
+                    status: 'belum lunas', createdAt: serverTimestamp(), isProrated: true
+                });
+                generatedCount++;
             }
 
-            if (generatedCount > 0) {
-                await batch.commit();
-                showToast(`${generatedCount} tagihan prorata berhasil digenerate.`);
-            } else {
-                showToast("Tidak ada pelanggan baru yang memerlukan tagihan prorata.");
-            }
+            if (generatedCount > 0) await batch.commit();
+            showToast(generatedCount > 0 ? `${generatedCount} tagihan prorata berhasil digenerate.` : "Tidak ada pelanggan baru untuk ditagih.");
+            if(skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (sudah memiliki tagihan).`, 'info');
         }
 
         async function updateInvoiceStatus(id, newStatus) {
             try {
-                await updateDoc(getDocRef('invoices', id), { status: newStatus });
+                await updateDoc(doc(db, dataContainerPath, 'invoices', id), { status: newStatus });
                 showToast("Status tagihan berhasil diperbarui.");
             } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
         }
 
-        // --- AUTHENTICATION & APP FLOW ---
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                showApp(user);
-            } else {
-                showAuth();
-            }
-        });
-
+        onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
         function showApp(user) {
-            authContainer.classList.add('hidden');
-            appContainer.classList.add('flex');
-            appContainer.classList.remove('hidden');
+            document.getElementById('auth-container').classList.add('hidden');
+            const appEl = document.getElementById('app-container');
+            appEl.classList.remove('hidden');
+            appEl.classList.add('flex');
             document.getElementById('user-email').textContent = user.email;
-            initApp();
+            if (!userIsLoggedIn) {
+                userIsLoggedIn = true;
+                initApp();
+            }
         }
-
         function showAuth() {
-            authContainer.classList.remove('hidden');
-            appContainer.classList.remove('flex');
-            appContainer.classList.add('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+            const appEl = document.getElementById('app-container');
+            appEl.classList.add('hidden');
+            appEl.classList.remove('flex');
+            userIsLoggedIn = false;
+            appListenersAttached = false;
             if (unsubscribeCustomers) unsubscribeCustomers();
             if (unsubscribePackages) unsubscribePackages();
             if (unsubscribeInvoices) unsubscribeInvoices();
-            userIsLoggedIn = false;
-            appListenersAttached = false;
         }
+        function initApp() { setupAppListeners(); loadData(); populateLaporanDateFilters(); switchTab('dashboard'); }
+        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); }
 
-        function initApp() {
-            if (!userIsLoggedIn) {
-                userIsLoggedIn = true;
-                setupAppListeners();
-                populateDateFilters();
-                populateLaporanDateFilters();
-                loadData();
-                switchTab('dashboard');
-            }
-        }
-
-        function loadData() {
-            loadCustomers();
-            loadPackages();
-            loadInvoices();
-        }
-
-        // --- UI FUNCTIONS ---
         function switchTab(tabId) {
-            currentTab = tabId;
-            document.querySelectorAll('.tab-content').forEach(div => div.classList.add('hidden'));
-            document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('tab-active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-active'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('tab-active');
         }
         function openModal(modal) { modal.style.display = 'flex'; }
         function closeModal(modal) { modal.style.display = 'none'; }
         function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            toast.className = 'fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-all duration-300'; // reset classes
-            if (type === 'error') {
-                toast.classList.add('bg-red-600');
-            } else if (type === 'info') {
-                toast.classList.add('bg-blue-600');
-            } else {
-                toast.classList.add('bg-gray-800');
-            }
-            toastMessage.textContent = message;
+            const toast = document.getElementById('toast'), msg = document.getElementById('toast-message');
+            toast.className = 'fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-all duration-300';
+            const typeClasses = { error: 'bg-red-600', info: 'bg-blue-600' };
+            toast.classList.add(typeClasses[type] || 'bg-gray-800');
+            msg.textContent = message;
             toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
-        function formatRupiah(angka) { 
-            if (!angka) return '-';
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka); 
-        }
+        const formatRupiah = (angka) => !angka ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
-        // --- RENDER FUNCTIONS ---
         function renderCustomers() {
             const tbody = document.getElementById('pelanggan-table-body');
-            tbody.innerHTML = '';
-            if (allCustomers.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Belum ada data pelanggan.</td></tr>`; return; }
-            allCustomers.sort((a,b) => (a.nama.toLowerCase() > b.nama.toLowerCase()) ? 1 : -1).forEach(customer => {
-                const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A' };
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${customer.alamat}</td><td class="p-4">${customer.hp}</td><td class="p-4">${pkg.nama}</td><td class="p-4 flex gap-2"><button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${customer.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${customer.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
-                tbody.appendChild(tr);
-            });
-            lucide.createIcons(); updateDashboard();
+            tbody.innerHTML = !allCustomers.length ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada pelanggan.</td></tr>` : 
+                allCustomers.map(c => {
+                    const pkg = allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${c.nama}</td><td class="p-4">${c.alamat}</td><td class="p-4">${c.hp}</td>
+                        <td class="p-4">${pkg.nama}</td>
+                        <td class="p-4 flex gap-2">
+                            <button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${c.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${c.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </td></tr>`;
+                }).join('');
+            lucide.createIcons();
         }
         function renderPackages() {
             const tbody = document.getElementById('paket-table-body');
-            tbody.innerHTML = '';
-            if (allPackages.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Belum ada data paket.</td></tr>`; return; }
-            allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4">${pkg.nama}</td><td class="p-4">${pkg.kecepatan}</td><td class="p-4">${formatRupiah(pkg.harga)}</td><td class="p-4">${formatRupiah(pkg.hargaProrate)}</td><td class="p-4 flex gap-2"><button class="btn-edit-paket text-blue-600 hover:text-blue-800" data-id="${pkg.id}"><i data-lucide="edit" class="w-5 h-5"></i></button><button class="btn-delete-paket text-red-600 hover:text-red-800" data-id="${pkg.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>`;
-                tbody.appendChild(tr);
-            });
+            tbody.innerHTML = !allPackages.length ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada paket.</td></tr>` : 
+                allPackages.map(p => `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">${p.nama}</td><td class="p-4">${p.kecepatan}</td>
+                    <td class="p-4">${formatRupiah(p.harga)}</td><td class="p-4">${formatRupiah(p.hargaProrate)}</td>
+                    <td class="p-4 flex gap-2">
+                        <button class="btn-edit-paket text-blue-600 hover:text-blue-800" data-id="${p.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                        <button class="btn-delete-paket text-red-600 hover:text-red-800" data-id="${p.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </td></tr>`).join('');
             lucide.createIcons();
         }
         function renderInvoices() {
             const tbody = document.getElementById('tagihan-table-body');
-            tbody.innerHTML = '';
-            
-            const startDate = document.getElementById('filter-tanggal-awal').value;
-            const endDate = document.getElementById('filter-tanggal-akhir').value;
-            const selectedStatus = document.getElementById('filter-status').value;
-
-            if (!startDate || !endDate) {
-                 tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Silakan tentukan rentang tanggal.</td></tr>`;
-                 return;
-            }
-
-            const filteredInvoices = allInvoices.filter(inv => {
-                return inv.periode >= startDate && inv.periode <= endDate && 
-                       (selectedStatus === 'semua' || inv.status === selectedStatus);
-            });
-
-            if (filteredInvoices.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Tidak ada data tagihan untuk periode ini.</td></tr>`; return; }
-            filteredInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
-                const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
-                const statusClass = invoice.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                const buttonAction = invoice.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600" data-id="${invoice.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
-                const tr = document.createElement('tr');
-                tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)} ${invoice.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td><td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${invoice.status}</span></td><td class="p-4">${buttonAction}</td>`;
-                tbody.appendChild(tr);
-            });
-            updateDashboard();
+            if (!allInvoices.length) { tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada tagihan.</td></tr>`; return; }
+            tbody.innerHTML = [...allInvoices].sort((a,b) => b.periode.localeCompare(a.periode))
+                .map(inv => {
+                    const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                    const statusClass = inv.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const actionBtn = inv.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600" data-id="${inv.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${customer.nama}</td><td class="p-4">${getBillingPeriodText(inv, customer)}</td>
+                        <td class="p-4">${formatRupiah(inv.jumlah)} ${inv.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td>
+                        <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${inv.status}</span></td>
+                        <td class="p-4">${actionBtn}</td></tr>`;
+                }).join('');
+            lucide.createIcons();
         }
         function renderLaporan() {
+            const bulan = document.getElementById('laporan-filter-bulan').value;
+            const tahun = document.getElementById('laporan-filter-tahun').value;
+            const filtered = allInvoices.filter(inv => { const p = new Date(inv.periode); return p.getMonth() == bulan && p.getFullYear() == tahun; });
+            const lunas = filtered.filter(inv => inv.status === 'lunas');
+            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(lunas.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(filtered.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-transaksi-lunas').textContent = lunas.length;
+            document.getElementById('laporan-tagihan-tertunggak').textContent = filtered.filter(inv => inv.status === 'belum lunas').length;
             const tbody = document.getElementById('laporan-table-body');
-            const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-            const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-            tbody.innerHTML = '';
-            const selectedMonth = parseInt(laporanFilterBulan.value); const selectedYear = parseInt(laporanFilterTahun.value);
-            const filteredInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
-            const lunasInvoices = filteredInvoices.filter(inv => inv.status === 'lunas');
-            const totalPemasukan = lunasInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
-            const potensiPemasukan = filteredInvoices.reduce((sum, inv) => sum + inv.jumlah, 0);
-            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(totalPemasukan);
-            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(potensiPemasukan);
-            document.getElementById('laporan-transaksi-lunas').textContent = lunasInvoices.length;
-            document.getElementById('laporan-tagihan-tertunggak').textContent = filteredInvoices.filter(inv => inv.status === 'belum lunas').length;
-            if (lunasInvoices.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="text-center p-8 text-gray-500">Tidak ada transaksi lunas untuk periode ini.</td></tr>`; return; }
-            lunasInvoices.sort((a,b) => (a.createdAt?.toDate() || 0) - (b.createdAt?.toDate() || 0)).forEach(invoice => {
-                const customer = allCustomers.find(c => c.id === invoice.pelangganId) || { nama: 'Pelanggan Dihapus' };
-                const tr = document.createElement('tr'); tr.className = 'border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="p-4">${customer.nama}</td><td class="p-4">${new Date(invoice.periode + "T00:00:00").toLocaleString('id-ID', { month: 'long', year: 'numeric' })}</td><td class="p-4">${formatRupiah(invoice.jumlah)}</td>`;
-                tbody.appendChild(tr);
-            });
+            tbody.innerHTML = !lunas.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada transaksi lunas.</td></tr>` : 
+                lunas.map(inv => {
+                    const c = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                    return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${getBillingPeriodText(inv, c)}</td><td class="p-4">${formatRupiah(inv.jumlah)}</td></tr>`;
+                }).join('');
         }
         function updateDashboard() {
             document.getElementById('total-pelanggan').textContent = allCustomers.length;
-            const selectedMonth = new Date().getMonth(); const selectedYear = new Date().getFullYear();
-            const currentMonthInvoices = allInvoices.filter(inv => { const periode = new Date(inv.periode + "T00:00:00"); return periode.getMonth() === selectedMonth && periode.getFullYear() === selectedYear; });
-            const totalPemasukan = currentMonthInvoices.filter(inv => inv.status === 'lunas').reduce((sum, inv) => sum + inv.jumlah, 0);
-            document.getElementById('total-pemasukan').textContent = formatRupiah(totalPemasukan);
-            document.getElementById('tagihan-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'lunas').length;
-            document.getElementById('tagihan-belum-lunas').textContent = currentMonthInvoices.filter(inv => inv.status === 'belum lunas').length;
-        }
-    
-        function populatePaketOptions(selectedId = null) {
-            const select = document.getElementById('paket-pelanggan'); select.innerHTML = '<option value="">-- Pilih Paket --</option>';
-            allPackages.sort((a,b) => a.harga - b.harga).forEach(pkg => { const option = document.createElement('option'); option.value = pkg.id; option.textContent = `${pkg.nama} (${formatRupiah(pkg.harga)})`; if(pkg.id === selectedId) option.selected = true; select.appendChild(option); });
-        }
-        
-        function populateDateFilters() {
-            const filterAwal = document.getElementById('filter-tanggal-awal');
-            const filterAkhir = document.getElementById('filter-tanggal-akhir');
             const today = new Date();
-            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-            filterAwal.value = firstDayOfMonth.toISOString().split('T')[0];
-            filterAkhir.value = lastDayOfMonth.toISOString().split('T')[0];
-        }
-
-        function populateLaporanDateFilters() {
-            const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-            const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-            const currentYear = new Date().getFullYear(); const currentMonth = new Date().getMonth();
-            months.forEach((month, index) => { const option = document.createElement('option'); option.value = index; option.textContent = month; if(index === currentMonth) option.selected = true; laporanFilterBulan.appendChild(option.cloneNode(true)); });
-            for (let i = currentYear - 2; i <= currentYear + 1; i++) { const option = document.createElement('option'); option.value = i; option.textContent = i; if (i === currentYear) option.selected = true; laporanFilterTahun.appendChild(option.cloneNode(true)); }
-        }
-    
-        // --- EVENT LISTENERS ---
-        function setupAuthListeners() {
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const toggleAuthMode = document.getElementById('toggle-auth-mode');
-            const authTitle = document.getElementById('auth-title');
-            const authError = document.getElementById('auth-error');
-    
-            toggleAuthMode.addEventListener('click', (e) => { e.preventDefault(); isLoginMode = !isLoginMode; authError.textContent = ''; if (isLoginMode) { loginForm.classList.remove('hidden'); registerForm.classList.add('hidden'); authTitle.textContent = 'Login ke Akun Anda'; toggleAuthMode.textContent = 'Belum punya akun? Daftar sekarang'; } else { loginForm.classList.add('hidden'); registerForm.classList.remove('hidden'); authTitle.textContent = 'Buat Akun Baru'; toggleAuthMode.textContent = 'Sudah punya akun? Login'; } });
-            loginForm.addEventListener('submit', (e) => { 
-                e.preventDefault();
-                const email = document.getElementById('login-email').value; 
-                const password = document.getElementById('login-password').value; 
-                signInWithEmailAndPassword(auth, email, password)
-                    .catch((error) => { authError.textContent = "Email atau password salah."; console.error("Login error:", error.message); }); 
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const monthlyInvoices = allInvoices.filter(inv => {
+                const pDate = new Date(inv.periode);
+                return pDate >= currentMonthStart && pDate <= currentMonthEnd;
             });
-            registerForm.addEventListener('submit', (e) => { 
+            const paidThisMonth = monthlyInvoices.filter(inv => inv.status === 'lunas');
+            document.getElementById('total-pemasukan').textContent = formatRupiah(paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
+            document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
+        }
+    
+        function populatePelangganFilter() {
+            const select = document.getElementById('pelanggan-filter');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="semua">Semua Pelanggan</option>';
+            allCustomers.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nama}</option>`;
+            });
+            select.value = currentVal;
+        }
+        function populateLaporanDateFilters() {
+            const bulan = document.getElementById('laporan-filter-bulan');
+            const tahun = document.getElementById('laporan-filter-tahun');
+            const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            const currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
+            bulan.innerHTML = months.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            let yearOptions = '';
+            for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
+            tahun.innerHTML = yearOptions;
+        }
+    
+        function setupAuthListeners() {
+            let isLoginMode = true;
+            document.getElementById('toggle-auth-mode').addEventListener('click', (e) => {
+                e.preventDefault(); isLoginMode = !isLoginMode;
+                document.getElementById('auth-error').textContent = '';
+                document.getElementById('login-form').classList.toggle('hidden', !isLoginMode);
+                document.getElementById('register-form').classList.toggle('hidden', isLoginMode);
+                document.getElementById('auth-title').textContent = isLoginMode ? 'Login ke Akun Anda' : 'Buat Akun Baru';
+                e.target.textContent = isLoginMode ? 'Belum punya akun? Daftar sekarang' : 'Sudah punya akun? Login';
+            });
+            document.getElementById('login-form').addEventListener('submit', (e) => { 
                 e.preventDefault();
-                const email = document.getElementById('register-email').value; 
-                const password = document.getElementById('register-password').value; 
-                createUserWithEmailAndPassword(auth, email, password)
-                    .catch((error) => {
-                        console.error("Register error:", error.code, error.message);
-                        let pesanError = "Terjadi kesalahan saat mendaftar.";
-                        if (error.code === 'auth/email-already-in-use') {
-                            pesanError = "Email ini sudah terdaftar. Silakan login atau gunakan email lain.";
-                        } else if (error.code === 'auth/weak-password') {
-                            pesanError = "Password terlalu lemah. Gunakan minimal 6 karakter.";
-                        } else if (error.code === 'auth/invalid-email') {
-                            pesanError = "Format email yang Anda masukkan tidak valid.";
-                        }
-                        const authError = document.getElementById('auth-error');
-                        authError.textContent = pesanError;
-                    });
+                const email = document.getElementById('login-email').value, pass = document.getElementById('login-password').value;
+                signInWithEmailAndPassword(auth, email, pass).catch(err => document.getElementById('auth-error').textContent = "Email atau password salah.");
+            });
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('register-email').value, pass = document.getElementById('register-password').value;
+                createUserWithEmailAndPassword(auth, email, pass).catch(err => {
+                    let msg = "Terjadi kesalahan.";
+                    if (err.code === 'auth/email-already-in-use') msg = "Email ini sudah terdaftar.";
+                    else if (err.code === 'auth/weak-password') msg = "Password minimal 6 karakter.";
+                    else if (err.code === 'auth/invalid-email') msg = "Format email tidak valid.";
+                    document.getElementById('auth-error').textContent = msg;
                 });
+            });
         }
     
         function setupAppListeners() {
-            if (appListenersAttached) return; 
-    
-            const btnLogout = document.getElementById('btn-logout');
-            const tabItems = document.querySelectorAll('.tab-item');
-            const modalPelanggan = document.getElementById('modal-pelanggan');
-            const formPelanggan = document.getElementById('form-pelanggan');
-            const btnAddPelanggan = document.getElementById('btn-add-pelanggan');
-            const btnCancelPelanggan = document.getElementById('btn-cancel-pelanggan');
-            const modalPaket = document.getElementById('modal-paket');
-            const formPaket = document.getElementById('form-paket');
-            const btnAddPaket = document.getElementById('btn-add-paket');
-            const btnCancelPaket = document.getElementById('btn-cancel-paket');
-            const modalKonfirmasi = document.getElementById('modal-konfirmasi');
-            const btnCancelHapus = document.getElementById('btn-cancel-hapus');
-            const btnConfirmHapus = document.getElementById('btn-confirm-hapus');
-            const konfirmasiPesan = document.getElementById('konfirmasi-pesan');
-            const btnGenerateTagihan = document.getElementById('btn-generate-tagihan');
-            const btnGenerateProrate = document.getElementById('btn-generate-prorate');
-            const filterTanggalAwal = document.getElementById('filter-tanggal-awal');
-            const filterTanggalAkhir = document.getElementById('filter-tanggal-akhir');
-            const filterStatus = document.getElementById('filter-status');
-            const laporanFilterBulan = document.getElementById('laporan-filter-bulan');
-            const laporanFilterTahun = document.getElementById('laporan-filter-tahun');
-            const prorateContainer = document.getElementById('prorate-container');
-    
-            btnLogout.addEventListener('click', () => { signOut(auth); });
-            tabItems.forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); switchTab(item.id.split('-')[1]); }); });
-            
-            btnAddPelanggan.addEventListener('click', () => { 
-                formPelanggan.reset(); 
-                document.getElementById('pelanggan-id').value = ''; 
-                document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
+            if (appListenersAttached) return;
+            document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+            document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.id.split('-')[1]); }));
+            document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
+                document.getElementById('form-pelanggan').reset(); 
+                document.getElementById('pelanggan-id').value = '';
                 document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
-                prorateContainer.classList.remove('hidden');
-                populatePaketOptions(); 
-                openModal(modalPelanggan); 
+                let pkgSelect = document.getElementById('paket-pelanggan');
+                pkgSelect.innerHTML = '<option value="">-- Pilih Paket --</option>' + allPackages.map(p => `<option value="${p.id}">${p.nama}</option>`).join('');
+                document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
+                openModal(document.getElementById('modal-pelanggan')); 
             });
-            btnAddPaket.addEventListener('click', () => { 
-                formPaket.reset(); 
+            document.getElementById('btn-add-paket').addEventListener('click', () => { 
+                document.getElementById('form-paket').reset(); 
                 document.getElementById('paket-id').value = ''; 
                 document.getElementById('modal-paket-title').textContent = 'Tambah Paket Baru'; 
-                openModal(modalPaket); 
+                openModal(document.getElementById('modal-paket')); 
             });
-            
-            btnCancelPelanggan.addEventListener('click', () => closeModal(modalPelanggan));
-            btnCancelPaket.addEventListener('click', () => closeModal(modalPaket));
-            btnCancelHapus.addEventListener('click', () => { deleteCallback = null; closeModal(modalKonfirmasi); });
-            
-            formPelanggan.addEventListener('submit', (e) => { 
-                e.preventDefault(); 
-                const data = { 
-                    id: document.getElementById('pelanggan-id').value, 
-                    nama: document.getElementById('nama').value, 
-                    alamat: document.getElementById('alamat').value, 
-                    hp: document.getElementById('hp').value, 
-                    paketId: document.getElementById('paket-pelanggan').value,
-                    joinDate: document.getElementById('join-date').value,
-                    createProrate: document.getElementById('prorate-checkbox').checked
-                }; 
-                saveCustomer(data); 
-            });
-            
-            formPaket.addEventListener('submit', (e) => { 
-                e.preventDefault(); 
-                const data = { 
-                    id: document.getElementById('paket-id').value, 
-                    nama: document.getElementById('nama-paket').value, 
-                    kecepatan: document.getElementById('kecepatan').value, 
-                    harga: document.getElementById('harga').value, 
-                    hargaProrate: document.getElementById('harga-prorate').value 
-                }; 
-                savePackage(data); 
-            });
-            
+            document.getElementById('btn-cancel-pelanggan').addEventListener('click', () => closeModal(document.getElementById('modal-pelanggan')));
+            document.getElementById('btn-cancel-paket').addEventListener('click', () => closeModal(document.getElementById('modal-paket')));
+            document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
+            document.getElementById('form-pelanggan').addEventListener('submit', (e) => { e.preventDefault(); saveCustomer({ id: document.getElementById('pelanggan-id').value, nama: document.getElementById('nama').value, alamat: document.getElementById('alamat').value, hp: document.getElementById('hp').value, paketId: document.getElementById('paket-pelanggan').value, joinDate: document.getElementById('join-date').value }); });
+            document.getElementById('form-paket').addEventListener('submit', (e) => { e.preventDefault(); savePackage({ id: document.getElementById('paket-id').value, nama: document.getElementById('nama-paket').value, kecepatan: document.getElementById('kecepatan').value, harga: document.getElementById('harga').value, hargaProrate: document.getElementById('harga-prorate').value }); });
             document.body.addEventListener('click', (e) => {
-                const target = e.target.closest('button'); if (!target) return;
-                if (target.classList.contains('btn-edit-pelanggan')) { 
-                    const id = target.dataset.id; 
-                    const customer = allCustomers.find(c => c.id === id); 
-                    if (customer) { 
-                        document.getElementById('pelanggan-id').value = customer.id; 
-                        document.getElementById('nama').value = customer.nama; 
-                        document.getElementById('alamat').value = customer.alamat; 
-                        document.getElementById('hp').value = customer.hp; 
-                        document.getElementById('join-date').value = customer.joinDate || '';
-                        prorateContainer.classList.add('hidden'); 
-                        populatePaketOptions(customer.paketId); 
-                        document.getElementById('modal-pelanggan-title').textContent = 'Edit Data Pelanggan'; 
-                        openModal(modalPelanggan); 
-                    } 
-                }
-                if (target.classList.contains('btn-delete-pelanggan')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus pelanggan ini? Semua tagihan terkait TIDAK akan dihapus."; deleteCallback = () => deleteCustomer(id); openModal(modalKonfirmasi); }
-                if (target.classList.contains('btn-edit-paket')) { 
-                    const id = target.dataset.id; 
-                    const pkg = allPackages.find(p => p.id === id); 
-                    if (pkg) { 
-                        document.getElementById('paket-id').value = pkg.id; 
-                        document.getElementById('nama-paket').value = pkg.nama; 
-                        document.getElementById('kecepatan').value = pkg.kecepatan; 
-                        document.getElementById('harga').value = pkg.harga; 
-                        document.getElementById('harga-prorate').value = pkg.hargaProrate || '';
-                        document.getElementById('modal-paket-title').textContent = 'Edit Data Paket'; 
-                        openModal(modalPaket); 
-                    } 
-                }
-                if (target.classList.contains('btn-delete-paket')) { const id = target.dataset.id; konfirmasiPesan.textContent = "Apakah Anda yakin ingin menghapus paket ini? Paket tidak bisa dihapus jika masih digunakan oleh pelanggan."; deleteCallback = () => deletePackage(id); openModal(modalKonfirmasi); }
-                if (target.classList.contains('btn-bayar-tagihan')) { const id = target.dataset.id; updateInvoiceStatus(id, 'lunas'); }
+                const btn = e.target.closest('button'); if (!btn) return;
+                const id = btn.dataset.id;
+                if (btn.classList.contains('btn-edit-pelanggan')) {
+                    const c = allCustomers.find(cust => cust.id === id); if (!c) return;
+                    document.getElementById('pelanggan-id').value = c.id; document.getElementById('nama').value = c.nama; document.getElementById('alamat').value = c.alamat; document.getElementById('hp').value = c.hp; document.getElementById('join-date').value = c.joinDate;
+                    let pkgSelect = document.getElementById('paket-pelanggan');
+                    pkgSelect.innerHTML = allPackages.map(p => `<option value="${p.id}" ${p.id === c.paketId ? 'selected' : ''}>${p.nama}</option>`).join('');
+                    document.getElementById('modal-pelanggan-title').textContent = 'Edit Data Pelanggan'; 
+                    openModal(document.getElementById('modal-pelanggan'));
+                } else if (btn.classList.contains('btn-delete-pelanggan')) {
+                    deleteCallback = () => deleteCustomer(id); document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus pelanggan ini? Tindakan ini tidak dapat dibatalkan."; openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-edit-paket')) {
+                    const p = allPackages.find(pkg => pkg.id === id); if (!p) return;
+                    document.getElementById('paket-id').value = p.id; document.getElementById('nama-paket').value = p.nama; document.getElementById('kecepatan').value = p.kecepatan; document.getElementById('harga').value = p.harga; document.getElementById('harga-prorate').value = p.hargaProrate || '';
+                    document.getElementById('modal-paket-title').textContent = 'Edit Data Paket'; openModal(document.getElementById('modal-paket'));
+                } else if (btn.classList.contains('btn-delete-paket')) {
+                    deleteCallback = () => deletePackage(id); document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus paket ini?"; openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-bayar-tagihan')) { updateInvoiceStatus(id, 'lunas'); }
             });
-    
-            btnConfirmHapus.addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } deleteCallback = null; closeModal(modalKonfirmasi); });
-            btnGenerateTagihan.addEventListener('click', generateInvoices);
-
-            btnGenerateProrate.addEventListener('click', generateProrateInvoicesForAll);
-            filterTanggalAwal.addEventListener('change', renderInvoices); 
-            filterTanggalAkhir.addEventListener('change', renderInvoices); 
-            filterStatus.addEventListener('change', renderInvoices);
-
-            laporanFilterBulan.addEventListener('change', renderLaporan); 
-            laporanFilterTahun.addEventListener('change', renderLaporan);
-    
+            document.getElementById('btn-confirm-hapus').addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } closeModal(document.getElementById('modal-konfirmasi')); });
+            document.getElementById('btn-generate-tagihan').addEventListener('click', generateInvoices);
+            document.getElementById('btn-generate-prorate').addEventListener('click', generateProrateInvoices);
+            document.getElementById('laporan-filter-bulan').addEventListener('change', renderLaporan); 
+            document.getElementById('laporan-filter-tahun').addEventListener('change', renderLaporan);
             appListenersAttached = true;
         }
     
