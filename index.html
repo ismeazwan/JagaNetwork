@@ -16,7 +16,6 @@
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         
-        /* PERUBAHAN: Style untuk sidebar mobile */
         @media (max-width: 768px) {
             .mobile-sidebar {
                 transform: translateX(-100%);
@@ -88,7 +87,6 @@
     <!-- Container Aplikasi Utama -->
     <div id="app-container" class="hidden relative md:flex min-h-screen">
         
-        <!-- PERUBAHAN: Struktur Sidebar diubah untuk mobile -->
         <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden hidden"></div>
         <aside id="sidebar" class="mobile-sidebar fixed top-0 left-0 w-64 h-full bg-white shadow-md flex flex-col z-30 md:relative md:translate-x-0">
             <div class="p-6">
@@ -120,9 +118,7 @@
             </div>
         </aside>
 
-        <!-- Konten Utama -->
         <div class="flex-1 flex flex-col">
-            <!-- PERUBAHAN: Header Mobile dengan Tombol Menu -->
             <header class="md:hidden flex items-center justify-between bg-white shadow-md p-4">
                 <button id="menu-toggle" class="text-gray-600">
                     <i data-lucide="menu" class="w-6 h-6"></i>
@@ -135,7 +131,6 @@
                 <div id="content-dashboard" class="tab-content">
                     <h2 class="text-2xl md:text-3xl font-bold mb-6">Dashboard</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <!-- Card Dashboard -->
                         <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-500">Total Pelanggan</p>
@@ -182,7 +177,6 @@
                             <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Pelanggan
                         </button>
                     </div>
-                    <!-- PERUBAHAN: Wrapper untuk tabel responsif -->
                     <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
                         <table class="w-full text-left min-w-[600px]">
                             <thead>
@@ -504,7 +498,7 @@
             document.getElementById('auth-container').classList.add('hidden');
             const appEl = document.getElementById('app-container');
             appEl.classList.remove('hidden');
-            appEl.classList.add('flex'); // PERUBAHAN: Pastikan flex di desktop
+            appEl.classList.add('flex');
             document.getElementById('user-email').textContent = user.email;
             if (!userIsLoggedIn) { userIsLoggedIn = true; initApp(); }
         }
@@ -527,7 +521,6 @@
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-active'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('tab-active');
-            // PERUBAHAN: Tutup sidebar setelah klik menu di mobile
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             if (sidebar.classList.contains('open')) {
@@ -589,13 +582,36 @@
         }
     
         function setupAuthListeners() {
-            // ... (Fungsi ini tetap sama)
+            let isLoginMode = true;
+            document.getElementById('toggle-auth-mode').addEventListener('click', (e) => {
+                e.preventDefault(); isLoginMode = !isLoginMode;
+                document.getElementById('auth-error').textContent = '';
+                document.getElementById('login-form').classList.toggle('hidden', !isLoginMode);
+                document.getElementById('register-form').classList.toggle('hidden', isLoginMode);
+                document.getElementById('auth-title').textContent = isLoginMode ? 'Login ke Akun Anda' : 'Buat Akun Baru';
+                e.target.textContent = isLoginMode ? 'Belum punya akun? Daftar sekarang' : 'Sudah punya akun? Login';
+            });
+            document.getElementById('login-form').addEventListener('submit', (e) => { 
+                e.preventDefault();
+                const email = document.getElementById('login-email').value, pass = document.getElementById('login-password').value;
+                signInWithEmailAndPassword(auth, email, pass).catch(err => document.getElementById('auth-error').textContent = "Email atau password salah.");
+            });
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('register-email').value, pass = document.getElementById('register-password').value;
+                createUserWithEmailAndPassword(auth, email, pass).catch(err => {
+                    let msg = "Terjadi kesalahan.";
+                    if (err.code === 'auth/email-already-in-use') msg = "Email ini sudah terdaftar.";
+                    else if (err.code === 'auth/weak-password') msg = "Password minimal 6 karakter.";
+                    else if (err.code === 'auth/invalid-email') msg = "Format email tidak valid.";
+                    document.getElementById('auth-error').textContent = msg;
+                });
+            });
         }
     
         function setupAppListeners() {
             if (appListenersAttached) return;
             
-            // PERUBAHAN: Listener untuk menu mobile
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -608,7 +624,6 @@
                 backdrop.classList.add('hidden');
             });
 
-            // Listener lainnya
             document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
             document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.id.split('-')[1]); }));
             document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
