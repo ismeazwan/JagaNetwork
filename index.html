@@ -561,16 +561,15 @@
             
             // PERBAIKAN LOGIKA: Kalkulasi prorata sesuai permintaan
             let proratedAmount = 0;
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysOfService = daysInMonth - joinDate.getDate() + 1;
-             
-            if (daysOfService <= 0) return;
-
             if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                // Gunakan harga prorate sebagai tarif harian
-                proratedAmount = pkg.hargaProrate * daysOfService;
+                // Logika baru: Gunakan harga prorate sebagai BIAYA TETAP (fixed cost).
+                proratedAmount = pkg.hargaProrate;
             } else {
-                // Fallback: Hitung harian dari harga normal jika harga prorate tidak di-set
+                // Fallback: Hitung harian jika harga prorate tetap tidak di-set.
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysOfService = daysInMonth - joinDate.getDate() + 1;
+                if (daysOfService <= 0) return;
+
                 const dailyRate = pkg.harga / daysInMonth;
                 proratedAmount = Math.round(dailyRate * daysOfService);
             }
@@ -623,14 +622,12 @@
 
                     // PERBAIKAN LOGIKA: Kalkulasi prorata sesuai permintaan di sini juga
                     let proratedAmount = 0;
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const daysOfService = daysInMonth - joinDate.getDate() + 1;
-                    
-                    if (daysOfService <= 0) continue;
-
                     if (pkg.hargaProrate && pkg.hargaProrate > 0) {
-                        proratedAmount = pkg.hargaProrate * daysOfService;
+                        proratedAmount = pkg.hargaProrate;
                     } else {
+                        const daysInMonth = new Date(year, month + 1, 0).getDate();
+                        const daysOfService = daysInMonth - joinDate.getDate() + 1;
+                        if (daysOfService <= 0) continue;
                         const dailyRate = pkg.harga / daysInMonth;
                         proratedAmount = Math.round(dailyRate * daysOfService);
                     }
