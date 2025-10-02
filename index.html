@@ -152,7 +152,7 @@
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-500">Tagihan Lunas</p>
+                                <p class="text-sm text-gray-500">Tagihan Lunas Bulan Ini</p>
                                 <p id="tagihan-lunas" class="text-3xl font-bold">0</p>
                             </div>
                              <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
@@ -161,7 +161,7 @@
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
                             <div>
-                                <p class="text-sm text-gray-500">Tagihan Belum Lunas</p>
+                                <p class="text-sm text-gray-500">Total Tagihan Belum Lunas</p>
                                 <p id="tagihan-belum-lunas" class="text-3xl font-bold">0</p>
                             </div>
                              <div class="bg-red-100 text-red-600 p-3 rounded-full">
@@ -654,7 +654,11 @@
 
         async function updateInvoiceStatus(id, newStatus) {
             try {
-                await updateDoc(doc(db, dataContainerPath, 'invoices', id), { status: newStatus });
+                const dataToUpdate = { status: newStatus };
+                if (newStatus === 'lunas') {
+                    dataToUpdate.paidAt = serverTimestamp(); // PERBAIKAN: Tambahkan timestamp pembayaran
+                }
+                await updateDoc(doc(db, dataContainerPath, 'invoices', id), dataToUpdate);
                 showToast("Status tagihan berhasil diperbarui.");
             } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
         }
@@ -761,15 +765,24 @@
         function renderLaporan() {
             const bulan = document.getElementById('laporan-filter-bulan').value;
             const tahun = document.getElementById('laporan-filter-tahun').value;
-            const filtered = allInvoices.filter(inv => { const p = new Date(inv.periode); return p.getMonth() == bulan && p.getFullYear() == tahun; });
-            const lunas = filtered.filter(inv => inv.status === 'lunas');
-            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(lunas.reduce((sum, inv) => sum + inv.jumlah, 0));
-            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(filtered.reduce((sum, inv) => sum + inv.jumlah, 0));
-            document.getElementById('laporan-transaksi-lunas').textContent = lunas.length;
-            document.getElementById('laporan-tagihan-tertunggak').textContent = filtered.filter(inv => inv.status === 'belum lunas').length;
+            // PERBAIKAN: Filter laporan berdasarkan tanggal bayar (paidAt)
+            const lunasDiPeriode = allInvoices.filter(inv => {
+                if (inv.status !== 'lunas' || !inv.paidAt) return false;
+                const paidDate = inv.paidAt.toDate ? inv.paidAt.toDate() : new Date(inv.paidAt.seconds * 1000);
+                return paidDate.getMonth() == bulan && paidDate.getFullYear() == tahun;
+            });
+            const tagihanPeriode = allInvoices.filter(inv => {
+                const p = new Date(inv.periode);
+                return p.getMonth() == bulan && p.getFullYear() == tahun;
+            });
+
+            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(lunasDiPeriode.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(tagihanPeriode.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-transaksi-lunas').textContent = lunasDiPeriode.length;
+            document.getElementById('laporan-tagihan-tertunggak').textContent = tagihanPeriode.filter(inv => inv.status === 'belum lunas').length;
             const tbody = document.getElementById('laporan-table-body');
-            tbody.innerHTML = !lunas.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada transaksi lunas.</td></tr>` : 
-                lunas.map(inv => {
+            tbody.innerHTML = !lunasDiPeriode.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada transaksi lunas pada periode ini.</td></tr>` : 
+                lunasDiPeriode.map(inv => {
                     const c = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
                     return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${getBillingPeriodText(inv, c)}</td><td class="p-4">${formatRupiah(inv.jumlah)}</td></tr>`;
                 }).join('');
@@ -779,14 +792,18 @@
             const today = new Date();
             const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
             const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            const monthlyInvoices = allInvoices.filter(inv => {
-                const pDate = new Date(inv.periode);
-                return pDate >= currentMonthStart && pDate <= currentMonthEnd;
+
+            // PERBAIKAN: Filter pendapatan dan tagihan lunas berdasarkan tanggal bayar
+            const paidThisMonth = allInvoices.filter(inv => {
+                if (inv.status !== 'lunas' || !inv.paidAt) return false;
+                const paidDate = inv.paidAt.toDate ? inv.paidAt.toDate() : new Date(inv.paidAt.seconds * 1000);
+                return paidDate >= currentMonthStart && paidDate <= currentMonthEnd;
             });
-            const paidThisMonth = monthlyInvoices.filter(inv => inv.status === 'lunas');
+            
             document.getElementById('total-pemasukan').textContent = formatRupiah(paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0));
             document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
-            document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
+            // Total tagihan belum lunas adalah semua yg statusnya 'belum lunas'
+            document.getElementById('tagihan-belum-lunas').textContent = allInvoices.filter(inv => inv.status === 'belum lunas').length;
         }
     
         function populatePelangganFilter() {
@@ -856,10 +873,12 @@
                 const year = date.getFullYear();
                 monthLabels.push(`${monthName} ${year}`);
 
+                // PERBAIKAN: Filter pendapatan chart berdasarkan tanggal bayar
                 const monthRevenue = allInvoices
                     .filter(inv => {
-                        const invDate = new Date(inv.periode);
-                        return inv.status === 'lunas' && invDate.getFullYear() === year && invDate.getMonth() === date.getMonth();
+                        if (inv.status !== 'lunas' || !inv.paidAt) return false;
+                        const paidDate = inv.paidAt.toDate ? inv.paidAt.toDate() : new Date(inv.paidAt.seconds * 1000);
+                        return paidDate.getFullYear() === year && paidDate.getMonth() === date.getMonth();
                     })
                     .reduce((sum, inv) => sum + inv.jumlah, 0);
                 revenueData.push(monthRevenue);
