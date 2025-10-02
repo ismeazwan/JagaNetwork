@@ -324,7 +324,7 @@
                 <input type="hidden" id="pelanggan-id">
                 <div class="mb-4">
                     <label for="id-pelanggan-display" class="block text-sm font-medium text-gray-700 mb-1">ID Pelanggan</label>
-                    <input type="text" id="id-pelanggan-display" class="w-full p-2 border rounded-lg bg-gray-100" disabled>
+                    <input type="text" id="id-pelanggan-display" class="w-full p-2 border rounded-lg bg-gray-100" readonly>
                 </div>
                 <div class="mb-4">
                     <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Pelanggan</label>
@@ -425,6 +425,25 @@
         </div>
     </div>
 
+    <div id="modal-verifikasi" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+            <h3 class="text-2xl font-bold mb-6">Verifikasi Pembayaran</h3>
+            <p class="mb-2">Pelanggan: <span id="verifikasi-nama-pelanggan" class="font-semibold"></span></p>
+            <p class="mb-4">Jumlah: <span id="verifikasi-jumlah" class="font-semibold"></span></p>
+            
+            <div class="mb-6">
+                <p class="font-semibold mb-2">Bukti Pembayaran:</p>
+                <a id="verifikasi-link-bukti" href="#" target="_blank" class="text-indigo-600 hover:underline mb-2 block">Lihat Gambar Penuh</a>
+                <img id="verifikasi-gambar-bukti" src="" alt="Bukti Pembayaran" class="w-full h-auto max-h-80 object-contain border rounded-lg">
+            </div>
+
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-tolak-pembayaran" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Tolak</button>
+                <button type="button" id="btn-konfirmasi-pembayaran" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Konfirmasi Pembayaran</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
         <p id="toast-message"></p>
     </div>
@@ -444,7 +463,7 @@
             apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
             authDomain: "database-jaganetwork.firebaseapp.com",
             projectId: "database-jaganetwork",
-            storageBucket: "database-jaganetwork.firebasestorage.app",
+            storageBucket: "database-jaganetwork.appspot.com",
             messagingSenderId: "912989992875",
             appId: "1:912989992875:web:8c6cda77171889e1e644ee"
         };
@@ -458,7 +477,7 @@
         let allCustomers = [], allPackages = [], allInvoices = [];
         let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
         let deleteCallback = null;
-        let isLoginMode = true;
+        let verificationInvoiceId = null;
         
         let lineChartInstance, pieChartInstance;
 
@@ -468,15 +487,11 @@
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
 
-        // --- FUNGSI BARU UNTUK MEMBUAT ID PELANGGAN ---
         function generateUniqueCustomerId() {
             let newId;
             let isUnique = false;
-            // Terus buat ID baru sampai dipastikan unik
             while (!isUnique) {
-                // Buat angka 5 digit acak
                 newId = String(Math.floor(10000 + Math.random() * 90000));
-                // Periksa apakah ID sudah ada di daftar pelanggan
                 if (!allCustomers.some(c => c.customerId === newId)) {
                     isUnique = true;
                 }
@@ -484,7 +499,6 @@
             return newId;
         }
 
-        // ... Sisa kode JavaScript akan sama seperti sebelumnya ...
         function loadCustomers() {
             const q = query(getCollectionRef('customers'));
             if (unsubscribeCustomers) unsubscribeCustomers();
@@ -498,16 +512,13 @@
         async function saveCustomer(data) {
             try {
                 const customerData = { 
-                    nama: data.nama, alamat: data.alamat, hp: data.hp, 
+                    customerId: data.customerId, nama: data.nama, alamat: data.alamat, hp: data.hp, 
                     paketId: data.paketId, joinDate: data.joinDate
                 };
                 if (data.id) {
-                    // Update data pelanggan yang ada
                     await setDoc(doc(db, dataContainerPath, 'customers', data.id), customerData, { merge: true });
                     showToast("Data pelanggan berhasil diperbarui.");
                 } else {
-                    // Tambah pelanggan baru dengan ID Pelanggan
-                    customerData.customerId = data.customerId; // Tambahkan ID ke data yang akan disimpan
                     await addDoc(getCollectionRef('customers'), customerData);
                     showToast("Pelanggan baru berhasil ditambahkan. Gunakan 'Generate Prorate' untuk tagihan pertama.");
                 }
@@ -676,9 +687,13 @@
             if(skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (sudah memiliki tagihan).`, 'info');
         }
 
-        async function updateInvoiceStatus(id, newStatus) {
+        async function updateInvoiceStatus(id, newStatus, clearProof = false) {
             try {
-                await updateDoc(doc(db, dataContainerPath, 'invoices', id), { status: newStatus });
+                const dataToUpdate = { status: newStatus };
+                if (clearProof) {
+                    dataToUpdate.proofOfPaymentURL = deleteField(); // Hapus field jika ditolak
+                }
+                await updateDoc(doc(db, dataContainerPath, 'invoices', id), dataToUpdate);
                 showToast("Status tagihan berhasil diperbarui.");
             } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
         }
@@ -738,7 +753,7 @@
         function renderCustomers() {
             const tbody = document.getElementById('pelanggan-table-body');
             tbody.innerHTML = !allCustomers.length ? `<tr><td colspan="6" class="p-8 text-center text-gray-500">Belum ada pelanggan.</td></tr>` : 
-                allCustomers.map(c => {
+                allCustomers.sort((a,b) => a.nama.localeCompare(b.nama)).map(c => {
                     const pkg = allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
                     return `<tr class="border-b hover:bg-gray-50">
                         <td class="p-4 font-mono text-sm text-gray-600">${c.customerId || '-'}</td>
@@ -769,17 +784,38 @@
             tbody.innerHTML = [...allInvoices].sort((a,b) => b.periode.localeCompare(a.periode))
                 .map(inv => {
                     const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
-                    const statusClass = inv.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                    const actionBtn = inv.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-xs sm:text-sm" data-id="${inv.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
-                    const editDeleteBtns = inv.status !== 'lunas' ? `
-                        <button class="btn-edit-tagihan text-blue-600 hover:text-blue-800" data-id="${inv.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
-                        <button class="btn-delete-tagihan text-red-600 hover:text-red-800" data-id="${inv.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                    ` : '';
+                    
+                    let statusClass, statusText, actionBtn, editDeleteBtns;
+
+                    switch(inv.status) {
+                        case 'lunas':
+                            statusClass = 'bg-green-100 text-green-800';
+                            statusText = 'Lunas';
+                            actionBtn = `<span class="text-sm text-gray-500">Lunas</span>`;
+                            editDeleteBtns = '';
+                            break;
+                        case 'menunggu konfirmasi':
+                            statusClass = 'bg-yellow-100 text-yellow-800';
+                            statusText = 'Menunggu Konfirmasi';
+                            actionBtn = `<button class="btn-verifikasi-pembayaran bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs sm:text-sm" data-id="${inv.id}">Verifikasi</button>`;
+                            editDeleteBtns = '';
+                            break;
+                        default: // belum lunas
+                            statusClass = 'bg-red-100 text-red-800';
+                            statusText = 'Belum Lunas';
+                            actionBtn = `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-xs sm:text-sm" data-id="${inv.id}">Bayar</button>`;
+                            editDeleteBtns = `
+                                <button class="btn-edit-tagihan text-blue-600 hover:text-blue-800" data-id="${inv.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                                <button class="btn-delete-tagihan text-red-600 hover:text-red-800" data-id="${inv.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                            `;
+                            break;
+                    }
+
                     return `<tr class="border-b hover:bg-gray-50">
                         <td class="p-4">${customer.nama}</td><td class="p-4">${getBillingPeriodText(inv, customer)}</td>
                         <td class="p-4">${formatRupiah(inv.jumlah)} ${inv.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td>
-                        <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${inv.status}</span></td>
-                        <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${editDeleteBtns}</td></tr>`;
+                        <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span></td>
+                        <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${editDeleteBtns || ''}</td></tr>`;
                 }).join('');
             lucide.createIcons();
         }
@@ -974,7 +1010,6 @@
             document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
                 document.getElementById('form-pelanggan').reset(); 
                 document.getElementById('pelanggan-id').value = '';
-                // Buat dan tampilkan ID pelanggan baru saat modal dibuka
                 const newCustomerId = generateUniqueCustomerId();
                 document.getElementById('id-pelanggan-display').value = newCustomerId;
 
@@ -1054,6 +1089,15 @@
                     deleteCallback = () => deleteInvoice(id); 
                     document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus tagihan ini?"; 
                     openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-verifikasi-pembayaran')) {
+                    const inv = allInvoices.find(i => i.id === id); if (!inv) return;
+                    const customer = allCustomers.find(c => c.id === inv.pelangganId);
+                    verificationInvoiceId = id;
+                    document.getElementById('verifikasi-nama-pelanggan').textContent = customer ? customer.nama : 'Terhapus';
+                    document.getElementById('verifikasi-jumlah').textContent = formatRupiah(inv.jumlah);
+                    document.getElementById('verifikasi-link-bukti').href = inv.proofOfPaymentURL;
+                    document.getElementById('verifikasi-gambar-bukti').src = inv.proofOfPaymentURL;
+                    openModal(document.getElementById('modal-verifikasi'));
                 }
             });
             document.getElementById('btn-confirm-hapus').addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } closeModal(document.getElementById('modal-konfirmasi')); });
@@ -1061,6 +1105,23 @@
             document.getElementById('btn-generate-prorate').addEventListener('click', generateProrateInvoices);
             document.getElementById('laporan-filter-bulan').addEventListener('change', renderLaporan); 
             document.getElementById('laporan-filter-tahun').addEventListener('change', renderLaporan);
+            
+            document.getElementById('btn-konfirmasi-pembayaran').addEventListener('click', () => {
+                if (verificationInvoiceId) {
+                    updateInvoiceStatus(verificationInvoiceId, 'lunas');
+                    closeModal(document.getElementById('modal-verifikasi'));
+                    verificationInvoiceId = null;
+                }
+            });
+            document.getElementById('btn-tolak-pembayaran').addEventListener('click', () => {
+                if (verificationInvoiceId) {
+                    updateInvoiceStatus(verificationInvoiceId, 'belum lunas', true);
+                    closeModal(document.getElementById('modal-verifikasi'));
+                    verificationInvoiceId = null;
+                }
+            });
+
+
             appListenersAttached = true;
         }
     
@@ -1070,3 +1131,4 @@
     </script>
 </body>
 </html>
+
