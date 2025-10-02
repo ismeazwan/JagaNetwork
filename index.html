@@ -6,7 +6,6 @@
     <title>JagaNetwork - Billing & Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- PERUBAHAN: Menambahkan library Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -171,7 +170,6 @@
                         </div>
                     </div>
 
-                    <!-- PERUBAHAN: Container untuk Chart -->
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-8">
                         <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold mb-4">Pendapatan & Pelanggan Baru (12 Bulan Terakhir)</h3>
@@ -455,8 +453,8 @@
         let allCustomers = [], allPackages = [], allInvoices = [];
         let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
         let deleteCallback = null;
+        let isLoginMode = true;
         
-        // PERUBAHAN: Variabel untuk instance Chart
         let lineChartInstance, pieChartInstance;
 
         const authContainer = document.getElementById('auth-container');
@@ -465,6 +463,8 @@
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
 
+        // --- Sisa kode JavaScript (fungsi-fungsi load, save, delete, dll.) sama seperti sebelumnya ---
+        // ... (Kode lengkap ada di bawah)
         function loadCustomers() {
             const q = query(getCollectionRef('customers'));
             if (unsubscribeCustomers) unsubscribeCustomers();
@@ -572,11 +572,85 @@
         }
 
         async function generateInvoices() {
-            // ... (Fungsi ini tetap sama)
+            const customerId = document.getElementById('pelanggan-filter').value;
+            const targetCustomers = customerId === 'semua' ? allCustomers : allCustomers.filter(c => c.id === customerId);
+
+            if (!targetCustomers.length) return showToast("Tidak ada pelanggan yang dipilih.", "error");
+            if (!confirm(`Generate tagihan bulanan untuk ${targetCustomers.length} pelanggan?\nIni untuk pembayaran periode berikutnya.`)) return;
+            
+            showToast("Memeriksa dan membuat tagihan bulanan...", "info");
+            const batch = writeBatch(db);
+            let generatedCount = 0, skippedCount = 0;
+
+            for (const customer of targetCustomers) {
+                const pkg = allPackages.find(p => p.id === customer.paketId);
+                if (!pkg) { skippedCount++; continue; }
+
+                const lastInvoice = allInvoices.filter(inv => inv.pelangganId === customer.id)
+                    .sort((a, b) => new Date(b.periode) - new Date(a.periode))[0];
+                
+                if (!lastInvoice) { skippedCount++; continue; }
+
+                const lastPeriodEndDate = new Date(lastInvoice.periode);
+                const nextPeriodEndDate = new Date(lastPeriodEndDate.getFullYear(), lastPeriodEndDate.getMonth() + 1, 7);
+                const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
+                
+                const alreadyExists = allInvoices.some(inv => inv.pelangganId === customer.id && inv.periode === nextPeriodString);
+
+                if (!alreadyExists) {
+                    batch.set(doc(getCollectionRef('invoices')), {
+                        pelangganId: customer.id, jumlah: pkg.harga, periode: nextPeriodString,
+                        status: 'belum lunas', createdAt: serverTimestamp(), isProrated: false
+                    });
+                    generatedCount++;
+                }
+            }
+
+            if (generatedCount > 0) await batch.commit();
+            showToast(generatedCount > 0 ? `${generatedCount} tagihan bulanan baru digenerate.` : "Semua tagihan bulanan sudah ada.");
+            if (skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (mungkin belum punya tagihan awal).`, 'info');
         }
         
         async function generateProrateInvoices() {
-            // ... (Fungsi ini tetap sama)
+            const customerId = document.getElementById('pelanggan-filter').value;
+            const targetCustomers = customerId === 'semua' ? allCustomers : allCustomers.filter(c => c.id === customerId);
+
+            if (!targetCustomers.length) return showToast("Tidak ada pelanggan yang dipilih.", "error");
+            if (!confirm(`Generate tagihan prorata untuk ${targetCustomers.length} pelanggan?\nHanya untuk yang belum pernah ditagih.`)) return;
+            
+            showToast("Memeriksa pelanggan baru...", "info");
+            const batch = writeBatch(db);
+            let generatedCount = 0, skippedCount = 0;
+
+            for (const customer of targetCustomers) {
+                if (!customer.joinDate || allInvoices.some(inv => inv.pelangganId === customer.id)) {
+                    skippedCount++; continue;
+                }
+
+                const pkg = allPackages.find(p => p.id === customer.paketId);
+                if (!pkg) { skippedCount++; continue; }
+
+                const joinDate = new Date(customer.joinDate + 'T00:00:00');
+                const joinDay = joinDate.getDate();
+                
+                let endDateProrate = new Date(joinDate.getFullYear(), joinDate.getMonth() + (joinDay > 7 ? 1 : 0), 7);
+                const daysOfService = Math.round((endDateProrate - joinDate) / (1000 * 60 * 60 * 24)) + 1;
+
+                if (daysOfService <= 0) { skippedCount++; continue; }
+                
+                const dailyProratePrice = pkg.hargaProrate > 0 ? pkg.hargaProrate : (pkg.harga / 30);
+                const proratedAmount = Math.round(dailyProratePrice * daysOfService);
+                
+                batch.set(doc(getCollectionRef('invoices')), {
+                    pelangganId: customer.id, jumlah: proratedAmount, periode: endDateProrate.toISOString().split('T')[0],
+                    status: 'belum lunas', createdAt: serverTimestamp(), isProrated: true
+                });
+                generatedCount++;
+            }
+
+            if (generatedCount > 0) await batch.commit();
+            showToast(generatedCount > 0 ? `${generatedCount} tagihan prorata berhasil digenerate.` : "Tidak ada pelanggan baru untuk ditagih.");
+            if(skippedCount > 0) showToast(`${skippedCount} pelanggan dilewati (sudah memiliki tagihan).`, 'info');
         }
 
         async function updateInvoiceStatus(id, newStatus) {
@@ -587,7 +661,6 @@
         }
 
         onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
-        
         function showApp(user) {
             authContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
@@ -608,147 +681,166 @@
         function initApp() { 
             setupAppListeners(); 
             loadData(); 
-            renderCharts(); // PERUBAHAN: Panggil inisialisasi chart
+            renderCharts();
             populateLaporanDateFilters(); 
             switchTab('dashboard'); 
         }
         function loadData() { loadCustomers(); loadPackages(); loadInvoices(); }
 
         function switchTab(tabId) {
-            // ... (Fungsi ini tetap sama)
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-active'));
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('tab-active');
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                backdrop.classList.add('hidden');
+            }
         }
         function openModal(modal) { modal.style.display = 'flex'; }
         function closeModal(modal) { modal.style.display = 'none'; }
         function showToast(message, type = 'success') {
-            // ... (Fungsi ini tetap sama)
+            const toast = document.getElementById('toast'), msg = document.getElementById('toast-message');
+            toast.className = 'fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-all duration-300 z-50';
+            const typeClasses = { error: 'bg-red-600', info: 'bg-blue-600' };
+            toast.classList.add(typeClasses[type] || 'bg-gray-800');
+            msg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
         const formatRupiah = (angka) => !angka ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
         function renderCustomers() {
-            // ... (Fungsi ini tetap sama)
+            const tbody = document.getElementById('pelanggan-table-body');
+            tbody.innerHTML = !allCustomers.length ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada pelanggan.</td></tr>` : 
+                allCustomers.map(c => {
+                    const pkg = allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${c.nama}</td><td class="p-4">${c.alamat}</td><td class="p-4">${c.hp}</td>
+                        <td class="p-4">${pkg.nama}</td>
+                        <td class="p-4 flex gap-2">
+                            <button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${c.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${c.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </td></tr>`;
+                }).join('');
+            lucide.createIcons();
         }
         function renderPackages() {
-            // ... (Fungsi ini tetap sama)
+            const tbody = document.getElementById('paket-table-body');
+            tbody.innerHTML = !allPackages.length ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada paket.</td></tr>` : 
+                allPackages.map(p => `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">${p.nama}</td><td class="p-4">${p.kecepatan}</td>
+                    <td class="p-4">${formatRupiah(p.harga)}</td><td class="p-4">${formatRupiah(p.hargaProrate)}</td>
+                    <td class="p-4 flex gap-2">
+                        <button class="btn-edit-paket text-blue-600 hover:text-blue-800" data-id="${p.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                        <button class="btn-delete-paket text-red-600 hover:text-red-800" data-id="${p.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </td></tr>`).join('');
+            lucide.createIcons();
         }
         function renderInvoices() {
-            // ... (Fungsi ini tetap sama)
+            const tbody = document.getElementById('tagihan-table-body');
+            if (!allInvoices.length) { tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada tagihan.</td></tr>`; return; }
+            tbody.innerHTML = [...allInvoices].sort((a,b) => b.periode.localeCompare(a.periode))
+                .map(inv => {
+                    const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                    const statusClass = inv.status === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                    const actionBtn = inv.status !== 'lunas' ? `<button class="btn-bayar-tagihan bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-xs sm:text-sm" data-id="${inv.id}">Bayar</button>` : `<span class="text-sm text-gray-500">Lunas</span>`;
+                    const editDeleteBtns = inv.status !== 'lunas' ? `
+                        <button class="btn-edit-tagihan text-blue-600 hover:text-blue-800" data-id="${inv.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                        <button class="btn-delete-tagihan text-red-600 hover:text-red-800" data-id="${inv.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    ` : '';
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${customer.nama}</td><td class="p-4">${getBillingPeriodText(inv, customer)}</td>
+                        <td class="p-4">${formatRupiah(inv.jumlah)} ${inv.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td>
+                        <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${inv.status}</span></td>
+                        <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${editDeleteBtns}</td></tr>`;
+                }).join('');
+            lucide.createIcons();
         }
         function renderLaporan() {
-            // ... (Fungsi ini tetap sama)
+            const bulan = document.getElementById('laporan-filter-bulan').value;
+            const tahun = document.getElementById('laporan-filter-tahun').value;
+            const filtered = allInvoices.filter(inv => { const p = new Date(inv.periode); return p.getMonth() == bulan && p.getFullYear() == tahun; });
+            const lunas = filtered.filter(inv => inv.status === 'lunas');
+            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(lunas.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(filtered.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('laporan-transaksi-lunas').textContent = lunas.length;
+            document.getElementById('laporan-tagihan-tertunggak').textContent = filtered.filter(inv => inv.status === 'belum lunas').length;
+            const tbody = document.getElementById('laporan-table-body');
+            tbody.innerHTML = !lunas.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada transaksi lunas.</td></tr>` : 
+                lunas.map(inv => {
+                    const c = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                    return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${getBillingPeriodText(inv, c)}</td><td class="p-4">${formatRupiah(inv.jumlah)}</td></tr>`;
+                }).join('');
         }
         function updateDashboard() {
-            // ... (Fungsi ini tetap sama)
+            document.getElementById('total-pelanggan').textContent = allCustomers.length;
+            const today = new Date();
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const monthlyInvoices = allInvoices.filter(inv => {
+                const pDate = new Date(inv.periode);
+                return pDate >= currentMonthStart && pDate <= currentMonthEnd;
+            });
+            const paidThisMonth = monthlyInvoices.filter(inv => inv.status === 'lunas');
+            document.getElementById('total-pemasukan').textContent = formatRupiah(paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0));
+            document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
+            document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
         }
     
         function populatePelangganFilter() {
-            // ... (Fungsi ini tetap sama)
+            const select = document.getElementById('pelanggan-filter');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="semua">Semua Pelanggan</option>';
+            allCustomers.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nama}</option>`;
+            });
+            select.value = currentVal;
         }
         function populateLaporanDateFilters() {
-            // ... (Fungsi ini tetap sama)
-        }
-
-        // --- PERUBAHAN: FUNGSI BARU UNTUK CHARTS ---
-        function renderCharts() {
-            const lineCtx = document.getElementById('lineChart').getContext('2d');
-            lineChartInstance = new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Pendapatan', data: [],
-                        borderColor: 'rgb(79, 70, 229)', backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.1, yAxisID: 'y'
-                    }, {
-                        label: 'Pelanggan Baru', data: [],
-                        borderColor: 'rgb(22, 163, 74)', backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                        tension: 0.1, yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Pendapatan (Rp)' } },
-                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Jumlah Pelanggan' }, grid: { drawOnChartArea: false } }
-                    }
-                }
-            });
-
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            pieChartInstance = new Chart(pieCtx, {
-                type: 'pie',
-                data: { labels: [], datasets: [{ label: 'Pelanggan', data: [], backgroundColor: [] }] },
-                options: { responsive: true }
-            });
-        }
-
-        function updateCharts() {
-            if (!lineChartInstance || !pieChartInstance || !allCustomers.length || !allPackages.length) return;
-
-            // Update Line Chart
-            const monthLabels = [];
-            const revenueData = [];
-            const newCustomerData = [];
-            const today = new Date();
-
-            for (let i = 11; i >= 0; i--) {
-                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                const monthName = date.toLocaleString('id-ID', { month: 'short' });
-                const year = date.getFullYear();
-                monthLabels.push(`${monthName} ${year}`);
-
-                const monthRevenue = allInvoices
-                    .filter(inv => {
-                        const invDate = new Date(inv.periode);
-                        return inv.status === 'lunas' && invDate.getFullYear() === year && invDate.getMonth() === date.getMonth();
-                    })
-                    .reduce((sum, inv) => sum + inv.jumlah, 0);
-                revenueData.push(monthRevenue);
-
-                const newCustomers = allCustomers.filter(c => {
-                    if (!c.joinDate) return false;
-                    const joinDate = new Date(c.joinDate);
-                    return joinDate.getFullYear() === year && joinDate.getMonth() === date.getMonth();
-                }).length;
-                newCustomerData.push(newCustomers);
-            }
-
-            lineChartInstance.data.labels = monthLabels;
-            lineChartInstance.data.datasets[0].data = revenueData;
-            lineChartInstance.data.datasets[1].data = newCustomerData;
-            lineChartInstance.update();
-
-            // Update Pie Chart
-            const packageCounts = {};
-            allCustomers.forEach(customer => {
-                packageCounts[customer.paketId] = (packageCounts[customer.paketId] || 0) + 1;
-            });
-
-            const pieLabels = [];
-            const pieData = [];
-            const pieColors = [];
-            for (const pkgId in packageCounts) {
-                const pkg = allPackages.find(p => p.id === pkgId);
-                if (pkg) {
-                    pieLabels.push(pkg.nama);
-                    pieData.push(packageCounts[pkgId]);
-                    pieColors.push(`hsl(${Math.random() * 360}, 70%, 50%)`);
-                }
-            }
-
-            pieChartInstance.data.labels = pieLabels;
-            pieChartInstance.data.datasets[0].data = pieData;
-            pieChartInstance.data.datasets[0].backgroundColor = pieColors;
-            pieChartInstance.update();
+            const bulan = document.getElementById('laporan-filter-bulan');
+            const tahun = document.getElementById('laporan-filter-tahun');
+            const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            const currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
+            bulan.innerHTML = months.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            let yearOptions = '';
+            for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
+            tahun.innerHTML = yearOptions;
         }
     
         function setupAuthListeners() {
-            // ... (Fungsi ini tetap sama)
+            let isLoginMode = true;
+            document.getElementById('toggle-auth-mode').addEventListener('click', (e) => {
+                e.preventDefault(); isLoginMode = !isLoginMode;
+                document.getElementById('auth-error').textContent = '';
+                document.getElementById('login-form').classList.toggle('hidden', !isLoginMode);
+                document.getElementById('register-form').classList.toggle('hidden', isLoginMode);
+                document.getElementById('auth-title').textContent = isLoginMode ? 'Login ke Akun Anda' : 'Buat Akun Baru';
+                e.target.textContent = isLoginMode ? 'Belum punya akun? Daftar sekarang' : 'Sudah punya akun? Login';
+            });
+            document.getElementById('login-form').addEventListener('submit', (e) => { 
+                e.preventDefault();
+                const email = document.getElementById('login-email').value, pass = document.getElementById('login-password').value;
+                signInWithEmailAndPassword(auth, email, pass).catch(err => document.getElementById('auth-error').textContent = "Email atau password salah.");
+            });
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('register-email').value, pass = document.getElementById('register-password').value;
+                createUserWithEmailAndPassword(auth, email, pass).catch(err => {
+                    let msg = "Terjadi kesalahan.";
+                    if (err.code === 'auth/email-already-in-use') msg = "Email ini sudah terdaftar.";
+                    else if (err.code === 'auth/weak-password') msg = "Password minimal 6 karakter.";
+                    else if (err.code === 'auth/invalid-email') msg = "Format email tidak valid.";
+                    document.getElementById('auth-error').textContent = msg;
+                });
+            });
         }
     
         function setupAppListeners() {
             if (appListenersAttached) return;
             
-            // Listener untuk menu mobile
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -761,7 +853,6 @@
                 backdrop.classList.add('hidden');
             });
 
-            // Listener lainnya
             document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
             document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.id.split('-')[1]); }));
             document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
