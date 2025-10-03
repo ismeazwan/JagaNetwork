@@ -38,6 +38,7 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+    <!-- Auth Container -->
     <div id="auth-container" class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
             <div>
@@ -85,7 +86,7 @@
         </div>
     </div>
 
-
+    <!-- App Container -->
     <div id="app-container" class="hidden relative md:flex min-h-screen">
         
         <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden hidden"></div>
@@ -108,6 +109,9 @@
                 <a href="#" id="tab-tagihan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Tagihan
                 </a>
+                 <a href="#" id="tab-pengeluaran" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                    <i data-lucide="arrow-left-right" class="w-5 h-5 mr-3"></i> Pengeluaran
+                </a>
                 <a href="#" id="tab-laporan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
                 </a>
@@ -125,12 +129,14 @@
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <h1 class="text-xl font-bold text-indigo-600">JagaNetwork</h1>
-                <div></div> </header>
+                <div></div> 
+            </header>
 
             <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+                <!-- Dashboard Content -->
                 <div id="content-dashboard" class="tab-content">
                     <h2 class="text-2xl md:text-3xl font-bold mb-6">Dashboard</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
                             <div>
                                 <p class="text-sm text-gray-500">Total Pelanggan</p>
@@ -146,7 +152,16 @@
                                 <p id="total-pemasukan" class="text-3xl font-bold">Rp 0</p>
                             </div>
                              <div class="bg-green-100 text-green-600 p-3 rounded-full">
-                                <i data-lucide="wallet" class="w-6 h-6"></i>
+                                <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Pengeluaran Bulan Ini</p>
+                                <p id="total-pengeluaran-dashboard" class="text-3xl font-bold">Rp 0</p>
+                            </div>
+                             <div class="bg-red-100 text-red-600 p-3 rounded-full">
+                                <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
@@ -163,12 +178,11 @@
                                 <p class="text-sm text-gray-500">Tagihan Belum Lunas</p>
                                 <p id="tagihan-belum-lunas" class="text-3xl font-bold">0</p>
                             </div>
-                             <div class="bg-red-100 text-red-600 p-3 rounded-full">
+                             <div class="bg-orange-100 text-orange-600 p-3 rounded-full">
                                 <i data-lucide="x-circle" class="w-6 h-6"></i>
                             </div>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-8">
                         <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold mb-4">Pendapatan & Pelanggan Baru (12 Bulan Terakhir)</h3>
@@ -179,9 +193,9 @@
                             <canvas id="pieChart"></canvas>
                         </div>
                     </div>
-
                 </div>
 
+                <!-- Customer Content -->
                 <div id="content-pelanggan" class="tab-content hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Manajemen Pelanggan</h2>
@@ -232,7 +246,8 @@
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Package Content -->
                 <div id="content-paket" class="tab-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Manajemen Paket Internet</h2>
@@ -257,6 +272,7 @@
                     </div>
                 </div>
 
+                <!-- Invoice Content -->
                 <div id="content-tagihan" class="tab-content hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Manajemen Tagihan</h2>
@@ -319,6 +335,32 @@
                     </div>
                 </div>
                 
+                <!-- Expense Content -->
+                <div id="content-pengeluaran" class="tab-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <h2 class="text-2xl md:text-3xl font-bold">Manajemen Pengeluaran</h2>
+                        <button id="btn-add-pengeluaran" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah Pengeluaran
+                        </button>
+                    </div>
+                    <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                        <table class="w-full text-left min-w-[700px]">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="p-4">Tanggal</th>
+                                    <th class="p-4">Kategori</th>
+                                    <th class="p-4">Deskripsi</th>
+                                    <th class="p-4">Jumlah</th>
+                                    <th class="p-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pengeluaran-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Report Content -->
                 <div id="content-laporan" class="tab-content hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Laporan Keuangan</h2>
@@ -331,37 +373,36 @@
                         </div>
                     </div>
                     <div id="laporan-export-area">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                        <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Ringkasan Keuangan Periode <span id="laporan-periode-text"></span></h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <div class="bg-white p-6 rounded-lg shadow">
                                 <p class="text-sm text-gray-500">Total Pemasukan</p>
-                                <p id="laporan-total-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                                <p id="laporan-total-pemasukan" class="text-3xl font-bold text-green-600">Rp 0</p>
                             </div>
                             <div class="bg-white p-6 rounded-lg shadow">
-                                <p class="text-sm text-gray-500">Potensi Pemasukan</p>
-                                <p id="laporan-potensi-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                                <p class="text-sm text-gray-500">Total Pengeluaran</p>
+                                <p id="laporan-total-pengeluaran" class="text-3xl font-bold text-red-600">Rp 0</p>
                             </div>
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <p class="text-sm text-gray-500">Transaksi Lunas</p>
-                                <p id="laporan-transaksi-lunas" class="text-3xl font-bold">0</p>
-                            </div>
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <p class="text-sm text-gray-500">Tagihan Tertunggak</p>
-                                <p id="laporan-tagihan-tertunggak" class="text-3xl font-bold">0</p>
+                            <div class="bg-white p-6 rounded-lg shadow col-span-1 sm:col-span-2 lg:col-span-2">
+                                <p class="text-sm text-gray-500">Laba / Rugi Bersih</p>
+                                <p id="laporan-laba-rugi" class="text-3xl font-bold text-indigo-600">Rp 0</p>
                             </div>
                         </div>
-                        <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
-                            <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pemasukan (Transaksi Lunas)</h3>
-                            <table class="w-full text-left min-w-[500px]">
-                                <thead>
-                                    <tr class="border-b">
-                                        <th class="p-4">Pelanggan</th>
-                                        <th class="p-4">Periode Tagihan</th>
-                                        <th class="p-4">Jumlah Dibayar</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="laporan-table-body">
-                                </tbody>
-                            </table>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                                <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pemasukan (Transaksi Lunas)</h3>
+                                <table class="w-full text-left min-w-[400px]">
+                                    <thead><tr class="border-b"><th class="p-4">Pelanggan</th><th class="p-4">Periode</th><th class="p-4">Jumlah</th></tr></thead>
+                                    <tbody id="laporan-pemasukan-table-body"></tbody>
+                                </table>
+                            </div>
+                            <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                                <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pengeluaran</h3>
+                                <table class="w-full text-left min-w-[400px]">
+                                    <thead><tr class="border-b"><th class="p-4">Tanggal</th><th class="p-4">Kategori</th><th class="p-4">Jumlah</th></tr></thead>
+                                    <tbody id="laporan-pengeluaran-table-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -369,6 +410,7 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="modal-pelanggan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
             <h3 id="modal-pelanggan-title" class="text-2xl font-bold mb-6">Tambah Pelanggan Baru</h3>
@@ -522,7 +564,43 @@
         </div>
     </div>
 
-
+    <!-- Expense Modal -->
+    <div id="modal-pengeluaran" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+            <h3 id="modal-pengeluaran-title" class="text-2xl font-bold mb-6">Tambah Pengeluaran Baru</h3>
+            <form id="form-pengeluaran">
+                <input type="hidden" id="pengeluaran-id">
+                <div class="mb-4">
+                    <label for="pengeluaran-tanggal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                    <input type="date" id="pengeluaran-tanggal" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="mb-4">
+                    <label for="pengeluaran-kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                    <select id="pengeluaran-kategori" class="w-full p-2 border rounded-lg bg-white" required>
+                        <option value="Pembelian Alat">Pembelian Alat</option>
+                        <option value="Biaya Listrik">Biaya Listrik</option>
+                        <option value="Gaji Karyawan">Gaji Karyawan</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Promosi & Pemasaran">Promosi & Pemasaran</option>
+                        <option value="Lain-lain">Lain-lain</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="pengeluaran-deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                    <textarea id="pengeluaran-deskripsi" rows="2" class="w-full p-2 border rounded-lg" required></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="pengeluaran-jumlah" class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                    <input type="number" id="pengeluaran-jumlah" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="btn-cancel-pengeluaran" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
         <p id="toast-message"></p>
     </div>
@@ -555,8 +633,8 @@
     
         let userIsLoggedIn = false;
         let appListenersAttached = false;
-        let allCustomers = [], allPackages = [], allInvoices = [];
-        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
+        let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [];
+        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses;
         let deleteCallback = null;
         let verificationInvoiceId = null;
         let chatContext = {};
@@ -804,6 +882,50 @@
                 showToast("Status tagihan berhasil diperbarui.");
             } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
         }
+        
+        // --- Functions for Expenses (CRUD) ---
+        function loadExpenses() {
+            const q = query(getCollectionRef('expenses'));
+            if (unsubscribeExpenses) unsubscribeExpenses();
+            unsubscribeExpenses = onSnapshot(q, (snapshot) => {
+                allExpenses = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderExpenses();
+                renderLaporan();
+                updateDashboard();
+            });
+        }
+        async function saveExpense(data) {
+            try {
+                const expenseData = {
+                    tanggal: data.tanggal,
+                    kategori: data.kategori,
+                    deskripsi: data.deskripsi,
+                    jumlah: Number(data.jumlah),
+                    createdAt: serverTimestamp()
+                };
+                if (data.id) {
+                    delete expenseData.createdAt; // Don't update createdAt on edit
+                    await setDoc(doc(db, dataContainerPath, 'expenses', data.id), expenseData, { merge: true });
+                    showToast("Data pengeluaran berhasil diperbarui.");
+                } else {
+                    await addDoc(getCollectionRef('expenses'), expenseData);
+                    showToast("Pengeluaran baru berhasil ditambahkan.");
+                }
+                closeModal(document.getElementById('modal-pengeluaran'));
+            } catch (error) {
+                console.error("Error saving expense:", error);
+                showToast("Gagal menyimpan data pengeluaran.", "error");
+            }
+        }
+        async function deleteExpense(id) {
+            try {
+                await deleteDoc(doc(db, dataContainerPath, 'expenses', id));
+                showToast("Data pengeluaran berhasil dihapus.");
+            } catch (e) {
+                console.error("Error deleting expense:", e);
+                showToast("Gagal menghapus data.", "error");
+            }
+        }
 
         onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
         function showApp(user) {
@@ -821,6 +943,7 @@
             if (unsubscribeCustomers) unsubscribeCustomers();
             if (unsubscribePackages) unsubscribePackages();
             if (unsubscribeInvoices) unsubscribeInvoices();
+            if (unsubscribeExpenses) unsubscribeExpenses();
         }
         
         function initApp() { 
@@ -830,7 +953,7 @@
             populateLaporanDateFilters(); 
             switchTab('dashboard'); 
         }
-        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); }
+        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); loadExpenses(); }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -855,7 +978,7 @@
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
-        const formatRupiah = (angka) => !angka ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        const formatRupiah = (angka) => !angka && angka !== 0 ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
         const formatPhoneNumber = (phone) => {
             if (!phone) return null;
@@ -981,19 +1104,49 @@
             lucide.createIcons();
         }
         function renderLaporan() {
-            const bulan = document.getElementById('laporan-filter-bulan').value;
-            const tahun = document.getElementById('laporan-filter-tahun').value;
-            const filtered = allInvoices.filter(inv => { const p = new Date(inv.periode); return p.getMonth() == bulan && p.getFullYear() == tahun; });
-            const lunas = filtered.filter(inv => inv.status === 'lunas');
-            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(lunas.reduce((sum, inv) => sum + inv.jumlah, 0));
-            document.getElementById('laporan-potensi-pemasukan').textContent = formatRupiah(filtered.reduce((sum, inv) => sum + inv.jumlah, 0));
-            document.getElementById('laporan-transaksi-lunas').textContent = lunas.length;
-            document.getElementById('laporan-tagihan-tertunggak').textContent = filtered.filter(inv => inv.status === 'belum lunas').length;
-            const tbody = document.getElementById('laporan-table-body');
-            tbody.innerHTML = !lunas.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada transaksi lunas.</td></tr>` : 
-                lunas.map(inv => {
+            const bulanEl = document.getElementById('laporan-filter-bulan');
+            const tahunEl = document.getElementById('laporan-filter-tahun');
+            const bulan = bulanEl.value;
+            const tahun = tahunEl.value;
+            document.getElementById('laporan-periode-text').textContent = `${bulanEl.options[bulanEl.selectedIndex].text} ${tahun}`;
+
+            // Pemasukan
+            const pemasukanFiltered = allInvoices.filter(inv => { 
+                const p = new Date(inv.periode); 
+                return inv.status === 'lunas' && p.getMonth() == bulan && p.getFullYear() == tahun; 
+            });
+            const totalPemasukan = pemasukanFiltered.reduce((sum, inv) => sum + inv.jumlah, 0);
+            document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(totalPemasukan);
+            
+            // Pengeluaran
+            const pengeluaranFiltered = allExpenses.filter(exp => {
+                const p = new Date(exp.tanggal);
+                return p.getMonth() == bulan && p.getFullYear() == tahun;
+            });
+            const totalPengeluaran = pengeluaranFiltered.reduce((sum, exp) => sum + exp.jumlah, 0);
+            document.getElementById('laporan-total-pengeluaran').textContent = formatRupiah(totalPengeluaran);
+            
+            // Laba Rugi
+            const labaRugi = totalPemasukan - totalPengeluaran;
+            const labaRugiEl = document.getElementById('laporan-laba-rugi');
+            labaRugiEl.textContent = formatRupiah(labaRugi);
+            labaRugiEl.classList.toggle('text-red-600', labaRugi < 0);
+            labaRugiEl.classList.toggle('text-indigo-600', labaRugi >= 0);
+
+            // Render Tabel Pemasukan
+            const pemasukanTbody = document.getElementById('laporan-pemasukan-table-body');
+            pemasukanTbody.innerHTML = !pemasukanFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pemasukan.</td></tr>` : 
+                pemasukanFiltered.map(inv => {
                     const c = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
                     return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${getBillingPeriodText(inv, c)}</td><td class="p-4">${formatRupiah(inv.jumlah)}</td></tr>`;
+                }).join('');
+            
+            // Render Tabel Pengeluaran
+            const pengeluaranTbody = document.getElementById('laporan-pengeluaran-table-body');
+            pengeluaranTbody.innerHTML = !pengeluaranFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pengeluaran.</td></tr>` :
+                pengeluaranFiltered.sort((a,b) => a.tanggal.localeCompare(b.tanggal)).map(exp => {
+                     const tanggalFormatted = new Date(exp.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short'});
+                    return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${tanggalFormatted}</td><td class="p-4">${exp.kategori}</td><td class="p-4">${formatRupiah(exp.jumlah)}</td></tr>`;
                 }).join('');
         }
         function updateDashboard() {
@@ -1001,6 +1154,7 @@
             const today = new Date();
             const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
             const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
             const monthlyInvoices = allInvoices.filter(inv => {
                 const pDate = new Date(inv.periode);
                 return pDate >= currentMonthStart && pDate <= currentMonthEnd;
@@ -1009,6 +1163,12 @@
             document.getElementById('total-pemasukan').textContent = formatRupiah(paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0));
             document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
             document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
+
+            const expensesThisMonth = allExpenses.filter(exp => {
+                const expDate = new Date(exp.tanggal);
+                return expDate.getFullYear() === today.getFullYear() && expDate.getMonth() === today.getMonth();
+            });
+            document.getElementById('total-pengeluaran-dashboard').textContent = formatRupiah(expensesThisMonth.reduce((sum, exp) => sum + exp.jumlah, 0));
         }
 
         function updatePaginationControls(type, currentPage, totalPages) {
@@ -1194,9 +1354,19 @@
                 document.getElementById('modal-paket-title').textContent = 'Tambah Paket Baru'; 
                 openModal(document.getElementById('modal-paket')); 
             });
+            document.getElementById('btn-add-pengeluaran').addEventListener('click', () => {
+                const form = document.getElementById('form-pengeluaran');
+                form.reset();
+                document.getElementById('pengeluaran-id').value = '';
+                document.getElementById('pengeluaran-tanggal').value = new Date().toISOString().split('T')[0];
+                document.getElementById('modal-pengeluaran-title').textContent = 'Tambah Pengeluaran Baru';
+                openModal(document.getElementById('modal-pengeluaran'));
+            });
+
             document.getElementById('btn-cancel-pelanggan').addEventListener('click', () => closeModal(document.getElementById('modal-pelanggan')));
             document.getElementById('btn-cancel-paket').addEventListener('click', () => closeModal(document.getElementById('modal-paket')));
             document.getElementById('btn-cancel-tagihan').addEventListener('click', () => closeModal(document.getElementById('modal-tagihan')));
+            document.getElementById('btn-cancel-pengeluaran').addEventListener('click', () => closeModal(document.getElementById('modal-pengeluaran')));
             document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
             document.getElementById('btn-cancel-chat').addEventListener('click', () => closeModal(document.getElementById('modal-chat-options')));
 
@@ -1282,6 +1452,16 @@
                     periode: document.getElementById('tagihan-periode').value
                 }); 
             });
+             document.getElementById('form-pengeluaran').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveExpense({
+                    id: document.getElementById('pengeluaran-id').value,
+                    tanggal: document.getElementById('pengeluaran-tanggal').value,
+                    kategori: document.getElementById('pengeluaran-kategori').value,
+                    deskripsi: document.getElementById('pengeluaran-deskripsi').value,
+                    jumlah: document.getElementById('pengeluaran-jumlah').value
+                });
+            });
             document.body.addEventListener('click', (e) => {
                 const btn = e.target.closest('button'); if (!btn) return;
                 const id = btn.dataset.id;
@@ -1337,6 +1517,19 @@
                     document.getElementById('verifikasi-link-bukti').href = inv.proofOfPaymentURL;
                     document.getElementById('verifikasi-gambar-bukti').src = inv.proofOfPaymentURL;
                     openModal(document.getElementById('modal-verifikasi'));
+                } else if (btn.classList.contains('btn-edit-pengeluaran')) {
+                    const exp = allExpenses.find(e => e.id === id); if (!exp) return;
+                    document.getElementById('pengeluaran-id').value = exp.id;
+                    document.getElementById('pengeluaran-tanggal').value = exp.tanggal;
+                    document.getElementById('pengeluaran-kategori').value = exp.kategori;
+                    document.getElementById('pengeluaran-deskripsi').value = exp.deskripsi;
+                    document.getElementById('pengeluaran-jumlah').value = exp.jumlah;
+                    document.getElementById('modal-pengeluaran-title').textContent = 'Edit Pengeluaran';
+                    openModal(document.getElementById('modal-pengeluaran'));
+                } else if (btn.classList.contains('btn-delete-pengeluaran')) {
+                    deleteCallback = () => deleteExpense(id);
+                    document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus data pengeluaran ini?";
+                    openModal(document.getElementById('modal-konfirmasi'));
                 }
             });
 
@@ -1510,3 +1703,4 @@
     </script>
 </body>
 </html>
+
