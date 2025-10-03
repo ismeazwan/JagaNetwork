@@ -1103,6 +1103,45 @@
             updatePaginationControls('tagihan', tagihanCurrentPage, totalPages);
             lucide.createIcons();
         }
+
+        function renderExpenses() {
+            const tbody = document.getElementById('pengeluaran-table-body');
+            
+            if (!Array.isArray(allExpenses) || allExpenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada data pengeluaran.</td></tr>`;
+                return;
+            }
+
+            const sortedExpenses = [...allExpenses].sort((a, b) => {
+                const dateA = a.tanggal || '';
+                const dateB = b.tanggal || '';
+                return dateB.localeCompare(dateA);
+            });
+
+            tbody.innerHTML = sortedExpenses.map(e => {
+                    let tanggalFormatted = 'Invalid Date';
+                    if (e.tanggal && typeof e.tanggal === 'string') {
+                        try {
+                            tanggalFormatted = new Date(e.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric'});
+                        } catch (err) {
+                             console.error("Could not format date for expense:", e.tanggal);
+                        }
+                    }
+                    
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${tanggalFormatted}</td>
+                        <td class="p-4">${e.kategori || ''}</td>
+                        <td class="p-4">${e.deskripsi || ''}</td>
+                        <td class="p-4">${formatRupiah(e.jumlah)}</td>
+                        <td class="p-4 flex gap-3">
+                            <button class="btn-edit-pengeluaran text-blue-600 hover:text-blue-800" data-id="${e.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-pengeluaran text-red-600 hover:text-red-800" data-id="${e.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </td></tr>`;
+                }).join('');
+
+            lucide.createIcons();
+        }
+
         function renderLaporan() {
             const bulanEl = document.getElementById('laporan-filter-bulan');
             const tahunEl = document.getElementById('laporan-filter-tahun');
