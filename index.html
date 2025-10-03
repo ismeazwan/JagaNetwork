@@ -633,29 +633,21 @@
                     const lastPeriodEndDate = new Date(lastInvoice.periode);
                     nextPeriodEndDate = new Date(lastPeriodEndDate.getFullYear(), lastPeriodEndDate.getMonth() + 1, 7);
                 } else {
-                    // This is a new customer without any invoices.
-                    // Generate their first monthly bill.
+                    // This is a new customer. The first monthly bill should be for the NEXT full cycle.
                     if (!customer.joinDate) {
-                        skippedCount++;
-                        continue; // Cannot generate first bill without join date.
-                    }
-                    const joinDate = new Date(customer.joinDate + 'T00:00:00');
-                    const today = new Date();
-                    
-                    // Determine the end of the current billing cycle
-                    let currentCycleEnd = new Date(today.getFullYear(), today.getMonth(), 7);
-                    if (today.getDate() > 7) {
-                        // If we are past the 7th, the current cycle ends next month.
-                        currentCycleEnd = new Date(today.getFullYear(), today.getMonth() + 1, 7);
-                    }
-
-                    // If the customer joined after this cycle ends, they are too new. Skip.
-                    if (joinDate > currentCycleEnd) {
                         skippedCount++;
                         continue;
                     }
+                    const joinDate = new Date(customer.joinDate + 'T00:00:00');
                     
-                    nextPeriodEndDate = currentCycleEnd;
+                    // Find the end of the billing cycle in which the customer joined.
+                    let joinCycleEnd = new Date(joinDate.getFullYear(), joinDate.getMonth(), 7);
+                    if (joinDate.getDate() > 7) {
+                        joinCycleEnd = new Date(joinDate.getFullYear(), joinDate.getMonth() + 1, 7);
+                    }
+
+                    // The first full monthly bill is for the cycle AFTER the one they joined in.
+                    nextPeriodEndDate = new Date(joinCycleEnd.getFullYear(), joinCycleEnd.getMonth() + 1, 7);
                 }
 
                 const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
@@ -1164,5 +1156,6 @@
     </script>
 </body>
 </html>
+
 
 
