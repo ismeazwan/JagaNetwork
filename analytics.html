@@ -50,45 +50,79 @@
                 </section>
 
                 <section id="bep" class="mb-12">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Alat Bantu Bisnis RT/RW Net</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Kalkulator BEP untuk Bisnis RT/RW Net</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         
-                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col">
-                            <h4 class="text-lg font-semibold mb-4">Kalkulator Break-Even Point (BEP)</h4>
-                            <div class="space-y-4 flex-grow">
-                                <div><label for="initial-investment" class="block text-sm font-medium text-gray-700">Total Investasi Awal (Alat)</label><input type="number" id="initial-investment" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 5000000"></div>
-                                <div><label for="lifespan" class="block text-sm font-medium text-gray-700">Masa Pakai Alat (Bulan)</label><input type="number" id="lifespan" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 24"></div>
-                                <div><label for="isp-cost" class="block text-sm font-medium text-gray-700">Langganan Internet Utama (per bulan)</label><input type="number" id="isp-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 1000000"></div>
-                                <div><label for="ops-cost" class="block text-sm font-medium text-gray-700">Biaya Operasional Lain (per bulan)</label><input type="number" id="ops-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000"></div>
-                                <div><label for="subscription-price" class="block text-sm font-medium text-gray-700">Harga Paket Langganan</label><input type="number" id="subscription-price" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000"></div>
-                            </div>
-                            <button id="calculate-bep-btn" class="mt-6 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Hitung BEP</button>
-                             <div class="text-center mt-4"><p class="text-sm text-gray-500">Target Impas: <span id="bep-result" class="font-bold text-indigo-600">- Pelanggan</span></p></div>
-                        </div>
-                
-                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col">
-                            <h4 class="text-lg font-semibold mb-4">Kalkulator Cek Profitabilitas</h4>
-                            <p class="text-sm text-gray-600 mb-4">Fitur ini menggunakan data biaya dari kalkulator BEP di sebelah kiri.</p>
-                            <div class="space-y-4 flex-grow">
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-4">Masukkan Data Biaya</h4>
+                            <div class="space-y-4">
                                 <div>
-                                    <label for="actual-revenue" class="block text-sm font-medium text-gray-700">Total Pendapatan Aktual Bulan Ini</label>
-                                    <input type="number" id="actual-revenue" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Masukkan total omzet Anda">
+                                    <label for="initial-investment" class="block text-sm font-medium text-gray-700">Total Investasi Awal (Alat)</label>
+                                    <input type="number" id="initial-investment" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 5000000">
+                                </div>
+                                <div>
+                                    <label for="lifespan" class="block text-sm font-medium text-gray-700">Masa Pakai Alat (dalam Bulan)</label>
+                                    <input type="number" id="lifespan" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 24 (untuk 2 tahun)">
+                                </div>
+                                <hr class="my-4">
+                                <div>
+                                    <label for="isp-cost" class="block text-sm font-medium text-gray-700">Langganan Internet Utama (per bulan)</label>
+                                    <input type="number" id="isp-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 1000000">
+                                </div>
+                                <div>
+                                    <label for="ops-cost" class="block text-sm font-medium text-gray-700">Biaya Operasional Lain (Listrik, dll) (per bulan)</label>
+                                    <input type="number" id="ops-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000">
+                                </div>
+                                <hr class="my-4">
+                                <div>
+                                    <label for="subscription-price" class="block text-sm font-medium text-gray-700">Harga Paket Langganan (per bulan)</label>
+                                    <input type="number" id="subscription-price" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000">
                                 </div>
                             </div>
-                            <button id="calculate-profit-btn" class="mt-6 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700">Cek Profitabilitas</button>
-                            <div id="profit-result-card" class="text-center mt-4 p-4 rounded-lg bg-gray-50 hidden">
-                                <p class="text-sm font-medium text-gray-500">Status Keuangan Bulan Ini</p>
-                                <p id="profit-status" class="text-2xl font-bold my-1">-</p>
-                                <p id="profit-amount" class="text-lg font-semibold">-</p>
-                            </div>
+                            <button id="calculate-bep-btn" class="mt-6 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                                Hitung BEP
+                            </button>
                         </div>
-
+                
+                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center">
+                            <h4 class="text-lg font-semibold text-gray-800">Hasil Titik Impas Bulanan</h4>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">Anda perlu mendapatkan:</p>
+                                <p class="text-4xl font-bold text-indigo-600 my-2"><span id="bep-unit-result">-</span> Pelanggan</p>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">Untuk mencapai omzet:</p>
+                                <p class="text-3xl font-bold text-green-600 my-2"><span id="bep-rupiah-result">-</span></p>
+                            </div>
+                             <p id="bep-status" class="mt-4 text-sm text-gray-400">Masukkan data dan klik hitung.</p>
+                        </div>
                     </div>
                 </section>
                 
-                <section id="pendapatan" class="mb-12"></section>
-                <section id="pelanggan" class="mb-12"></section>
-                <section id="pengeluaran" class="mb-12"></section>
+                <section id="pendapatan" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
+                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4><div class="relative flex-grow min-h-0"><canvas id="revenue-profit-chart"></canvas></div></div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4><div class="relative flex-grow min-h-0"><canvas id="revenue-composition-chart"></canvas></div></div>
+                    </div>
+                </section>
+
+                <section id="pelanggan" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pelanggan</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Pelanggan Baru Bulan Ini</h4><p id="kpi-new-customers" class="text-4xl font-bold text-green-600">0</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Customer Lifetime Value (LTV)</h4><p id="kpi-ltv" class="text-4xl font-bold text-indigo-600">Rp 0</p><p class="text-sm text-gray-500">Estimasi pendapatan dari satu pelanggan.</p></div>
+                        <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4><div class="relative flex-grow min-h-0"><canvas id="customer-growth-chart"></canvas></div></div>
+                    </div>
+                </section>
+                
+                <section id="pengeluaran" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4><div class="relative flex-grow min-h-0"><canvas id="expenses-composition-chart"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4><p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p><h4 class="text-lg font-semibold mb-2 mt-6">Kategori Teratas</h4><p id="kpi-top-expense-category" class="text-2xl font-medium">-</p></div>
+                    </div>
+                </section>
             </div>
         </main>
     </div>
@@ -102,85 +136,53 @@
         const app=initializeApp(firebaseConfig);const db=getFirestore(app);const auth=getAuth(app);
         const dataContainerPath="jaganetwork_data/shared_workspace";const getCollectionRef=name=>query(collection(db,dataContainerPath,name));
         const formatRupiah=angka=>!angka&&angka!==0?'Rp 0':new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(angka);
-        async function fetchData(){/*... Code ...*/}
-        function calculateAnalytics(data){/*... Code ...*/}
-        function prepareChartData(data){/*... Code ...*/}
-        function renderCharts(chartData){/*... Code ...*/}
-        onAuthStateChanged(auth,user=>{/*... Code ...*/});
-        document.getElementById('sidebar-nav').addEventListener('click',function(e){/*... Code ...*/});
+        async function fetchData(){try{const[customersSnap,packagesSnap,invoicesSnap,expensesSnap]=await Promise.all([getDocs(getCollectionRef('customers')),getDocs(getCollectionRef('packages')),getDocs(getCollectionRef('invoices')),getDocs(getCollectionRef('expenses'))]);const customers=customersSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const packages=packagesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const invoices=invoicesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const expenses=expensesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));return{customers,packages,invoices,expenses}}catch(error){console.error("Error fetching data:",error);document.getElementById('main-title').textContent="Gagal Memuat Data";return null}}
+        function calculateAnalytics(data){const{customers,packages,invoices,expenses}=data;const today=new Date();const thisMonthStart=new Date(today.getFullYear(),today.getMonth(),1);const oneMonthAgo=new Date(today.getFullYear(),today.getMonth()-1,today.getDate());const activeCustomers=customers.length;let mrr=0;customers.forEach(c=>{const pkg=packages.find(p=>p.id===c.paketId);if(pkg&&pkg.harga)mrr+=Number(pkg.harga)});const arpu=activeCustomers>0?mrr/activeCustomers:0;const customersBeforeThisMonth=customers.filter(c=>c.joinDate&&new Date(c.joinDate)<thisMonthStart);let churnedThisMonth=0;customersBeforeThisMonth.forEach(c=>{const hasPaidThisMonth=invoices.some(inv=>inv.pelangganId===c.id&&inv.status==='lunas'&&new Date(inv.periode)>=thisMonthStart);if(!hasPaidThisMonth)churnedThisMonth++});const churnRate=customersBeforeThisMonth.length>0?churnedThisMonth/customersBeforeThisMonth.length:0;const newCustomersThisMonth=customers.filter(c=>c.joinDate&&new Date(c.joinDate)>=thisMonthStart).length;const ltv=churnRate>0?arpu/churnRate:arpu*12;const totalExpensesLast30Days=expenses.filter(e=>e.tanggal&&new Date(e.tanggal)>=oneMonthAgo).reduce((sum,e)=>sum+e.jumlah,0);document.getElementById('kpi-active-customers').textContent=activeCustomers;document.getElementById('kpi-mrr').textContent=formatRupiah(mrr);document.getElementById('kpi-arpu').textContent=formatRupiah(arpu);document.getElementById('kpi-churn-rate').textContent=`${(churnRate*100).toFixed(1)}%`;document.getElementById('kpi-new-customers').textContent=newCustomersThisMonth;document.getElementById('kpi-ltv').textContent=formatRupiah(ltv);document.getElementById('kpi-total-expenses').textContent=formatRupiah(totalExpensesLast30Days)}
+        function prepareChartData(data){const{customers,packages,invoices,expenses}=data;const history={};for(let i=11;i>=0;i--){const d=new Date((new Date).setMonth((new Date).getMonth()-i));const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;history[monthKey]={revenue:0,profit:0,customers:0,expenses:0}}
+        invoices.filter(inv=>inv.status==='lunas'&&inv.periode).forEach(inv=>{const d=new Date(inv.periode);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(history[monthKey]){history[monthKey].revenue+=inv.jumlah}});expenses.filter(e=>e.tanggal).forEach(e=>{const d=new Date(e.tanggal);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(history[monthKey]){history[monthKey].expenses+=e.jumlah}});Object.keys(history).forEach(monthKey=>{history[monthKey].profit=history[monthKey].revenue-history[monthKey].expenses;history[monthKey].customers=customers.filter(c=>c.joinDate&&new Date(c.joinDate)<=new Date(monthKey+'-28')).length});const revenueByPackage={};packages.forEach(p=>revenueByPackage[p.nama]=0);invoices.filter(inv=>inv.status==='lunas').forEach(inv=>{const cust=customers.find(c=>c.id===inv.pelangganId);if(cust){const pkg=packages.find(p=>p.id===cust.paketId);if(pkg)revenueByPackage[pkg.nama]+=inv.jumlah}});const expensesByCategory={};expenses.forEach(e=>{expensesByCategory[e.kategori]=(expensesByCategory[e.kategori]||0)+e.jumlah});if(Object.keys(expensesByCategory).length>0){document.getElementById('kpi-top-expense-category').textContent=Object.entries(expensesByCategory).sort(([,a],[,b])=>b-a)[0][0]}
+        return{history,revenueByPackage,expensesByCategory}}
+        function renderCharts(chartData){const{history,revenueByPackage,expensesByCategory}=chartData;const colorPalette=['#4f46e5','#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#d946ef'];const labels=Object.keys(history).map(k=>new Date(k+'-02').toLocaleString('id-ID',{month:'short',year:'numeric'}));const profitData=Object.values(history).map(h=>h.profit);const revenueData=Object.values(history).map(h=>h.revenue);const allDataPoints=[...profitData,...revenueData];const dataMax=Math.max(0,...allDataPoints),dataMin=Math.min(0,...allDataPoints);const padding=(dataMax-dataMin)*.1;const calculatedMax=dataMax+padding,calculatedMin=dataMin-padding;new Chart(document.getElementById('revenue-profit-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Pendapatan',data:revenueData,backgroundColor:'#3b82f6'},{label:'Laba Kotor',data:profitData,backgroundColor:'#10b981'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false},y:{stacked:false,min:calculatedMin,max:calculatedMax}}}});new Chart(document.getElementById('revenue-composition-chart').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(revenueByPackage),datasets:[{label:'Pendapatan',data:Object.values(revenueByPackage),backgroundColor:colorPalette}]},options:{responsive:true,maintainAspectRatio:false}});new Chart(document.getElementById('customer-growth-chart').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Total Pelanggan',data:Object.values(history).map(h=>h.customers),borderColor:'#4f46e5',backgroundColor:'rgba(79, 70, 229, 0.1)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}});new Chart(document.getElementById('expenses-composition-chart').getContext('2d'),{type:'pie',data:{labels:Object.keys(expensesByCategory),datasets:[{label:'Pengeluaran',data:Object.values(expensesByCategory),backgroundColor:colorPalette.reverse()}]},options:{responsive:true,maintainAspectRatio:false}})}
+        onAuthStateChanged(auth,user=>{if(user){document.getElementById('current-date').textContent=(new Date).toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});fetchData().then(data=>{if(data){document.getElementById('loading-indicator').style.display='none';document.getElementById('analytics-content').style.display='block';calculateAnalytics(data);const chartData=prepareChartData(data);renderCharts(chartData)}else{document.getElementById('loading-indicator').textContent="Gagal memuat data. Silakan coba lagi nanti."}})}else{document.body.innerHTML=`<div class="w-full h-screen flex items-center justify-center p-4 text-center"><p class="text-xl">Silakan <a href="index.html" class="text-indigo-600 font-semibold">login</a> untuk mengakses analytics.</p></div>`}});
+        document.getElementById('sidebar-nav').addEventListener('click',function(e){const clickedLink=e.target.closest('a.nav-link');if(clickedLink){document.querySelectorAll('.nav-link').forEach(link=>link.classList.remove('nav-active'));clickedLink.classList.add('nav-active')}});
         
-        // --- Logika Kalkulator Bisnis ---
+        // --- [MODIFIKASI] Logika Kalkulator BEP untuk RT/RW Net ---
         const calculateBepBtn = document.getElementById('calculate-bep-btn');
-        const bepResultEl = document.getElementById('bep-result');
-        
-        // Fungsi untuk mengambil dan memvalidasi semua input biaya
-        function getCostInputs() {
+        calculateBepBtn.addEventListener('click', function() {
+            // 1. Ambil semua nilai dari input baru
             const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
             const lifespan = parseFloat(document.getElementById('lifespan').value);
             const ispCost = parseFloat(document.getElementById('isp-cost').value);
             const opsCost = parseFloat(document.getElementById('ops-cost').value);
             const subscriptionPrice = parseFloat(document.getElementById('subscription-price').value);
 
+            const bepUnitResultEl = document.getElementById('bep-unit-result');
+            const bepRupiahResultEl = document.getElementById('bep-rupiah-result');
+            const bepStatusEl = document.getElementById('bep-status');
+            
+            // 2. Validasi input
             const allInputsValid = !isNaN(initialInvestment) && !isNaN(lifespan) && !isNaN(ispCost) && !isNaN(opsCost) && !isNaN(subscriptionPrice);
             if (!allInputsValid || lifespan <= 0 || subscriptionPrice <= 0) {
-                return null; // Mengembalikan null jika ada input tidak valid
-            }
-            return { initialInvestment, lifespan, ispCost, opsCost, subscriptionPrice };
-        }
-
-        // Event Listener untuk Kalkulator BEP
-        calculateBepBtn.addEventListener('click', function() {
-            const costs = getCostInputs();
-            if (!costs) {
-                bepResultEl.textContent = 'Data tidak valid!';
-                return;
-            }
-            const monthlyDepreciation = costs.initialInvestment / costs.lifespan;
-            const totalFixedCosts = costs.ispCost + costs.opsCost + monthlyDepreciation;
-            const bepInUnits = Math.ceil(totalFixedCosts / costs.subscriptionPrice);
-            bepResultEl.textContent = `${bepInUnits.toLocaleString('id-ID')} Pelanggan`;
-        });
-
-        // [BARU] Event Listener untuk Kalkulator Profitabilitas
-        const calculateProfitBtn = document.getElementById('calculate-profit-btn');
-        const profitResultCard = document.getElementById('profit-result-card');
-        const profitStatusEl = document.getElementById('profit-status');
-        const profitAmountEl = document.getElementById('profit-amount');
-
-        calculateProfitBtn.addEventListener('click', function() {
-            const costs = getCostInputs();
-            const actualRevenue = parseFloat(document.getElementById('actual-revenue').value);
-
-            if (!costs || isNaN(actualRevenue)) {
-                profitResultCard.classList.remove('hidden');
-                profitStatusEl.textContent = 'Data Biaya / Pendapatan tidak valid!';
-                profitAmountEl.textContent = '-';
+                bepStatusEl.textContent = 'Pastikan semua kolom diisi dengan angka yang valid.';
+                bepStatusEl.classList.remove('text-gray-400');
+                bepStatusEl.classList.add('text-red-500');
                 return;
             }
 
-            const monthlyDepreciation = costs.initialInvestment / costs.lifespan;
-            const totalFixedCosts = costs.ispCost + costs.opsCost + monthlyDepreciation;
-            const profitOrLoss = actualRevenue - totalFixedCosts;
+            // 3. Hitung BEP sesuai logika RT/RW Net
+            // Hitung penyusutan bulanan dari investasi
+            const monthlyDepreciation = initialInvestment / lifespan;
+            // Hitung total biaya tetap bulanan
+            const totalFixedCosts = ispCost + opsCost + monthlyDepreciation;
+            // Biaya variabel bulanan dianggap 0
+            const bepInUnits = Math.ceil(totalFixedCosts / subscriptionPrice);
+            const bepInRupiah = bepInUnits * subscriptionPrice;
 
-            // Tampilkan kartu hasil
-            profitResultCard.classList.remove('hidden');
-            
-            // Hapus class warna sebelumnya
-            profitStatusEl.classList.remove('text-green-600', 'text-red-600', 'text-gray-600');
-
-            if (profitOrLoss > 0) {
-                profitStatusEl.textContent = 'Untung';
-                profitStatusEl.classList.add('text-green-600');
-                profitAmountEl.textContent = `+ ${formatRupiah(profitOrLoss)}`;
-            } else if (profitOrLoss < 0) {
-                profitStatusEl.textContent = 'Rugi';
-                profitStatusEl.classList.add('text-red-600');
-                profitAmountEl.textContent = `- ${formatRupiah(Math.abs(profitOrLoss))}`;
-            } else {
-                profitStatusEl.textContent = 'Impas';
-                profitStatusEl.classList.add('text-gray-600');
-                profitAmountEl.textContent = formatRupiah(0);
-            }
+            // 4. Tampilkan hasil
+            bepUnitResultEl.textContent = bepInUnits.toLocaleString('id-ID');
+            bepRupiahResultEl.textContent = formatRupiah(bepInRupiah);
+            bepStatusEl.textContent = `Pelanggan ke-${(bepInUnits + 1).toLocaleString('id-ID')} akan menjadi keuntungan pertama Anda.`;
+            bepStatusEl.classList.add('text-gray-400');
+            bepStatusEl.classList.remove('text-red-500');
         });
 
         lucide.createIcons();
