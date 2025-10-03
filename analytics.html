@@ -20,7 +20,6 @@
 <body class="text-gray-800">
 
     <div id="app-container" class="flex min-h-screen">
-        <!-- Sidebar -->
         <aside class="w-64 bg-white shadow-md flex-col p-4 hidden md:flex">
             <div class="p-4 mb-4">
                 <h1 class="text-2xl font-bold text-indigo-600">Analytics</h1>
@@ -42,7 +41,6 @@
             </nav>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
             <header class="flex justify-between items-center mb-8">
                 <h2 id="main-title" class="text-2xl md:text-3xl font-bold">Ringkasan Bisnis</h2>
@@ -57,7 +55,6 @@
             </div>
 
             <div id="analytics-content" class="hidden">
-                <!-- Ringkasan Section -->
                 <section id="ringkasan" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -92,24 +89,22 @@
                     </div>
                 </section>
                 
-                <!-- Analisis Pendapatan -->
                 <section id="pendapatan" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
-                            <h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4>
-                            <div class="relative h-96">
-                                <canvas id="revenue-profit-chart"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm">
-                            <h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4>
-                            <canvas id="revenue-composition-chart"></canvas>
-                        </div>
+                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+                             <h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4>
+                             <div class="relative h-96">
+                                 <canvas id="revenue-profit-chart"></canvas>
+                             </div>
+                         </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm">
+                             <h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4>
+                             <canvas id="revenue-composition-chart"></canvas>
+                         </div>
                     </div>
                 </section>
 
-                 <!-- Analisis Pelanggan -->
                 <section id="pelanggan" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pelanggan</h3>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -124,18 +119,21 @@
                         </div>
                         <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm">
                             <h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4>
-                            <canvas id="customer-growth-chart"></canvas>
+                            <div class="relative h-96">
+                                <canvas id="customer-growth-chart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </section>
                 
-                <!-- Analisis Pengeluaran -->
                 <section id="pengeluaran" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm">
                              <h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4>
-                            <canvas id="expenses-composition-chart"></canvas>
+                             <div class="relative h-96">
+                                <canvas id="expenses-composition-chart"></canvas>
+                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4>
@@ -235,57 +233,57 @@
         }
         
         function prepareChartData(data) {
-             const { customers, packages, invoices, expenses } = data;
-             const history = {};
-             for (let i = 11; i >= 0; i--) {
-                const d = new Date(new Date().setMonth(new Date().getMonth() - i));
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                history[monthKey] = { revenue: 0, profit: 0, customers: 0, expenses: 0 };
-            }
+              const { customers, packages, invoices, expenses } = data;
+              const history = {};
+              for (let i = 11; i >= 0; i--) {
+                  const d = new Date(new Date().setMonth(new Date().getMonth() - i));
+                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                  history[monthKey] = { revenue: 0, profit: 0, customers: 0, expenses: 0 };
+              }
 
-            // Process Invoices for revenue
-            invoices.filter(inv => inv.status === 'lunas' && inv.periode).forEach(inv => {
-                const d = new Date(inv.periode);
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                if (history[monthKey]) {
-                    history[monthKey].revenue += inv.jumlah;
-                }
-            });
+              // Process Invoices for revenue
+              invoices.filter(inv => inv.status === 'lunas' && inv.periode).forEach(inv => {
+                  const d = new Date(inv.periode);
+                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                  if (history[monthKey]) {
+                      history[monthKey].revenue += inv.jumlah;
+                  }
+              });
 
-            // Process Expenses
-            expenses.filter(e => e.tanggal).forEach(e => {
-                const d = new Date(e.tanggal);
-                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                 if (history[monthKey]) {
-                    history[monthKey].expenses += e.jumlah;
-                }
-            });
-            
-            // Calculate Profit & Customer Growth
-            Object.keys(history).forEach(monthKey => {
-                history[monthKey].profit = history[monthKey].revenue - history[monthKey].expenses;
-                history[monthKey].customers = customers.filter(c => c.joinDate && new Date(c.joinDate) <= new Date(monthKey + '-28')).length;
-            });
-            
-            const revenueByPackage = {};
-            packages.forEach(p => revenueByPackage[p.nama] = 0);
-            invoices.filter(inv => inv.status === 'lunas').forEach(inv => {
-                const cust = customers.find(c => c.id === inv.pelangganId);
-                if (cust) {
-                    const pkg = packages.find(p => p.id === cust.paketId);
-                    if (pkg) revenueByPackage[pkg.nama] += inv.jumlah;
-                }
-            });
+              // Process Expenses
+              expenses.filter(e => e.tanggal).forEach(e => {
+                  const d = new Date(e.tanggal);
+                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                   if (history[monthKey]) {
+                       history[monthKey].expenses += e.jumlah;
+                   }
+              });
+              
+              // Calculate Profit & Customer Growth
+              Object.keys(history).forEach(monthKey => {
+                  history[monthKey].profit = history[monthKey].revenue - history[monthKey].expenses;
+                  history[monthKey].customers = customers.filter(c => c.joinDate && new Date(c.joinDate) <= new Date(monthKey + '-28')).length;
+              });
+              
+              const revenueByPackage = {};
+              packages.forEach(p => revenueByPackage[p.nama] = 0);
+              invoices.filter(inv => inv.status === 'lunas').forEach(inv => {
+                  const cust = customers.find(c => c.id === inv.pelangganId);
+                  if (cust) {
+                      const pkg = packages.find(p => p.id === cust.paketId);
+                      if (pkg) revenueByPackage[pkg.nama] += inv.jumlah;
+                  }
+              });
 
-            const expensesByCategory = {};
-            expenses.forEach(e => {
-                expensesByCategory[e.kategori] = (expensesByCategory[e.kategori] || 0) + e.jumlah;
-            });
-            if (Object.keys(expensesByCategory).length > 0) {
-                 document.getElementById('kpi-top-expense-category').textContent = Object.entries(expensesByCategory).sort(([,a],[,b]) => b-a)[0][0];
-            }
-            
-            return { history, revenueByPackage, expensesByCategory };
+              const expensesByCategory = {};
+              expenses.forEach(e => {
+                  expensesByCategory[e.kategori] = (expensesByCategory[e.kategori] || 0) + e.jumlah;
+              });
+              if (Object.keys(expensesByCategory).length > 0) {
+                   document.getElementById('kpi-top-expense-category').textContent = Object.entries(expensesByCategory).sort(([,a],[,b]) => b-a)[0][0];
+              }
+              
+              return { history, revenueByPackage, expensesByCategory };
         }
 
         function renderCharts(chartData) {
@@ -355,7 +353,14 @@
                         tension: 0.3,
                     }]
                 },
-                options: { scales: { y: { beginAtZero: true } } }
+                // 👇 [FIXED] Added options for responsiveness
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { beginAtZero: true } 
+                    } 
+                }
             });
             
              // Expenses Composition Chart
@@ -366,6 +371,7 @@
                     labels: Object.keys(expensesByCategory),
                     datasets: [{ label: 'Pengeluaran', data: Object.values(expensesByCategory), backgroundColor: colorPalette.reverse() }]
                 },
+                // 👇 [FIXED] Ensured maintainAspectRatio is false
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
@@ -404,4 +410,3 @@
     </script>
 </body>
 </html>
-
