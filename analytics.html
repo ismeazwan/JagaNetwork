@@ -294,14 +294,25 @@
             const labels = Object.keys(history).map(k => new Date(k + '-02').toLocaleString('id-ID', { month: 'short', year: 'numeric' }));
             
             // Revenue vs Profit Chart
+            const profitData = Object.values(history).map(h => h.profit);
+            const revenueData = Object.values(history).map(h => h.revenue);
+            const allDataPoints = [...profitData, ...revenueData];
+
+            const dataMax = Math.max(0, ...allDataPoints);
+            const dataMin = Math.min(0, ...allDataPoints);
+
+            const padding = (dataMax - dataMin) * 0.1;
+            const calculatedMax = dataMax + padding;
+            const calculatedMin = dataMin - padding;
+
             const revProfitCtx = document.getElementById('revenue-profit-chart').getContext('2d');
             new Chart(revProfitCtx, {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [
-                        { label: 'Pendapatan', data: Object.values(history).map(h => h.revenue), backgroundColor: '#3b82f6' },
-                        { label: 'Laba Kotor', data: Object.values(history).map(h => h.profit), backgroundColor: '#10b981' }
+                        { label: 'Pendapatan', data: revenueData, backgroundColor: '#3b82f6' },
+                        { label: 'Laba Kotor', data: profitData, backgroundColor: '#10b981' }
                     ]
                 },
                 options: { 
@@ -309,7 +320,11 @@
                     maintainAspectRatio: false,
                     scales: { 
                         x: { stacked: false }, 
-                        y: { stacked: false } 
+                        y: { 
+                            stacked: false,
+                            min: calculatedMin,
+                            max: calculatedMax
+                        } 
                     } 
                 }
             });
