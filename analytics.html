@@ -52,93 +52,98 @@
                 </div>
             </header>
             
-            <!-- Ringkasan Section -->
-            <section id="ringkasan" class="mb-12">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p>
-                            <p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p>
-                        </div>
-                        <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
-                    </div>
-                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p>
-                            <p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p>
-                        </div>
-                        <div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div>
-                    </div>
-                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Pelanggan Aktif</p>
-                            <p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p>
-                        </div>
-                        <div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div>
-                    </div>
-                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p>
-                            <p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p>
-                        </div>
-                        <div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Analisis Pendapatan -->
-            <section id="pendapatan" class="mb-12">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
-                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4>
-                        <canvas id="revenue-profit-chart"></canvas>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4>
-                        <canvas id="revenue-composition-chart"></canvas>
-                    </div>
-                </div>
-            </section>
+            <div id="loading-indicator" class="text-center py-16">
+                <p class="text-lg text-gray-600">Memuat data analitik...</p>
+            </div>
 
-             <!-- Analisis Pelanggan -->
-            <section id="pelanggan" class="mb-12">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pelanggan</h3>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-2">Pelanggan Baru Bulan Ini</h4>
-                        <p id="kpi-new-customers" class="text-4xl font-bold text-green-600">0</p>
+            <div id="analytics-content" class="hidden">
+                <!-- Ringkasan Section -->
+                <section id="ringkasan" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p>
+                                <p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p>
+                            </div>
+                            <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
+                        </div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p>
+                                <p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p>
+                            </div>
+                            <div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div>
+                        </div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Pelanggan Aktif</p>
+                                <p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p>
+                            </div>
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div>
+                        </div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p>
+                                <p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p>
+                            </div>
+                            <div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-2">Customer Lifetime Value (LTV)</h4>
-                        <p id="kpi-ltv" class="text-4xl font-bold text-indigo-600">Rp 0</p>
-                        <p class="text-sm text-gray-500">Estimasi pendapatan dari satu pelanggan.</p>
+                </section>
+                
+                <!-- Analisis Pendapatan -->
+                <section id="pendapatan" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
+                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4>
+                            <canvas id="revenue-profit-chart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4>
+                            <canvas id="revenue-composition-chart"></canvas>
+                        </div>
                     </div>
-                    <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4>
-                        <canvas id="customer-growth-chart"></canvas>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Analisis Pengeluaran -->
-            <section id="pengeluaran" class="mb-12">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm">
-                         <h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4>
-                        <canvas id="expenses-composition-chart"></canvas>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm">
-                        <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4>
-                        <p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p>
-                         <h4 class="text-lg font-semibold mb-2 mt-6">Kategori Teratas</h4>
-                        <p id="kpi-top-expense-category" class="text-2xl font-medium">-</p>
-                    </div>
-                </div>
-            </section>
+                </section>
 
+                 <!-- Analisis Pelanggan -->
+                <section id="pelanggan" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pelanggan</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-2">Pelanggan Baru Bulan Ini</h4>
+                            <p id="kpi-new-customers" class="text-4xl font-bold text-green-600">0</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-2">Customer Lifetime Value (LTV)</h4>
+                            <p id="kpi-ltv" class="text-4xl font-bold text-indigo-600">Rp 0</p>
+                            <p class="text-sm text-gray-500">Estimasi pendapatan dari satu pelanggan.</p>
+                        </div>
+                        <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4>
+                            <canvas id="customer-growth-chart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Analisis Pengeluaran -->
+                <section id="pengeluaran" class="mb-12">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+                             <h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4>
+                            <canvas id="expenses-composition-chart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4>
+                            <p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p>
+                             <h4 class="text-lg font-semibold mb-2 mt-6">Kategori Teratas</h4>
+                            <p id="kpi-top-expense-category" class="text-2xl font-medium">-</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -183,7 +188,7 @@
             } catch (error) {
                 console.error("Error fetching data:", error);
                 document.getElementById('main-title').textContent = "Gagal Memuat Data";
-                return { customers: [], packages: [], invoices: [], expenses: [] };
+                return null;
             }
         }
         
@@ -346,9 +351,13 @@
                 document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 fetchData().then(data => {
                     if (data) {
+                        document.getElementById('loading-indicator').style.display = 'none';
+                        document.getElementById('analytics-content').style.display = 'block';
                         calculateAnalytics(data);
                         const chartData = prepareChartData(data);
                         renderCharts(chartData);
+                    } else {
+                        document.getElementById('loading-indicator').textContent = "Gagal memuat data. Silakan coba lagi nanti.";
                     }
                 });
             } else {
@@ -358,11 +367,12 @@
 
         // Sidebar Navigation Logic
         document.getElementById('sidebar-nav').addEventListener('click', function(e) {
-            if (e.target.tagName === 'A') {
+            const clickedLink = e.target.closest('a.nav-link');
+            if (clickedLink) {
                 document.querySelectorAll('.nav-link').forEach(link => {
                     link.classList.remove('nav-active');
                 });
-                e.target.classList.add('nav-active');
+                clickedLink.classList.add('nav-active');
             }
         });
 
