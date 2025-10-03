@@ -788,6 +788,3 @@ function setupAppListeners() {
 lucide.createIcons();
 setupAuthListeners();
 
-</script>
-</body>
-</html>
