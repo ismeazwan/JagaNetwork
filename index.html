@@ -444,6 +444,34 @@
         </div>
     </div>
 
+    <!-- Modal Opsi Chat -->
+    <div id="modal-chat-options" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-md">
+            <h3 class="text-2xl font-bold mb-6">Kirim Pesan WhatsApp</h3>
+            <p class="mb-4 text-gray-600">Pilih template pesan untuk dikirim ke <span id="chat-customer-name" class="font-semibold"></span>.</p>
+            <div class="space-y-3">
+                <button id="btn-send-customer-data" class="w-full text-left p-4 border rounded-lg hover:bg-gray-50 flex items-center">
+                    <i data-lucide="user-square" class="w-5 h-5 mr-3 text-indigo-600"></i>
+                    <div>
+                        <p class="font-semibold">Kirim Data Pelanggan</p>
+                        <p class="text-sm text-gray-500">Kirim detail ID, nama, dan paket pelanggan.</p>
+                    </div>
+                </button>
+                <button id="btn-send-invoice-info" class="w-full text-left p-4 border rounded-lg hover:bg-gray-50 flex items-center">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3 text-green-600"></i>
+                    <div>
+                        <p class="font-semibold">Kirim Info Tagihan</p>
+                        <p class="text-sm text-gray-500">Kirim rincian tagihan yang belum lunas.</p>
+                    </div>
+                </button>
+            </div>
+            <div class="flex justify-end mt-6">
+                 <button type="button" id="btn-cancel-chat" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            </div>
+        </div>
+    </div>
+
+
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300">
         <p id="toast-message"></p>
     </div>
@@ -456,7 +484,7 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
-            collection, query, where, getDocs, writeBatch, serverTimestamp
+            collection, query, where, getDocs, writeBatch, serverTimestamp, deleteField
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
         const firebaseConfig = {
@@ -478,6 +506,7 @@
         let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices;
         let deleteCallback = null;
         let verificationInvoiceId = null;
+        let chatContext = {};
         
         let lineChartInstance, pieChartInstance;
 
@@ -716,7 +745,7 @@
             try {
                 const dataToUpdate = { status: newStatus };
                 if (clearProof) {
-                    dataToUpdate.proofOfPaymentURL = deleteField(); // Hapus field jika ditolak
+                    dataToUpdate.proofOfPaymentURL = deleteField();
                 }
                 await updateDoc(doc(db, dataContainerPath, 'invoices', id), dataToUpdate);
                 showToast("Status tagihan berhasil diperbarui.");
@@ -775,6 +804,17 @@
         }
         const formatRupiah = (angka) => !angka ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
+        const formatPhoneNumber = (phone) => {
+            if (!phone) return null;
+            let formatted = phone.replace(/[^0-9]/g, ''); // Remove all non-numeric characters
+            if (formatted.startsWith('0')) {
+                formatted = '62' + formatted.substring(1);
+            } else if (formatted.startsWith('+62')) {
+                formatted = formatted.substring(1);
+            }
+            return formatted;
+        };
+
         function renderCustomers() {
             const tbody = document.getElementById('pelanggan-table-body');
             tbody.innerHTML = !allCustomers.length ? `<tr><td colspan="6" class="p-8 text-center text-gray-500">Belum ada pelanggan.</td></tr>` : 
@@ -784,9 +824,10 @@
                         <td class="p-4 font-mono text-sm text-gray-600">${c.customerId || '-'}</td>
                         <td class="p-4">${c.nama}</td><td class="p-4">${c.alamat}</td><td class="p-4">${c.hp}</td>
                         <td class="p-4">${pkg.nama}</td>
-                        <td class="p-4 flex gap-2">
-                            <button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${c.id}"><i data-lucide="edit" class="w-5 h-5"></i></button>
-                            <button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${c.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        <td class="p-4 flex gap-3">
+                            <button class="btn-chat text-green-600 hover:text-green-800" data-customer-id="${c.id}" title="Kirim WhatsApp"><i data-lucide="message-circle" class="w-5 h-5"></i></button>
+                            <button class="btn-edit-pelanggan text-blue-600 hover:text-blue-800" data-id="${c.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${c.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                         </td></tr>`;
                 }).join('');
             lucide.createIcons();
@@ -810,20 +851,20 @@
                 .map(inv => {
                     const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
                     
-                    let statusClass, statusText, actionBtn, editDeleteBtns;
+                    let statusClass, statusText, actionBtn = '', editDeleteBtns = '', chatBtn = '';
+
+                    chatBtn = `<button class="btn-chat text-green-600 hover:text-green-800" data-customer-id="${customer.id}" title="Kirim WhatsApp"><i data-lucide="message-circle" class="w-5 h-5"></i></button>`;
 
                     switch(inv.status) {
                         case 'lunas':
                             statusClass = 'bg-green-100 text-green-800';
                             statusText = 'Lunas';
                             actionBtn = `<span class="text-sm text-gray-500">Lunas</span>`;
-                            editDeleteBtns = '';
                             break;
                         case 'menunggu konfirmasi':
                             statusClass = 'bg-yellow-100 text-yellow-800';
                             statusText = 'Menunggu Konfirmasi';
                             actionBtn = `<button class="btn-verifikasi-pembayaran bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs sm:text-sm" data-id="${inv.id}">Verifikasi</button>`;
-                            editDeleteBtns = '';
                             break;
                         default: // belum lunas
                             statusClass = 'bg-red-100 text-red-800';
@@ -840,7 +881,7 @@
                         <td class="p-4">${customer.nama}</td><td class="p-4">${getBillingPeriodText(inv, customer)}</td>
                         <td class="p-4">${formatRupiah(inv.jumlah)} ${inv.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td>
                         <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span></td>
-                        <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${editDeleteBtns || ''}</td></tr>`;
+                        <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${chatBtn}${editDeleteBtns}</td></tr>`;
                 }).join('');
             lucide.createIcons();
         }
@@ -1054,7 +1095,8 @@
             document.getElementById('btn-cancel-paket').addEventListener('click', () => closeModal(document.getElementById('modal-paket')));
             document.getElementById('btn-cancel-tagihan').addEventListener('click', () => closeModal(document.getElementById('modal-tagihan')));
             document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
-            
+            document.getElementById('btn-cancel-chat').addEventListener('click', () => closeModal(document.getElementById('modal-chat-options')));
+
             document.getElementById('form-pelanggan').addEventListener('submit', (e) => { 
                 e.preventDefault(); 
                 saveCustomer({ 
@@ -1094,6 +1136,15 @@
                     openModal(document.getElementById('modal-pelanggan'));
                 } else if (btn.classList.contains('btn-delete-pelanggan')) {
                     deleteCallback = () => deleteCustomer(id); document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus pelanggan ini? Tindakan ini tidak dapat dibatalkan."; openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-chat')) {
+                    const customerId = btn.dataset.customerId;
+                    const customer = allCustomers.find(c => c.id === customerId);
+                    if (customer) {
+                        chatContext = { customerId: customer.id };
+                        document.getElementById('chat-customer-name').textContent = customer.nama;
+                        openModal(document.getElementById('modal-chat-options'));
+                        lucide.createIcons();
+                    }
                 } else if (btn.classList.contains('btn-edit-paket')) {
                     const p = allPackages.find(pkg => pkg.id === id); if (!p) return;
                     document.getElementById('paket-id').value = p.id; document.getElementById('nama-paket').value = p.nama; document.getElementById('kecepatan').value = p.kecepatan; document.getElementById('harga').value = p.harga; document.getElementById('harga-prorate').value = p.hargaProrate || '';
@@ -1125,6 +1176,48 @@
                     openModal(document.getElementById('modal-verifikasi'));
                 }
             });
+
+            document.getElementById('btn-send-customer-data').addEventListener('click', () => {
+                const { customerId } = chatContext;
+                const customer = allCustomers.find(c => c.id === customerId);
+                if (!customer) return showToast('Data pelanggan tidak ditemukan.', 'error');
+
+                const phone = formatPhoneNumber(customer.hp);
+                if (!phone) return showToast('Nomor HP pelanggan tidak valid.', 'error');
+
+                const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A', kecepatan: '' };
+
+                const message = `Halo Kak ${customer.nama},\n\nBerikut adalah data kepelangganan Anda di JagaNetwork:\n- ID Pelanggan: *${customer.customerId}*\n- Nama: *${customer.nama}*\n- Alamat: *${customer.alamat}*\n- Paket: *${pkg.nama} (${pkg.kecepatan})*\n\nTerima kasih telah menjadi pelanggan kami.`;
+                
+                const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                closeModal(document.getElementById('modal-chat-options'));
+            });
+
+            document.getElementById('btn-send-invoice-info').addEventListener('click', () => {
+                const { customerId } = chatContext;
+                const customer = allCustomers.find(c => c.id === customerId);
+                if (!customer) return showToast('Data pelanggan tidak ditemukan.', 'error');
+
+                const phone = formatPhoneNumber(customer.hp);
+                if (!phone) return showToast('Nomor HP pelanggan tidak valid.', 'error');
+                
+                const latestUnpaidInvoice = allInvoices
+                    .filter(inv => inv.pelangganId === customerId && inv.status === 'belum lunas')
+                    .sort((a, b) => new Date(b.periode) - new Date(a.periode))[0];
+
+                if (!latestUnpaidInvoice) {
+                    return showToast('Tidak ada tagihan yang belum lunas untuk pelanggan ini.', 'info');
+                }
+                
+                const message = `Halo Kak ${customer.nama},\n\nKami ingin menginformasikan tagihan JagaNetwork Anda yang perlu dibayarkan:\n- Periode: *${getBillingPeriodText(latestUnpaidInvoice, customer)}*\n- Jumlah: *${formatRupiah(latestUnpaidInvoice.jumlah)}*\n\nSilakan lakukan pembayaran melalui portal pelanggan kami di:\nhttps://payment-gateway-wheat-nine.vercel.app/\n\nTerima kasih.`;
+
+                const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                closeModal(document.getElementById('modal-chat-options'));
+            });
+
+
             document.getElementById('btn-confirm-hapus').addEventListener('click', () => { if (deleteCallback) { deleteCallback(); } closeModal(document.getElementById('modal-konfirmasi')); });
             document.getElementById('btn-generate-tagihan').addEventListener('click', generateInvoices);
             document.getElementById('btn-generate-prorate').addEventListener('click', generateProrateInvoices);
@@ -1156,6 +1249,4 @@
     </script>
 </body>
 </html>
-
-
 
