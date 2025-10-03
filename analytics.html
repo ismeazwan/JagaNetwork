@@ -21,67 +21,39 @@
 
     <div id="app-container" class="flex min-h-screen">
         <aside class="w-64 bg-white shadow-md flex-col p-4 hidden md:flex">
-            <div class="p-4 mb-4">
-                <h1 class="text-2xl font-bold text-indigo-600">Analytics</h1>
-                <p class="text-sm text-gray-500">JagaNetwork Platform</p>
-            </div>
+            <div class="p-4 mb-4"><h1 class="text-2xl font-bold text-indigo-600">Analytics</h1><p class="text-sm text-gray-500">JagaNetwork Platform</p></div>
             <nav id="sidebar-nav" class="flex-1 space-y-2">
-                <a href="#ringkasan" class="nav-link nav-active flex items-center py-2 px-4 text-gray-700 rounded-lg">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Ringkasan
-                </a>
-                <a href="#pendapatan" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <i data-lucide="trending-up" class="w-5 h-5 mr-3"></i> Pendapatan
-                </a>
-                <a href="#pelanggan" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Pelanggan
-                </a>
-                 <a href="#pengeluaran" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
-                    <i data-lucide="trending-down" class="w-5 h-5 mr-3"></i> Pengeluaran
-                </a>
+                <a href="#ringkasan" class="nav-link nav-active flex items-center py-2 px-4 text-gray-700 rounded-lg"><i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Ringkasan</a>
+                <a href="#pendapatan" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg"><i data-lucide="trending-up" class="w-5 h-5 mr-3"></i> Pendapatan</a>
+                <a href="#pelanggan" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg"><i data-lucide="users" class="w-5 h-5 mr-3"></i> Pelanggan</a>
+                <a href="#pengeluaran" class="nav-link flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg"><i data-lucide="trending-down" class="w-5 h-5 mr-3"></i> Pengeluaran</a>
             </nav>
         </aside>
 
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
             <header class="flex justify-between items-center mb-8">
                 <h2 id="main-title" class="text-2xl md:text-3xl font-bold">Ringkasan Bisnis</h2>
-                <div class="flex items-center gap-2">
-                    <i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i>
-                    <span id="current-date" class="text-gray-600 font-medium text-sm md:text-base"></span>
-                </div>
+                <div class="flex items-center gap-2"><i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i><span id="current-date" class="text-gray-600 font-medium text-sm md:text-base"></span></div>
             </header>
             
-            <div id="loading-indicator" class="text-center py-16">
-                <p class="text-lg text-gray-600">Memuat data analitik...</p>
-            </div>
+            <div id="loading-indicator" class="text-center py-16"><p class="text-lg text-gray-600">Memuat data analitik...</p></div>
 
             <div id="analytics-content" class="hidden">
                 <section id="ringkasan" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                            <div><p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p><p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p></div>
-                            <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
-                        </div>
-                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                            <div><p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p><p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p></div>
-                            <div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div>
-                        </div>
-                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                            <div><p class="text-sm text-gray-500">Pelanggan Aktif</p><p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p></div>
-                            <div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div>
-                        </div>
-                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
-                            <div><p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p><p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p></div>
-                            <div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div>
-                        </div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p><p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div></div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p><p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div></div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Pelanggan Aktif</p><p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p></div><div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div></div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p><p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p></div><div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div></div>
                     </div>
                 </section>
                 
                 <section id="pendapatan" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4><div class="relative h-96"><canvas id="revenue-profit-chart"></canvas></div></div>
-                         <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4><canvas id="revenue-composition-chart"></canvas></div>
+                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4><div class="relative flex-grow min-h-0"><canvas id="revenue-profit-chart"></canvas></div></div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4><div class="relative flex-grow min-h-0"><canvas id="revenue-composition-chart"></canvas></div></div>
                     </div>
                 </section>
 
@@ -90,29 +62,15 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Pelanggan Baru Bulan Ini</h4><p id="kpi-new-customers" class="text-4xl font-bold text-green-600">0</p></div>
                         <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Customer Lifetime Value (LTV)</h4><p id="kpi-ltv" class="text-4xl font-bold text-indigo-600">Rp 0</p><p class="text-sm text-gray-500">Estimasi pendapatan dari satu pelanggan.</p></div>
-                        
-                        <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm flex flex-col">
-                            <h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4>
-                            <div class="relative flex-grow min-h-0">
-                                <canvas id="customer-growth-chart"></canvas>
-                            </div>
-                        </div>
+                        <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4><div class="relative flex-grow min-h-0"><canvas id="customer-growth-chart"></canvas></div></div>
                     </div>
                 </section>
                 
                 <section id="pengeluaran" class="mb-12">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col">
-                             <h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4>
-                             <div class="relative flex-grow min-h-0">
-                                <canvas id="expenses-composition-chart"></canvas>
-                             </div>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm">
-                            <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4><p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p>
-                             <h4 class="text-lg font-semibold mb-2 mt-6">Kategori Teratas</h4><p id="kpi-top-expense-category" class="text-2xl font-medium">-</p>
-                        </div>
+                        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4><div class="relative flex-grow min-h-0"><canvas id="expenses-composition-chart"></canvas></div></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4><p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p><h4 class="text-lg font-semibold mb-2 mt-6">Kategori Teratas</h4><p id="kpi-top-expense-category" class="text-2xl font-medium">-</p></div>
                     </div>
                 </section>
             </div>
@@ -120,154 +78,22 @@
     </div>
 
     <script type="module">
+        // ... (JavaScript code remains the same)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    
-        const firebaseConfig = {
-            apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
-            authDomain: "database-jaganetwork.firebaseapp.com",
-            projectId: "database-jaganetwork",
-            storageBucket: "database-jaganetwork.appspot.com",
-            messagingSenderId: "912989992875",
-            appId: "1:912989992875:web:8c6cda77171889e1e644ee"
-        };
-    
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        
-        const dataContainerPath = "jaganetwork_data/shared_workspace";
-        const getCollectionRef = (name) => query(collection(db, dataContainerPath, name));
-
-        const formatRupiah = (angka) => !angka && angka !== 0 ? 'Rp 0' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-
-        async function fetchData() {
-            try {
-                const [customersSnap, packagesSnap, invoicesSnap, expensesSnap] = await Promise.all([
-                    getDocs(getCollectionRef('customers')), getDocs(getCollectionRef('packages')),
-                    getDocs(getCollectionRef('invoices')), getDocs(getCollectionRef('expenses'))
-                ]);
-                const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const packages = packagesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const invoices = invoicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const expenses = expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                return { customers, packages, invoices, expenses };
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                document.getElementById('main-title').textContent = "Gagal Memuat Data";
-                return null;
-            }
-        }
-        
-        function calculateAnalytics(data) {
-            const { customers, packages, invoices, expenses } = data;
-            const today = new Date();
-            const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-            const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-            const activeCustomers = customers.length;
-            let mrr = 0;
-            customers.forEach(c => {
-                const pkg = packages.find(p => p.id === c.paketId);
-                if (pkg && pkg.harga) mrr += Number(pkg.harga);
-            });
-            const arpu = activeCustomers > 0 ? mrr / activeCustomers : 0;
-            const customersBeforeThisMonth = customers.filter(c => c.joinDate && new Date(c.joinDate) < thisMonthStart);
-            let churnedThisMonth = 0;
-            customersBeforeThisMonth.forEach(c => {
-                 const hasPaidThisMonth = invoices.some(inv => inv.pelangganId === c.id && inv.status === 'lunas' && new Date(inv.periode) >= thisMonthStart);
-                 if (!hasPaidThisMonth) churnedThisMonth++;
-            });
-            const churnRate = customersBeforeThisMonth.length > 0 ? (churnedThisMonth / customersBeforeThisMonth.length) : 0;
-            const newCustomersThisMonth = customers.filter(c => c.joinDate && new Date(c.joinDate) >= thisMonthStart).length;
-            const ltv = churnRate > 0 ? arpu / churnRate : arpu * 12;
-            const totalExpensesLast30Days = expenses.filter(e => e.tanggal && new Date(e.tanggal) >= oneMonthAgo).reduce((sum, e) => sum + e.jumlah, 0);
-            document.getElementById('kpi-active-customers').textContent = activeCustomers;
-            document.getElementById('kpi-mrr').textContent = formatRupiah(mrr);
-            document.getElementById('kpi-arpu').textContent = formatRupiah(arpu);
-            document.getElementById('kpi-churn-rate').textContent = `${(churnRate * 100).toFixed(1)}%`;
-            document.getElementById('kpi-new-customers').textContent = newCustomersThisMonth;
-            document.getElementById('kpi-ltv').textContent = formatRupiah(ltv);
-            document.getElementById('kpi-total-expenses').textContent = formatRupiah(totalExpensesLast30Days);
-        }
-        
-        function prepareChartData(data) {
-              const { customers, packages, invoices, expenses } = data;
-              const history = {};
-              for (let i = 11; i >= 0; i--) {
-                  const d = new Date(new Date().setMonth(new Date().getMonth() - i));
-                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                  history[monthKey] = { revenue: 0, profit: 0, customers: 0, expenses: 0 };
-              }
-              invoices.filter(inv => inv.status === 'lunas' && inv.periode).forEach(inv => {
-                  const d = new Date(inv.periode);
-                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                  if (history[monthKey]) { history[monthKey].revenue += inv.jumlah; }
-              });
-              expenses.filter(e => e.tanggal).forEach(e => {
-                  const d = new Date(e.tanggal);
-                  const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                   if (history[monthKey]) { history[monthKey].expenses += e.jumlah; }
-              });
-              Object.keys(history).forEach(monthKey => {
-                  history[monthKey].profit = history[monthKey].revenue - history[monthKey].expenses;
-                  history[monthKey].customers = customers.filter(c => c.joinDate && new Date(c.joinDate) <= new Date(monthKey + '-28')).length;
-              });
-              const revenueByPackage = {};
-              packages.forEach(p => revenueByPackage[p.nama] = 0);
-              invoices.filter(inv => inv.status === 'lunas').forEach(inv => {
-                  const cust = customers.find(c => c.id === inv.pelangganId);
-                  if (cust) { const pkg = packages.find(p => p.id === cust.paketId); if (pkg) revenueByPackage[pkg.nama] += inv.jumlah; }
-              });
-              const expensesByCategory = {};
-              expenses.forEach(e => { expensesByCategory[e.kategori] = (expensesByCategory[e.kategori] || 0) + e.jumlah; });
-              if (Object.keys(expensesByCategory).length > 0) {
-                   document.getElementById('kpi-top-expense-category').textContent = Object.entries(expensesByCategory).sort(([,a],[,b]) => b-a)[0][0];
-              }
-              return { history, revenueByPackage, expensesByCategory };
-        }
-
-        function renderCharts(chartData) {
-            const { history, revenueByPackage, expensesByCategory } = chartData;
-            const colorPalette = ['#4f46e5', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#d946ef'];
-            const labels = Object.keys(history).map(k => new Date(k + '-02').toLocaleString('id-ID', { month: 'short', year: 'numeric' }));
-            
-            const profitData = Object.values(history).map(h => h.profit);
-            const revenueData = Object.values(history).map(h => h.revenue);
-            const allDataPoints = [...profitData, ...revenueData];
-            const dataMax = Math.max(0, ...allDataPoints), dataMin = Math.min(0, ...allDataPoints);
-            const padding = (dataMax - dataMin) * 0.1;
-            const calculatedMax = dataMax + padding, calculatedMin = dataMin - padding;
-
-            new Chart(document.getElementById('revenue-profit-chart').getContext('2d'), { type: 'bar', data: { labels, datasets: [{ label: 'Pendapatan', data: revenueData, backgroundColor: '#3b82f6' }, { label: 'Laba Kotor', data: profitData, backgroundColor: '#10b981' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false, min: calculatedMin, max: calculatedMax } } } });
-            new Chart(document.getElementById('revenue-composition-chart').getContext('2d'), { type: 'doughnut', data: { labels: Object.keys(revenueByPackage), datasets: [{ label: 'Pendapatan', data: Object.values(revenueByPackage), backgroundColor: colorPalette }] }, options: { responsive: true, maintainAspectRatio: false } });
-            new Chart(document.getElementById('customer-growth-chart').getContext('2d'), { type: 'line', data: { labels, datasets: [{ label: 'Total Pelanggan', data: Object.values(history).map(h => h.customers), borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
-            new Chart(document.getElementById('expenses-composition-chart').getContext('2d'), { type: 'pie', data: { labels: Object.keys(expensesByCategory), datasets: [{ label: 'Pengeluaran', data: Object.values(expensesByCategory), backgroundColor: colorPalette.reverse() }] }, options: { responsive: true, maintainAspectRatio: false } });
-        }
-        
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                fetchData().then(data => {
-                    if (data) {
-                        document.getElementById('loading-indicator').style.display = 'none';
-                        document.getElementById('analytics-content').style.display = 'block';
-                        calculateAnalytics(data);
-                        const chartData = prepareChartData(data);
-                        renderCharts(chartData);
-                    } else { document.getElementById('loading-indicator').textContent = "Gagal memuat data. Silakan coba lagi nanti."; }
-                });
-            } else { document.body.innerHTML = `<div class="w-full h-screen flex items-center justify-center p-4 text-center"><p class="text-xl">Silakan <a href="index.html" class="text-indigo-600 font-semibold">login</a> untuk mengakses analytics.</p></div>`; }
-        });
-
-        document.getElementById('sidebar-nav').addEventListener('click', function(e) {
-            const clickedLink = e.target.closest('a.nav-link');
-            if (clickedLink) {
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('nav-active'));
-                clickedLink.classList.add('nav-active');
-            }
-        });
-        lucide.createIcons();
+        const firebaseConfig={apiKey:"AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",authDomain:"database-jaganetwork.firebaseapp.com",projectId:"database-jaganetwork",storageBucket:"database-jaganetwork.appspot.com",messagingSenderId:"912989992875",appId:"1:912989992875:web:8c6cda77171889e1e644ee"};
+        const app=initializeApp(firebaseConfig);const db=getFirestore(app);const auth=getAuth(app);
+        const dataContainerPath="jaganetwork_data/shared_workspace";const getCollectionRef=name=>query(collection(db,dataContainerPath,name));
+        const formatRupiah=angka=>!angka&&angka!==0?'Rp 0':new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(angka);
+        async function fetchData(){try{const[customersSnap,packagesSnap,invoicesSnap,expensesSnap]=await Promise.all([getDocs(getCollectionRef('customers')),getDocs(getCollectionRef('packages')),getDocs(getCollectionRef('invoices')),getDocs(getCollectionRef('expenses'))]);const customers=customersSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const packages=packagesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const invoices=invoicesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));const expenses=expensesSnap.docs.map(doc=>({id:doc.id,...doc.data()}));return{customers,packages,invoices,expenses}}catch(error){console.error("Error fetching data:",error);document.getElementById('main-title').textContent="Gagal Memuat Data";return null}}
+        function calculateAnalytics(data){const{customers,packages,invoices,expenses}=data;const today=new Date();const thisMonthStart=new Date(today.getFullYear(),today.getMonth(),1);const oneMonthAgo=new Date(today.getFullYear(),today.getMonth()-1,today.getDate());const activeCustomers=customers.length;let mrr=0;customers.forEach(c=>{const pkg=packages.find(p=>p.id===c.paketId);if(pkg&&pkg.harga)mrr+=Number(pkg.harga)});const arpu=activeCustomers>0?mrr/activeCustomers:0;const customersBeforeThisMonth=customers.filter(c=>c.joinDate&&new Date(c.joinDate)<thisMonthStart);let churnedThisMonth=0;customersBeforeThisMonth.forEach(c=>{const hasPaidThisMonth=invoices.some(inv=>inv.pelangganId===c.id&&inv.status==='lunas'&&new Date(inv.periode)>=thisMonthStart);if(!hasPaidThisMonth)churnedThisMonth++});const churnRate=customersBeforeThisMonth.length>0?churnedThisMonth/customersBeforeThisMonth.length:0;const newCustomersThisMonth=customers.filter(c=>c.joinDate&&new Date(c.joinDate)>=thisMonthStart).length;const ltv=churnRate>0?arpu/churnRate:arpu*12;const totalExpensesLast30Days=expenses.filter(e=>e.tanggal&&new Date(e.tanggal)>=oneMonthAgo).reduce((sum,e)=>sum+e.jumlah,0);document.getElementById('kpi-active-customers').textContent=activeCustomers;document.getElementById('kpi-mrr').textContent=formatRupiah(mrr);document.getElementById('kpi-arpu').textContent=formatRupiah(arpu);document.getElementById('kpi-churn-rate').textContent=`${(churnRate*100).toFixed(1)}%`;document.getElementById('kpi-new-customers').textContent=newCustomersThisMonth;document.getElementById('kpi-ltv').textContent=formatRupiah(ltv);document.getElementById('kpi-total-expenses').textContent=formatRupiah(totalExpensesLast30Days)}
+        function prepareChartData(data){const{customers,packages,invoices,expenses}=data;const history={};for(let i=11;i>=0;i--){const d=new Date((new Date).setMonth((new Date).getMonth()-i));const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;history[monthKey]={revenue:0,profit:0,customers:0,expenses:0}}
+        invoices.filter(inv=>inv.status==='lunas'&&inv.periode).forEach(inv=>{const d=new Date(inv.periode);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(history[monthKey]){history[monthKey].revenue+=inv.jumlah}});expenses.filter(e=>e.tanggal).forEach(e=>{const d=new Date(e.tanggal);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(history[monthKey]){history[monthKey].expenses+=e.jumlah}});Object.keys(history).forEach(monthKey=>{history[monthKey].profit=history[monthKey].revenue-history[monthKey].expenses;history[monthKey].customers=customers.filter(c=>c.joinDate&&new Date(c.joinDate)<=new Date(monthKey+'-28')).length});const revenueByPackage={};packages.forEach(p=>revenueByPackage[p.nama]=0);invoices.filter(inv=>inv.status==='lunas').forEach(inv=>{const cust=customers.find(c=>c.id===inv.pelangganId);if(cust){const pkg=packages.find(p=>p.id===cust.paketId);if(pkg)revenueByPackage[pkg.nama]+=inv.jumlah}});const expensesByCategory={};expenses.forEach(e=>{expensesByCategory[e.kategori]=(expensesByCategory[e.kategori]||0)+e.jumlah});if(Object.keys(expensesByCategory).length>0){document.getElementById('kpi-top-expense-category').textContent=Object.entries(expensesByCategory).sort(([,a],[,b])=>b-a)[0][0]}
+        return{history,revenueByPackage,expensesByCategory}}
+        function renderCharts(chartData){const{history,revenueByPackage,expensesByCategory}=chartData;const colorPalette=['#4f46e5','#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#d946ef'];const labels=Object.keys(history).map(k=>new Date(k+'-02').toLocaleString('id-ID',{month:'short',year:'numeric'}));const profitData=Object.values(history).map(h=>h.profit);const revenueData=Object.values(history).map(h=>h.revenue);const allDataPoints=[...profitData,...revenueData];const dataMax=Math.max(0,...allDataPoints),dataMin=Math.min(0,...allDataPoints);const padding=(dataMax-dataMin)*.1;const calculatedMax=dataMax+padding,calculatedMin=dataMin-padding;new Chart(document.getElementById('revenue-profit-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Pendapatan',data:revenueData,backgroundColor:'#3b82f6'},{label:'Laba Kotor',data:profitData,backgroundColor:'#10b981'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false},y:{stacked:false,min:calculatedMin,max:calculatedMax}}}});new Chart(document.getElementById('revenue-composition-chart').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(revenueByPackage),datasets:[{label:'Pendapatan',data:Object.values(revenueByPackage),backgroundColor:colorPalette}]},options:{responsive:true,maintainAspectRatio:false}});new Chart(document.getElementById('customer-growth-chart').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Total Pelanggan',data:Object.values(history).map(h=>h.customers),borderColor:'#4f46e5',backgroundColor:'rgba(79, 70, 229, 0.1)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}});new Chart(document.getElementById('expenses-composition-chart').getContext('2d'),{type:'pie',data:{labels:Object.keys(expensesByCategory),datasets:[{label:'Pengeluaran',data:Object.values(expensesByCategory),backgroundColor:colorPalette.reverse()}]},options:{responsive:true,maintainAspectRatio:false}})}
+        onAuthStateChanged(auth,user=>{if(user){document.getElementById('current-date').textContent=(new Date).toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});fetchData().then(data=>{if(data){document.getElementById('loading-indicator').style.display='none';document.getElementById('analytics-content').style.display='block';calculateAnalytics(data);const chartData=prepareChartData(data);renderCharts(chartData)}else{document.getElementById('loading-indicator').textContent="Gagal memuat data. Silakan coba lagi nanti."}})}else{document.body.innerHTML=`<div class="w-full h-screen flex items-center justify-center p-4 text-center"><p class="text-xl">Silakan <a href="index.html" class="text-indigo-600 font-semibold">login</a> untuk mengakses analytics.</p></div>`}});
+        document.getElementById('sidebar-nav').addEventListener('click',function(e){const clickedLink=e.target.closest('a.nav-link');if(clickedLink){document.querySelectorAll('.nav-link').forEach(link=>link.classList.remove('nav-active'));clickedLink.classList.add('nav-active')}});lucide.createIcons();
     </script>
 </body>
 </html>
