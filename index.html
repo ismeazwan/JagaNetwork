@@ -115,6 +115,9 @@
                 <a href="#" id="tab-laporan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
                 </a>
+                <a href="analytics.html" target="_blank" rel="noopener noreferrer" class="flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Analytics
+                </a>
             </nav>
             <div class="p-6">
                 <button id="btn-logout" class="w-full flex items-center justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
@@ -1204,6 +1207,7 @@
             document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
 
             const expensesThisMonth = allExpenses.filter(exp => {
+                if (!exp.tanggal) return false;
                 const expDate = new Date(exp.tanggal);
                 return expDate.getFullYear() === today.getFullYear() && expDate.getMonth() === today.getMonth();
             });
@@ -1605,7 +1609,7 @@
                     return showToast('Tidak ada tagihan yang belum lunas untuk pelanggan ini.', 'info');
                 }
                 
-                const message = `Halo Kak *${customer.nama}* 👋\n\n‼️ *PENGINGAT TAGIHAN JARINGAN* ‼️\n\nKami ingin menginformasikan bahwa tagihan internet Anda untuk periode berikut telah jatuh tempo:\n\n🧾 *Detail Tagihan:*\n-----------------------------------\n*Periode:* ${getBillingPeriodText(latestUnpaidInvoice, customer)}\n*Jumlah:* *${formatRupiah(latestUnpaidInvoice.jumlah)}*\n-----------------------------------\n\nUntuk menghindari gangguan layanan, mohon segera lakukan pembayaran melalui Portal Pembayaran kami di bawah ini:\n\n👉 *Link Pembayaran:*\nhttps://payment-jaganetwork.vercel.app/\n\nCukup masukkan ID Pelanggan Anda: *${customer.customerId}*\n\nJika sudah melakukan pembayaran, mohon abaikan pesan ini.\n\nTerima kasih atas perhatiannya,\nAdmin JagaNetwork`;
+                const message = `Halo Kak *${customer.nama}* 👋\n\n‼️ *PENGINGAT TAGIHAN JARINGAN* ‼️\n\nKami ingin menginformasikan bahwa tagihan internet Anda untuk periode berikut telah jatuh tempo:\n\n🧾 *Detail Tagihan:*\n-----------------------------------\n*Periode:* ${getBillingPeriodText(latestUnpaidInvoice, customer)}\n*Jumlah:* *${formatRupiah(latestUnpaidInvoice.jumlah)}*\n-----------------------------------\n\nUntuk menghindari gangguan layanan, mohon segera lakukan pembayaran melalui Portal Pembayaran kami di bawah ini:\n\n👉 *Link Pembayaran:*\nhttps://payment-gateway-wheat-nine.vercel.app/\n\nCukup masukkan ID Pelanggan Anda: *${customer.customerId}*\n\nJika sudah melakukan pembayaran, mohon abaikan pesan ini.\n\nTerima kasih atas perhatiannya,\nAdmin JagaNetwork`;
 
                 const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
@@ -1742,4 +1746,3 @@
     </script>
 </body>
 </html>
-
