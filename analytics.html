@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advance Analytics - JagaNetwork</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .kpi-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="app-container" class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-md flex flex-col p-4">
+            <div class="p-4 mb-4">
+                <h1 class="text-2xl font-bold text-indigo-600">Analytics</h1>
+                <p class="text-sm text-gray-500">JagaNetwork Platform</p>
+            </div>
+            <nav class="flex-1 space-y-2">
+                <a href="#ringkasan" class="flex items-center py-2 px-4 text-gray-700 bg-indigo-50 rounded-lg">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3 text-indigo-600"></i> Ringkasan
+                </a>
+                <a href="#pendapatan" class="flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i data-lucide="trending-up" class="w-5 h-5 mr-3"></i> Analisis Pendapatan
+                </a>
+                <a href="#pelanggan" class="flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> Analisis Pelanggan
+                </a>
+                 <a href="#pengeluaran" class="flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <i data-lucide="trending-down" class="w-5 h-5 mr-3"></i> Analisis Pengeluaran
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="flex justify-between items-center mb-8">
+                <h2 id="main-title" class="text-3xl font-bold">Ringkasan Bisnis</h2>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i>
+                    <span id="current-date" class="text-gray-600 font-medium"></span>
+                </div>
+            </header>
+            
+            <!-- Ringkasan Section -->
+            <section id="ringkasan">
+                <!-- Key Performance Indicators -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p>
+                            <p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p>
+                        </div>
+                        <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p>
+                            <p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p>
+                        </div>
+                        <div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Pelanggan Aktif</p>
+                            <p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p>
+                        </div>
+                        <div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p>
+                            <p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p>
+                        </div>
+                        <div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-semibold mb-4">Pertumbuhan MRR (12 Bulan)</h3>
+                        <canvas id="mrr-growth-chart"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h3>
+                        <canvas id="revenue-composition-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
+            authDomain: "database-jaganetwork.firebaseapp.com",
+            projectId: "database-jaganetwork",
+            storageBucket: "database-jaganetwork.appspot.com",
+            messagingSenderId: "912989992875",
+            appId: "1:912989992875:web:8c6cda77171889e1e644ee"
+        };
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const dataContainerPath = "jaganetwork_data/shared_workspace";
+        const getCollectionRef = (name) => query(collection(db, dataContainerPath, name));
+
+        const formatRupiah = (angka) => !angka && angka !== 0 ? 'Rp 0' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        async function fetchData() {
+            try {
+                const [customersSnap, packagesSnap, invoicesSnap, expensesSnap] = await Promise.all([
+                    getDocs(getCollectionRef('customers')),
+                    getDocs(getCollectionRef('packages')),
+                    getDocs(getCollectionRef('invoices')),
+                    getDocs(getCollectionRef('expenses'))
+                ]);
+
+                const customers = customersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const packages = packagesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const invoices = invoicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const expenses = expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                return { customers, packages, invoices, expenses };
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                // Menampilkan pesan error di UI
+                document.getElementById('main-title').textContent = "Gagal Memuat Data";
+                return { customers: [], packages: [], invoices: [], expenses: [] };
+            }
+        }
+        
+        function calculateAnalytics(data) {
+            const { customers, packages, invoices } = data;
+            const today = new Date();
+            const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+
+            // 1. KPI: Pelanggan Aktif
+            const activeCustomers = customers.length; // Asumsi semua pelanggan di DB aktif
+            document.getElementById('kpi-active-customers').textContent = activeCustomers;
+
+            // 2. KPI: Monthly Recurring Revenue (MRR) & ARPU
+            let mrr = 0;
+            customers.forEach(c => {
+                const pkg = packages.find(p => p.id === c.paketId);
+                if (pkg && pkg.harga) {
+                    mrr += Number(pkg.harga);
+                }
+            });
+            document.getElementById('kpi-mrr').textContent = formatRupiah(mrr);
+
+            const arpu = activeCustomers > 0 ? mrr / activeCustomers : 0;
+            document.getElementById('kpi-arpu').textContent = formatRupiah(arpu);
+            
+            // 3. KPI: Churn Rate (Sederhana)
+            // Pelanggan yang bergabung > 1 bulan lalu dan tidak punya tagihan lunas bulan ini
+            // Ini adalah estimasi sederhana
+            let churnedCustomers = 0;
+            const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            
+            const customersBeforeLastMonth = customers.filter(c => c.joinDate && new Date(c.joinDate) < lastMonthStart);
+            customersBeforeLastMonth.forEach(c => {
+                const hasPaidThisMonth = invoices.some(inv => inv.pelangganId === c.id && inv.status === 'lunas' && new Date(inv.periode) > oneMonthAgo);
+                if (!hasPaidThisMonth) {
+                    churnedCustomers++;
+                }
+            });
+
+            const churnRate = customersBeforeLastMonth.length > 0 ? (churnedCustomers / customersBeforeLastMonth.length) * 100 : 0;
+            document.getElementById('kpi-churn-rate').textContent = `${churnRate.toFixed(1)}%`;
+
+            // Data untuk Chart
+            return { mrr, arpu, activeCustomers, churnRate };
+        }
+        
+        function prepareChartData(data) {
+             const { customers, packages, invoices } = data;
+
+            // 1. Data Pertumbuhan MRR
+            const mrrHistory = {};
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(new Date().setMonth(new Date().getMonth() - i));
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                mrrHistory[monthKey] = 0;
+            }
+            
+            customers.forEach(c => {
+                 if (!c.joinDate) return;
+                 const joinDate = new Date(c.joinDate);
+                 const pkg = packages.find(p => p.id === c.paketId);
+                 if(pkg && pkg.harga){
+                     for (let i = 11; i>= 0; i--){
+                         const d = new Date(new Date().setMonth(new Date().getMonth() - i));
+                         if (joinDate <= d) {
+                             const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                             mrrHistory[monthKey] += pkg.harga;
+                         }
+                     }
+                 }
+            });
+            
+            // 2. Data Komposisi Pendapatan
+            const revenueByPackage = {};
+            packages.forEach(p => revenueByPackage[p.nama] = 0);
+            
+            invoices.filter(inv => inv.status === 'lunas').forEach(inv => {
+                const customer = customers.find(c => c.id === inv.pelangganId);
+                if (customer) {
+                    const pkg = packages.find(p => p.id === customer.paketId);
+                    if (pkg) {
+                         revenueByPackage[pkg.nama] += inv.jumlah;
+                    }
+                }
+            });
+            
+            return { mrrHistory, revenueByPackage };
+        }
+
+        function renderCharts(chartData) {
+            const { mrrHistory, revenueByPackage } = chartData;
+            const colorPalette = ['#4f46e5', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+            
+            // MRR Growth Chart
+            const mrrCtx = document.getElementById('mrr-growth-chart').getContext('2d');
+            new Chart(mrrCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(mrrHistory).map(k => new Date(k + '-02').toLocaleString('id-ID', { month: 'short', year: 'numeric' })),
+                    datasets: [{
+                        label: 'MRR',
+                        data: Object.values(mrrHistory),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+
+            // Revenue Composition Chart
+            const revenueCtx = document.getElementById('revenue-composition-chart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(revenueByPackage),
+                    datasets: [{
+                        label: 'Pendapatan',
+                        data: Object.values(revenueByPackage),
+                        backgroundColor: colorPalette,
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+        
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                // Set tanggal hari ini
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                fetchData().then(data => {
+                    if (data) {
+                        calculateAnalytics(data);
+                        const chartData = prepareChartData(data);
+                        renderCharts(chartData);
+                    }
+                });
+            } else {
+                document.body.innerHTML = `<div class="w-full h-screen flex items-center justify-center"><p class="text-xl">Silakan <a href="index.html" class="text-indigo-600 font-semibold">login</a> untuk mengakses analytics.</p></div>`;
+            }
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
