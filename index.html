@@ -812,7 +812,7 @@
             let generatedCount = 0;
             let skippedCount = 0;
 
-            const nextPeriodEndDate = new Date(year, month, 7);
+            const nextPeriodEndDate = new Date(year, month + 1, 7); // Month is 0-indexed, but day logic makes it tricky. Let's use month + 1 and day 7.
             const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
 
             for (const customer of allCustomers) {
@@ -1437,6 +1437,9 @@
 
                 openModal(document.getElementById('modal-generate-tagihan'));
             });
+            
+            document.getElementById('btn-generate-prorate').addEventListener('click', generateProrateInvoices);
+
 
             document.getElementById('btn-cancel-pelanggan').addEventListener('click', () => closeModal(document.getElementById('modal-pelanggan')));
             document.getElementById('btn-cancel-paket').addEventListener('click', () => closeModal(document.getElementById('modal-paket')));
@@ -1785,4 +1788,5 @@
     </script>
 </body>
 </html>
+
 
