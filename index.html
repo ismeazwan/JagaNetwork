@@ -1187,7 +1187,7 @@
 
                 const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A', kecepatan: '' };
 
-                const message = `Halo Kak ${customer.nama},\n\nBerikut adalah data kepelangganan Anda di JagaNetwork:\n- ID Pelanggan: *${customer.customerId}*\n- Nama: *${customer.nama}*\n- Alamat: *${customer.alamat}*\n- Paket: *${pkg.nama} (${pkg.kecepatan})*\n\nTerima kasih telah menjadi pelanggan kami.`;
+                const message = `Halo Kak *${customer.nama}* 👋\n\nTerima kasih telah menjadi pelanggan setia JagaNetwork! 🙏\n\nBerikut adalah detail data kepelangganan Anda:\n-----------------------------------\n👤 *Nama:* ${customer.nama}\n💳 *ID Pelanggan:* ${customer.customerId}\n🏠 *Alamat:* ${customer.alamat}\n🚀 *Paket Layanan:* ${pkg.nama} (${pkg.kecepatan})\n-----------------------------------\n\nJika ada data yang perlu diubah, silakan balas pesan ini.\n\nTerima kasih,\nAdmin JagaNetwork`;
                 
                 const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
@@ -1210,7 +1210,7 @@
                     return showToast('Tidak ada tagihan yang belum lunas untuk pelanggan ini.', 'info');
                 }
                 
-                const message = `Halo Kak ${customer.nama},\n\nKami ingin menginformasikan tagihan JagaNetwork Anda yang perlu dibayarkan:\n- Periode: *${getBillingPeriodText(latestUnpaidInvoice, customer)}*\n- Jumlah: *${formatRupiah(latestUnpaidInvoice.jumlah)}*\n\nSilakan lakukan pembayaran melalui portal pelanggan kami di:\nhttps://payment-gateway-wheat-nine.vercel.app/\n\nTerima kasih.`;
+                const message = `Halo Kak *${customer.nama}* 👋\n\n‼️ *PENGINGAT TAGIHAN JARINGAN* ‼️\n\nKami ingin menginformasikan bahwa tagihan internet Anda untuk periode berikut telah jatuh tempo:\n\n🧾 *Detail Tagihan:*\n-----------------------------------\n*Periode:* ${getBillingPeriodText(latestUnpaidInvoice, customer)}\n*Jumlah:* *${formatRupiah(latestUnpaidInvoice.jumlah)}*\n-----------------------------------\n\nUntuk menghindari gangguan layanan, mohon segera lakukan pembayaran melalui Portal Pembayaran kami di bawah ini:\n\n👉 *Link Pembayaran:*\nhttps://payment-gateway-wheat-nine.vercel.app/\n\nCukup masukkan ID Pelanggan Anda: *${customer.customerId}*\n\nJika sudah melakukan pembayaran, mohon abaikan pesan ini.\n\nTerima kasih atas perhatiannya,\nAdmin JagaNetwork`;
 
                 const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
