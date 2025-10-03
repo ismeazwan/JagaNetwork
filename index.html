@@ -209,6 +209,21 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="pelanggan-pagination-controls" class="flex flex-col sm:flex-row items-center justify-between mt-6">
+                        <div class="flex items-center gap-2 mb-4 sm:mb-0">
+                            <label for="pelanggan-per-page" class="text-sm">Tampil:</label>
+                            <select id="pelanggan-per-page" class="p-2 border rounded-lg bg-white text-sm">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="pelanggan-prev-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">&lt; Sebelumnya</button>
+                            <span id="pelanggan-page-info" class="text-sm font-medium">Halaman 1 dari 1</span>
+                            <button id="pelanggan-next-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">Berikutnya &gt;</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="content-paket" class="tab-content hidden">
@@ -276,6 +291,21 @@
                             <tbody id="tagihan-table-body">
                             </tbody>
                         </table>
+                    </div>
+                    <div id="tagihan-pagination-controls" class="flex flex-col sm:flex-row items-center justify-between mt-6">
+                        <div class="flex items-center gap-2 mb-4 sm:mb-0">
+                            <label for="tagihan-per-page" class="text-sm">Tampil:</label>
+                            <select id="tagihan-per-page" class="p-2 border rounded-lg bg-white text-sm">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="tagihan-prev-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">&lt; Sebelumnya</button>
+                            <span id="tagihan-page-info" class="text-sm font-medium">Halaman 1 dari 1</span>
+                            <button id="tagihan-next-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">Berikutnya &gt;</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -520,6 +550,12 @@
         let invoiceSearchTerm = '';
         let invoiceStatusFilter = 'semua';
 
+        // State untuk paginasi
+        let pelangganCurrentPage = 1;
+        let pelangganItemsPerPage = 10;
+        let tagihanCurrentPage = 1;
+        let tagihanItemsPerPage = 10;
+
         let lineChartInstance, pieChartInstance;
 
         const authContainer = document.getElementById('auth-container');
@@ -545,6 +581,7 @@
             if (unsubscribeCustomers) unsubscribeCustomers();
             unsubscribeCustomers = onSnapshot(q, (snapshot) => {
                 allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                pelangganCurrentPage = 1; // Reset ke halaman pertama saat data berubah
                 renderCustomers(); 
                 updateCharts();
             });
@@ -579,7 +616,7 @@
             unsubscribePackages = onSnapshot(query(getCollectionRef('packages')), (snapshot) => {
                 allPackages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderPackages();
-                populatePaketFilter(); // Panggil fungsi untuk mengisi filter paket
+                populatePaketFilter();
                 updateCharts();
             });
         }
@@ -611,6 +648,7 @@
             if (unsubscribeInvoices) unsubscribeInvoices();
             unsubscribeInvoices = onSnapshot(query(getCollectionRef('invoices')), (snapshot) => {
                 allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                tagihanCurrentPage = 1; // Reset ke halaman pertama
                 renderInvoices(); renderLaporan(); updateDashboard(); updateCharts();
             });
         }
@@ -817,7 +855,6 @@
             const tbody = document.getElementById('pelanggan-table-body');
             let filteredCustomers = [...allCustomers];
 
-            // Terapkan filter pencarian
             if (customerSearchTerm) {
                 const lowerCaseSearch = customerSearchTerm.toLowerCase();
                 filteredCustomers = filteredCustomers.filter(c =>
@@ -826,13 +863,19 @@
                 );
             }
 
-            // Terapkan filter paket
             if (customerPackageFilter !== 'semua') {
                 filteredCustomers = filteredCustomers.filter(c => c.paketId === customerPackageFilter);
             }
+            
+            // Logika Paginasi
+            const totalItems = filteredCustomers.length;
+            const totalPages = Math.ceil(totalItems / pelangganItemsPerPage) || 1;
+            const startIndex = (pelangganCurrentPage - 1) * pelangganItemsPerPage;
+            const endIndex = startIndex + pelangganItemsPerPage;
+            const paginatedItems = filteredCustomers.slice(startIndex, endIndex);
 
-            tbody.innerHTML = !filteredCustomers.length ? `<tr><td colspan="6" class="p-8 text-center text-gray-500">Tidak ada pelanggan yang cocok.</td></tr>` : 
-                filteredCustomers.sort((a,b) => a.nama.localeCompare(b.nama)).map(c => {
+            tbody.innerHTML = !paginatedItems.length ? `<tr><td colspan="6" class="p-8 text-center text-gray-500">Tidak ada pelanggan yang cocok.</td></tr>` : 
+                paginatedItems.sort((a,b) => a.nama.localeCompare(b.nama)).map(c => {
                     const pkg = allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
                     return `<tr class="border-b hover:bg-gray-50">
                         <td class="p-4 font-mono text-sm text-gray-600">${c.customerId || '-'}</td>
@@ -844,6 +887,8 @@
                             <button class="btn-delete-pelanggan text-red-600 hover:text-red-800" data-id="${c.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                         </td></tr>`;
                 }).join('');
+            
+            updatePaginationControls('pelanggan', pelangganCurrentPage, totalPages);
             lucide.createIcons();
         }
 
@@ -863,12 +908,10 @@
             const tbody = document.getElementById('tagihan-table-body');
             let filteredInvoices = [...allInvoices];
             
-            // Terapkan filter status
             if (invoiceStatusFilter !== 'semua') {
                 filteredInvoices = filteredInvoices.filter(inv => inv.status === invoiceStatusFilter);
             }
 
-            // Terapkan filter pencarian
             if (invoiceSearchTerm) {
                 const lowerCaseSearch = invoiceSearchTerm.toLowerCase();
                 filteredInvoices = filteredInvoices.filter(inv => {
@@ -879,8 +922,15 @@
                 });
             }
 
-            if (!filteredInvoices.length) { tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-500">Tidak ada tagihan yang cocok.</td></tr>`; return; }
-            tbody.innerHTML = filteredInvoices.sort((a,b) => b.periode.localeCompare(a.periode))
+            // Logika Paginasi
+            const totalItems = filteredInvoices.length;
+            const totalPages = Math.ceil(totalItems / tagihanItemsPerPage) || 1;
+            const startIndex = (tagihanCurrentPage - 1) * tagihanItemsPerPage;
+            const endIndex = startIndex + tagihanItemsPerPage;
+            const paginatedItems = filteredInvoices.slice(startIndex, endIndex);
+
+            tbody.innerHTML = !paginatedItems.length ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Tidak ada tagihan yang cocok.</td></tr>` : 
+                paginatedItems.sort((a,b) => b.periode.localeCompare(a.periode))
                 .map(inv => {
                     const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
                     let statusClass, statusText, actionBtn = '', editDeleteBtns = '', chatBtn = '';
@@ -909,6 +959,8 @@
                         <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span></td>
                         <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${chatBtn}${editDeleteBtns}</td></tr>`;
                 }).join('');
+            
+            updatePaginationControls('tagihan', tagihanCurrentPage, totalPages);
             lucide.createIcons();
         }
         function renderLaporan() {
@@ -940,6 +992,12 @@
             document.getElementById('total-pemasukan').textContent = formatRupiah(paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0));
             document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
             document.getElementById('tagihan-belum-lunas').textContent = monthlyInvoices.filter(inv => inv.status === 'belum lunas').length;
+        }
+
+        function updatePaginationControls(type, currentPage, totalPages) {
+            document.getElementById(`${type}-page-info`).textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            document.getElementById(`${type}-prev-page`).disabled = currentPage === 1;
+            document.getElementById(`${type}-next-page`).disabled = currentPage === totalPages;
         }
     
         function populatePaketFilter() {
@@ -1128,18 +1186,54 @@
             // Listener untuk filter
             document.getElementById('pelanggan-search-input').addEventListener('input', (e) => {
                 customerSearchTerm = e.target.value;
+                pelangganCurrentPage = 1;
                 renderCustomers();
             });
             document.getElementById('pelanggan-paket-filter').addEventListener('change', (e) => {
                 customerPackageFilter = e.target.value;
+                pelangganCurrentPage = 1;
                 renderCustomers();
             });
             document.getElementById('tagihan-search-input').addEventListener('input', (e) => {
                 invoiceSearchTerm = e.target.value;
+                tagihanCurrentPage = 1;
                 renderInvoices();
             });
             document.getElementById('tagihan-status-filter').addEventListener('change', (e) => {
                 invoiceStatusFilter = e.target.value;
+                tagihanCurrentPage = 1;
+                renderInvoices();
+            });
+
+            // Listener untuk paginasi
+            document.getElementById('pelanggan-per-page').addEventListener('change', e => {
+                pelangganItemsPerPage = parseInt(e.target.value, 10);
+                pelangganCurrentPage = 1;
+                renderCustomers();
+            });
+            document.getElementById('pelanggan-prev-page').addEventListener('click', () => {
+                if (pelangganCurrentPage > 1) {
+                    pelangganCurrentPage--;
+                    renderCustomers();
+                }
+            });
+            document.getElementById('pelanggan-next-page').addEventListener('click', () => {
+                pelangganCurrentPage++; // Validasi batas atas dilakukan di renderCustomers
+                renderCustomers();
+            });
+             document.getElementById('tagihan-per-page').addEventListener('change', e => {
+                tagihanItemsPerPage = parseInt(e.target.value, 10);
+                tagihanCurrentPage = 1;
+                renderInvoices();
+            });
+            document.getElementById('tagihan-prev-page').addEventListener('click', () => {
+                if (tagihanCurrentPage > 1) {
+                    tagihanCurrentPage--;
+                    renderInvoices();
+                }
+            });
+            document.getElementById('tagihan-next-page').addEventListener('click', () => {
+                tagihanCurrentPage++;
                 renderInvoices();
             });
 
