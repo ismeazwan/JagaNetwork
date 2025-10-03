@@ -98,7 +98,9 @@
                      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm">
                             <h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4>
-                            <canvas id="revenue-profit-chart"></canvas>
+                            <div class="relative h-96">
+                                <canvas id="revenue-profit-chart"></canvas>
+                            </div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-sm">
                             <h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4>
@@ -302,7 +304,14 @@
                         { label: 'Laba Kotor', data: Object.values(history).map(h => h.profit), backgroundColor: '#10b981' }
                     ]
                 },
-                options: { scales: { x: { stacked: false }, y: { stacked: false } } }
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        x: { stacked: false }, 
+                        y: { stacked: false } 
+                    } 
+                }
             });
 
             // Revenue Composition Chart
