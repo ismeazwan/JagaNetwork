@@ -8,6 +8,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
@@ -183,9 +185,14 @@
                 <div id="content-pelanggan" class="tab-content hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Manajemen Pelanggan</h2>
-                        <button id="btn-add-pelanggan" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center w-full sm:w-auto">
-                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Pelanggan
-                        </button>
+                        <div class="flex gap-2">
+                             <button id="btn-export-pelanggan-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export CSV
+                            </button>
+                            <button id="btn-add-pelanggan" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+                                <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah
+                            </button>
+                        </div>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow mb-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,6 +260,9 @@
                 <div id="content-tagihan" class="tab-content hidden">
                      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl md:text-3xl font-bold">Manajemen Tagihan</h2>
+                         <button id="btn-export-tagihan-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export CSV
+                        </button>
                      </div>
                      <div class="bg-white p-4 rounded-lg shadow mb-6">
                         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -315,39 +325,44 @@
                         <div class="flex items-center gap-2">
                              <select id="laporan-filter-bulan" class="p-2 border rounded-lg bg-white"></select>
                              <select id="laporan-filter-tahun" class="p-2 border rounded-lg bg-white"></select>
+                             <button id="btn-export-laporan-pdf" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 flex items-center text-sm">
+                                <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export PDF
+                            </button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <p class="text-sm text-gray-500">Total Pemasukan</p>
-                            <p id="laporan-total-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                    <div id="laporan-export-area">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="text-sm text-gray-500">Total Pemasukan</p>
+                                <p id="laporan-total-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="text-sm text-gray-500">Potensi Pemasukan</p>
+                                <p id="laporan-potensi-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="text-sm text-gray-500">Transaksi Lunas</p>
+                                <p id="laporan-transaksi-lunas" class="text-3xl font-bold">0</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="text-sm text-gray-500">Tagihan Tertunggak</p>
+                                <p id="laporan-tagihan-tertunggak" class="text-3xl font-bold">0</p>
+                            </div>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <p class="text-sm text-gray-500">Potensi Pemasukan</p>
-                            <p id="laporan-potensi-pemasukan" class="text-3xl font-bold">Rp 0</p>
+                        <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                            <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pemasukan (Transaksi Lunas)</h3>
+                            <table class="w-full text-left min-w-[500px]">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="p-4">Pelanggan</th>
+                                        <th class="p-4">Periode Tagihan</th>
+                                        <th class="p-4">Jumlah Dibayar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="laporan-table-body">
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <p class="text-sm text-gray-500">Transaksi Lunas</p>
-                            <p id="laporan-transaksi-lunas" class="text-3xl font-bold">0</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <p class="text-sm text-gray-500">Tagihan Tertunggak</p>
-                            <p id="laporan-tagihan-tertunggak" class="text-3xl font-bold">0</p>
-                        </div>
-                    </div>
-                    <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
-                        <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pemasukan (Transaksi Lunas)</h3>
-                        <table class="w-full text-left min-w-[500px]">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="p-4">Pelanggan</th>
-                                    <th class="p-4">Periode Tagihan</th>
-                                    <th class="p-4">Jumlah Dibayar</th>
-                                </tr>
-                            </thead>
-                            <tbody id="laporan-table-body">
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </main>
@@ -523,6 +538,8 @@
             collection, query, where, getDocs, writeBatch, serverTimestamp, deleteField
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
+        const { jsPDF } = window.jspdf;
+
         const firebaseConfig = {
             apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
             authDomain: "database-jaganetwork.firebaseapp.com",
@@ -581,7 +598,7 @@
             if (unsubscribeCustomers) unsubscribeCustomers();
             unsubscribeCustomers = onSnapshot(q, (snapshot) => {
                 allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                pelangganCurrentPage = 1; // Reset ke halaman pertama saat data berubah
+                pelangganCurrentPage = 1; 
                 renderCustomers(); 
                 updateCharts();
             });
@@ -648,7 +665,7 @@
             if (unsubscribeInvoices) unsubscribeInvoices();
             unsubscribeInvoices = onSnapshot(query(getCollectionRef('invoices')), (snapshot) => {
                 allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                tagihanCurrentPage = 1; // Reset ke halaman pertama
+                tagihanCurrentPage = 1;
                 renderInvoices(); renderLaporan(); updateDashboard(); updateCharts();
             });
         }
@@ -867,9 +884,9 @@
                 filteredCustomers = filteredCustomers.filter(c => c.paketId === customerPackageFilter);
             }
             
-            // Logika Paginasi
             const totalItems = filteredCustomers.length;
             const totalPages = Math.ceil(totalItems / pelangganItemsPerPage) || 1;
+            if (pelangganCurrentPage > totalPages) pelangganCurrentPage = totalPages;
             const startIndex = (pelangganCurrentPage - 1) * pelangganItemsPerPage;
             const endIndex = startIndex + pelangganItemsPerPage;
             const paginatedItems = filteredCustomers.slice(startIndex, endIndex);
@@ -922,9 +939,9 @@
                 });
             }
 
-            // Logika Paginasi
             const totalItems = filteredInvoices.length;
             const totalPages = Math.ceil(totalItems / tagihanItemsPerPage) || 1;
+            if (tagihanCurrentPage > totalPages) tagihanCurrentPage = totalPages;
             const startIndex = (tagihanCurrentPage - 1) * tagihanItemsPerPage;
             const endIndex = startIndex + tagihanItemsPerPage;
             const paginatedItems = filteredInvoices.slice(startIndex, endIndex);
@@ -997,7 +1014,7 @@
         function updatePaginationControls(type, currentPage, totalPages) {
             document.getElementById(`${type}-page-info`).textContent = `Halaman ${currentPage} dari ${totalPages}`;
             document.getElementById(`${type}-prev-page`).disabled = currentPage === 1;
-            document.getElementById(`${type}-next-page`).disabled = currentPage === totalPages;
+            document.getElementById(`${type}-next-page`).disabled = currentPage >= totalPages;
         }
     
         function populatePaketFilter() {
@@ -1218,7 +1235,7 @@
                 }
             });
             document.getElementById('pelanggan-next-page').addEventListener('click', () => {
-                pelangganCurrentPage++; // Validasi batas atas dilakukan di renderCustomers
+                pelangganCurrentPage++;
                 renderCustomers();
             });
              document.getElementById('tagihan-per-page').addEventListener('change', e => {
@@ -1236,6 +1253,12 @@
                 tagihanCurrentPage++;
                 renderInvoices();
             });
+            
+            // Listener untuk Export
+            document.getElementById('btn-export-pelanggan-csv').addEventListener('click', exportPelangganToCsv);
+            document.getElementById('btn-export-tagihan-csv').addEventListener('click', exportTagihanToCsv);
+            document.getElementById('btn-export-laporan-pdf').addEventListener('click', exportLaporanToPdf);
+
 
             document.getElementById('form-pelanggan').addEventListener('submit', (e) => { 
                 e.preventDefault(); 
@@ -1381,6 +1404,104 @@
 
 
             appListenersAttached = true;
+        }
+
+        // --- Fungsi Export ---
+        function exportToCsv(filename, rows) {
+            const replacer = (key, value) => value === null ? '' : value;
+            const header = Object.keys(rows[0]);
+            const csv = [
+                header.join(','),
+                ...rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+            ].join('\r\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function exportPelangganToCsv() {
+            showToast("Mempersiapkan file CSV...", "info");
+            let filteredCustomers = [...allCustomers];
+            if (customerSearchTerm) {
+                const lowerCaseSearch = customerSearchTerm.toLowerCase();
+                filteredCustomers = filteredCustomers.filter(c => c.nama.toLowerCase().includes(lowerCaseSearch) || (c.customerId && c.customerId.includes(lowerCaseSearch)));
+            }
+            if (customerPackageFilter !== 'semua') {
+                filteredCustomers = filteredCustomers.filter(c => c.paketId === customerPackageFilter);
+            }
+
+            if(filteredCustomers.length === 0) return showToast("Tidak ada data untuk di-export.", "error");
+
+            const dataToExport = filteredCustomers.map(c => {
+                const pkg = allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
+                return {
+                    'ID Pelanggan': c.customerId,
+                    'Nama': c.nama,
+                    'Alamat': c.alamat,
+                    'No HP': c.hp,
+                    'Paket': pkg.nama,
+                    'Tanggal Bergabung': c.joinDate,
+                };
+            });
+            exportToCsv('jaganetwork_pelanggan.csv', dataToExport);
+        }
+
+        function exportTagihanToCsv() {
+            showToast("Mempersiapkan file CSV...", "info");
+            let filteredInvoices = [...allInvoices];
+            if (invoiceStatusFilter !== 'semua') {
+                filteredInvoices = filteredInvoices.filter(inv => inv.status === invoiceStatusFilter);
+            }
+            if (invoiceSearchTerm) {
+                const lowerCaseSearch = invoiceSearchTerm.toLowerCase();
+                filteredInvoices = filteredInvoices.filter(inv => {
+                    const customer = allCustomers.find(c => c.id === inv.pelangganId);
+                    const periodText = getBillingPeriodText(inv, customer).toLowerCase();
+                    return (customer && customer.nama.toLowerCase().includes(lowerCaseSearch)) || periodText.includes(lowerCaseSearch);
+                });
+            }
+
+            if(filteredInvoices.length === 0) return showToast("Tidak ada data untuk di-export.", "error");
+
+            const dataToExport = filteredInvoices.map(inv => {
+                const customer = allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                return {
+                    'Nama Pelanggan': customer.nama,
+                    'Periode Layanan': getBillingPeriodText(inv, customer),
+                    'Jumlah (Rp)': inv.jumlah,
+                    'Status': inv.status,
+                    'Tipe Tagihan': inv.isProrated ? 'Prorata' : 'Bulanan'
+                };
+            });
+            exportToCsv('jaganetwork_tagihan.csv', dataToExport);
+        }
+        
+        function exportLaporanToPdf() {
+            showToast("Membuat file PDF...", "info");
+            const element = document.getElementById('laporan-export-area');
+            const bulanEl = document.getElementById('laporan-filter-bulan');
+            const tahunEl = document.getElementById('laporan-filter-tahun');
+            const bulanText = bulanEl.options[bulanEl.selectedIndex].text;
+            const tahunText = tahunEl.value;
+            const filename = `Laporan Keuangan - ${bulanText} ${tahunText}.pdf`;
+
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(filename);
+            });
         }
     
         lucide.createIcons();
