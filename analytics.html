@@ -45,7 +45,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                         <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p><p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div></div>
                         <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p><p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div></div>
-                  _SESSION       <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Pelanggan Aktif</p><p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p></div><div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div></div>
+                        <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Pelanggan Aktif</p><p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p></div><div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div></div>
                         <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p><p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p></div><div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div></div>
                     </div>
                 </section>
@@ -89,13 +89,13 @@
                             <h4 class="text-lg font-semibold text-gray-800">Hasil Titik Impas Bulanan</h4>
                             <div class="mt-4">
                                 <p class="text-sm text-gray-500">Anda perlu mendapatkan:</p>
-                                <p class="text-4xl font-bold text-indigo-600 my-2"><span id="bep-unit-result">-</span> Pelanggan</p>
+                              _SESSION <p class="text-4xl font-bold text-indigo-600 my-2"><span id="bep-unit-result">-</span> Pelanggan</p>
                             </div>
                             <div class="mt-4">
                                 <p class="text-sm text-gray-500">Untuk mencapai omzet:</p>
                                 <p class="text-3xl font-bold text-green-600 my-2"><span id="bep-rupiah-result">-</span></p>
                             </div>
-                             <p id="bep-status" class="mt-4 text-sm text-gray-400">Masukkan data dan klik hitung.</p>
+              _SESSION              <p id="bep-status" class="mt-4 text-sm text-gray-400">Masukkan data dan klik hitung.</p>
                         </div>
                     </div>
                 </section>
@@ -144,9 +144,16 @@
         return{history,revenueByPackage,expensesByCategory}}
         function renderCharts(chartData){const{history,revenueByPackage,expensesByCategory}=chartData;const colorPalette=['#4f46e5','#10b981','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#d946ef'];const labels=Object.keys(history).map(k=>new Date(k+'-02').toLocaleString('id-ID',{month:'short',year:'numeric'}));const profitData=Object.values(history).map(h=>h.profit);const revenueData=Object.values(history).map(h=>h.revenue);const allDataPoints=[...profitData,...revenueData];const dataMax=Math.max(0,...allDataPoints),dataMin=Math.min(0,...allDataPoints);const padding=(dataMax-dataMin)*.1;const calculatedMax=dataMax+padding,calculatedMin=dataMin-padding;new Chart(document.getElementById('revenue-profit-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Pendapatan',data:revenueData,backgroundColor:'#3b82f6'},{label:'Laba Kotor',data:profitData,backgroundColor:'#10b981'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false},y:{stacked:false,min:calculatedMin,max:calculatedMax}}}});new Chart(document.getElementById('revenue-composition-chart').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(revenueByPackage),datasets:[{label:'Pendapatan',data:Object.values(revenueByPackage),backgroundColor:colorPalette}]},options:{responsive:true,maintainAspectRatio:false}});new Chart(document.getElementById('customer-growth-chart').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Total Pelanggan',data:Object.values(history).map(h=>h.customers),borderColor:'#4f46e5',backgroundColor:'rgba(79, 70, 229, 0.1)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}});new Chart(document.getElementById('expenses-composition-chart').getContext('2d'),{type:'pie',data:{labels:Object.keys(expensesByCategory),datasets:[{label:'Pengeluaran',data:Object.values(expensesByCategory),backgroundColor:colorPalette.reverse()}]},options:{responsive:true,maintainAspectRatio:false}})}
         onAuthStateChanged(auth,user=>{if(user){document.getElementById('current-date').textContent=(new Date).toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});fetchData().then(data=>{if(data){document.getElementById('loading-indicator').style.display='none';document.getElementById('analytics-content').style.display='block';calculateAnalytics(data);const chartData=prepareChartData(data);renderCharts(chartData)}else{document.getElementById('loading-indicator').textContent="Gagal memuat data. Silakan coba lagi nanti."}})}else{document.body.innerHTML=`<div class="w-full h-screen flex items-center justify-center p-4 text-center"><p class="text-xl">Silakan <a href="index.html" class="text-indigo-600 font-semibold">login</a> untuk mengakses analytics.</p></div>`}});
-        document.getElementById('sidebar-nav').addEventListener('click',function(e){const clickedLink=e.target.closest('a.nav-link');if(clickedLink&&clickedLink.href.includes('#')){document.querySelectorAll('.nav-link').forEach(link=>link.classList.remove('nav-active'));clickedLink.classList.add('nav-active')}});
         
-        // --- [MODIFIKASI] Logika Kalkulator BEP untuk RT/RW Net ---
+        document.getElementById('sidebar-nav').addEventListener('click',function(e){
+            const clickedLink=e.target.closest('a.nav-link');
+            if(clickedLink){
+                document.querySelectorAll('.nav-link').forEach(link=>link.classList.remove('nav-active'));
+                clickedLink.classList.add('nav-active');
+            }
+        });
+        
+        // --- Logika Kalkulator BEP untuk RT/RW Net ---
         const calculateBepBtn = document.getElementById('calculate-bep-btn');
         calculateBepBtn.addEventListener('click', function() {
             // 1. Ambil semua nilai dari input baru
@@ -190,3 +197,4 @@
     </script>
 </body>
 </html>
+
