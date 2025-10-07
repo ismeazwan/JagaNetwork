@@ -1504,7 +1504,12 @@
             });
 
             document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-            document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { e.preventDefault(); switchTab(el.id.split('-')[1]); }));
+            document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                // PERBAIKAN BUG DI SINI
+                const tabId = el.id.substring(4); // Mengambil semua karakter setelah "tab-"
+                switchTab(tabId);
+            }));
             
             document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
                 document.getElementById('form-pelanggan').reset(); 
@@ -1928,3 +1933,4 @@
     </script>
 </body>
 </html>
+
