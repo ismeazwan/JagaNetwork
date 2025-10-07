@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -19,6 +20,10 @@
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         
+        /* Gaya dari analytics.html */
+        .kpi-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
         @media (max-width: 768px) {
             .mobile-sidebar {
                 transform: translateX(-100%);
@@ -114,6 +119,10 @@
                 </a>
                 <a href="#" id="tab-laporan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
+                </a>
+                <!-- MENU BARU UNTUK ANALYTICS -->
+                <a href="#" id="tab-analytics" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Advance Analytics
                 </a>
                 <a href="#" id="tab-status-jaringan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="wifi" class="w-5 h-5 mr-3"></i> Status Jaringan
@@ -410,6 +419,118 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Content (BARU DITAMBAHKAN) -->
+                <div id="content-analytics" class="tab-content hidden">
+                    <header class="flex justify-between items-center mb-8">
+                        <h2 id="analytics-main-title" class="text-2xl md:text-3xl font-bold">Ringkasan Bisnis</h2>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-5 h-5 text-gray-500"></i>
+                            <span id="current-date-analytics" class="text-gray-600 font-medium text-sm md:text-base"></span>
+                        </div>
+                    </header>
+                    
+                    <div id="loading-indicator-analytics" class="text-center py-16"><p class="text-lg text-gray-600">Memuat data analitik...</p></div>
+
+                    <div id="analytics-content-container" class="hidden">
+                        <section id="ringkasan" class="mb-12">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-700">Key Performance Indicators</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Monthly Recurring Revenue (MRR)</p><p id="kpi-mrr" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-indigo-100 text-indigo-600 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-6 h-6"></i></div></div>
+                                <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Avg. Revenue Per User (ARPU)</p><p id="kpi-arpu" class="text-3xl font-bold mt-1">Rp 0</p></div><div class="bg-green-100 text-green-600 p-3 rounded-full"><i data-lucide="user-check" class="w-6 h-6"></i></div></div>
+                                <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Pelanggan Aktif</p><p id="kpi-active-customers" class="text-3xl font-bold mt-1">0</p></div><div class="bg-blue-100 text-blue-600 p-3 rounded-full"><i data-lucide="users" class="w-6 h-6"></i></div></div>
+                                <div class="kpi-card bg-white p-6 rounded-lg shadow-sm flex items-start justify-between"><div><p class="text-sm text-gray-500">Churn Rate (Bulan Ini)</p><p id="kpi-churn-rate" class="text-3xl font-bold mt-1">0%</p></div><div class="bg-red-100 text-red-600 p-3 rounded-full"><i data-lucide="user-x" class="w-6 h-6"></i></div></div>
+                            </div>
+                        </section>
+
+                        <section id="bep" class="mb-12">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-700">Kalkulator BEP untuk Bisnis RT/RW Net</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="bg-white p-6 rounded-lg shadow-sm">
+                                    <h4 class="text-lg font-semibold mb-4">Masukkan Data Biaya</h4>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="initial-investment" class="block text-sm font-medium text-gray-700">Total Investasi Awal (Alat)</label>
+                                            <input type="number" id="initial-investment" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 5000000">
+                                        </div>
+                                        <div>
+                                            <label for="lifespan" class="block text-sm font-medium text-gray-700">Masa Pakai Alat (dalam Bulan)</label>
+                                            <input type="number" id="lifespan" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 24 (untuk 2 tahun)">
+                                        </div>
+                                        <hr class="my-4">
+                                        <div>
+                                            <label for="isp-cost" class="block text-sm font-medium text-gray-700">Langganan Internet Utama (per bulan)</label>
+                                            <input type="number" id="isp-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 1000000">
+                                        </div>
+                                        <div>
+                                            <label for="ops-cost" class="block text-sm font-medium text-gray-700">Biaya Operasional Lain (Listrik, dll) (per bulan)</label>
+                                            <input type="number" id="ops-cost" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000">
+                                        </div>
+                                        <hr class="my-4">
+                                        <div>
+                                            <label for="subscription-price" class="block text-sm font-medium text-gray-700">Harga Paket Langganan (per bulan)</label>
+                                            <input type="number" id="subscription-price" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Contoh: 150000">
+                                        </div>
+                                    </div>
+                                    <button id="calculate-bep-btn" class="mt-6 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                                        Hitung BEP
+                                    </button>
+                                </div>
+                        
+                                <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center text-center">
+                                    <h4 class="text-lg font-semibold text-gray-800">Hasil Titik Impas Bulanan</h4>
+                                    <div class="mt-4">
+                                        <p class="text-sm text-gray-500">Anda perlu mendapatkan:</p>
+                                        <p class="text-4xl font-bold text-indigo-600 my-2"><span id="bep-unit-result">-</span> Pelanggan</p>
+                                    </div>
+                                    <div class="mt-4">
+                                        <p class="text-sm text-gray-500">Untuk mencapai omzet:</p>
+                                        <p class="text-3xl font-bold text-green-600 my-2"><span id="bep-rupiah-result">-</span></p>
+                                    </div>
+                                     <p id="bep-status" class="mt-4 text-sm text-gray-400">Masukkan data dan klik hitung.</p>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section id="pendapatan" class="mb-12">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pendapatan</h3>
+                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                 <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pendapatan vs Laba Kotor (12 Bulan)</h4><div class="relative flex-grow min-h-[300px]"><canvas id="revenue-profit-chart"></canvas></div></div>
+                                 <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pendapatan per Paket</h4><div class="relative flex-grow min-h-[300px]"><canvas id="revenue-composition-chart"></canvas></div></div>
+                            </div>
+                        </section>
+
+                        <section id="pelanggan-analytics" class="mb-12">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pelanggan</h3>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Pelanggan Baru Bulan Ini</h4><p id="kpi-new-customers" class="text-4xl font-bold text-green-600">0</p></div>
+                                <div class="bg-white p-6 rounded-lg shadow-sm"><h4 class="text-lg font-semibold mb-2">Customer Lifetime Value (LTV)</h4><p id="kpi-ltv" class="text-4xl font-bold text-indigo-600">Rp 0</p><p class="text-sm text-gray-500">Estimasi pendapatan dari satu pelanggan.</p></div>
+                                <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Pertumbuhan Jumlah Pelanggan (12 Bulan)</h4><div class="relative flex-grow min-h-[300px]"><canvas id="customer-growth-chart"></canvas></div></div>
+                            </div>
+                        </section>
+                        
+                        <section id="pengeluaran-analytics" class="mb-12">
+                            <h3 class="text-xl font-semibold mb-4 text-gray-700">Analisis Pengeluaran</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm flex flex-col overflow-hidden"><h4 class="text-lg font-semibold mb-4">Komposisi Pengeluaran per Kategori</h4><div class="relative flex-grow min-h-[300px]"><canvas id="expenses-composition-chart"></canvas></div></div>
+                                <div class="bg-white p-6 rounded-lg shadow-sm">
+                                    <div>
+                                        <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (Semua)</h4>
+                                        <p id="kpi-total-expenses-all-time" class="text-4xl font-bold text-red-600">Rp 0</p>
+                                    </div>
+                                    <div class="mt-6">
+                                        <h4 class="text-lg font-semibold mb-2">Total Pengeluaran (30 Hari)</h4>
+                                        <p id="kpi-total-expenses" class="text-4xl font-bold text-red-600">Rp 0</p>
+                                    </div>
+                                    <div class="mt-6">
+                                        <h4 class="text-lg font-semibold mb-2">Kategori Teratas</h4>
+                                        <p id="kpi-top-expense-category" class="text-2xl font-medium">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
 
@@ -785,6 +906,7 @@
         let tagihanCurrentPage = 1, tagihanItemsPerPage = 10;
 
         let lineChartInstance, pieChartInstance;
+        let analyticsInitialized = false; // Flag for analytics tab
 
         const authContainer = document.getElementById('auth-container');
         const appContainer = document.getElementById('app-container');
@@ -892,6 +1014,7 @@
                 pelangganCurrentPage = 1; 
                 renderCustomers(); 
                 updateCharts();
+                if (analyticsInitialized) initAnalytics(); // Refresh analytics data
             });
         }
         async function saveCustomer(data) {
@@ -926,6 +1049,7 @@
                 renderPackages();
                 populatePaketFilter();
                 updateCharts();
+                if (analyticsInitialized) initAnalytics(); // Refresh analytics data
             });
         }
         async function savePackage(data) {
@@ -958,6 +1082,7 @@
                 allInvoices = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 tagihanCurrentPage = 1;
                 renderInvoices(); renderLaporan(); updateDashboard(); updateCharts();
+                if (analyticsInitialized) initAnalytics(); // Refresh analytics data
             });
         }
 
@@ -1097,6 +1222,7 @@
                 renderExpenses();
                 renderLaporan();
                 updateDashboard();
+                 if (analyticsInitialized) initAnalytics(); // Refresh analytics data
             });
         }
         async function saveExpense(data) {
@@ -1132,6 +1258,157 @@
             }
         }
 
+        // --- FUNGSI-FUNGSI DARI ANALYTICS.HTML ---
+        function calculateAnalytics(data) {
+            const { customers, packages, invoices, expenses } = data;
+            const today = new Date();
+            const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+
+            const activeCustomers = customers.length;
+            let mrr = 0;
+            customers.forEach(c => {
+                const pkg = packages.find(p => p.id === c.paketId);
+                if (pkg && pkg.harga) mrr += Number(pkg.harga);
+            });
+
+            const arpu = activeCustomers > 0 ? mrr / activeCustomers : 0;
+            const customersBeforeThisMonth = customers.filter(c => c.joinDate && new Date(c.joinDate) < thisMonthStart);
+            let churnedThisMonth = 0;
+            customersBeforeThisMonth.forEach(c => {
+                const hasPaidThisMonth = invoices.some(inv => inv.pelangganId === c.id && inv.status === 'lunas' && new Date(inv.periode) >= thisMonthStart);
+                if (!hasPaidThisMonth) churnedThisMonth++;
+            });
+            const churnRate = customersBeforeThisMonth.length > 0 ? churnedThisMonth / customersBeforeThisMonth.length : 0;
+            const newCustomersThisMonth = customers.filter(c => c.joinDate && new Date(c.joinDate) >= thisMonthStart).length;
+            const ltv = churnRate > 0 ? arpu / churnRate : arpu * 12; // Simple LTV
+            const totalExpensesLast30Days = expenses.filter(e => e.tanggal && new Date(e.tanggal) >= oneMonthAgo).reduce((sum, e) => sum + (Number(e.jumlah) || 0), 0);
+            const totalExpensesAllTime = expenses.reduce((sum, e) => sum + (Number(e.jumlah) || 0), 0);
+            
+            document.getElementById('kpi-active-customers').textContent = activeCustomers;
+            document.getElementById('kpi-mrr').textContent = formatRupiah(mrr);
+            document.getElementById('kpi-arpu').textContent = formatRupiah(arpu);
+            document.getElementById('kpi-churn-rate').textContent = `${(churnRate * 100).toFixed(1)}%`;
+            document.getElementById('kpi-new-customers').textContent = newCustomersThisMonth;
+            document.getElementById('kpi-ltv').textContent = formatRupiah(ltv);
+            document.getElementById('kpi-total-expenses').textContent = formatRupiah(totalExpensesLast30Days);
+            document.getElementById('kpi-total-expenses-all-time').textContent = formatRupiah(totalExpensesAllTime);
+        }
+
+        function prepareChartData(data) {
+            const { customers, packages, invoices, expenses } = data;
+            const history = {};
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                history[monthKey] = { revenue: 0, profit: 0, customers: 0, expenses: 0 };
+            }
+            
+            invoices.filter(inv => inv.status === 'lunas' && inv.periode).forEach(inv => {
+                const d = new Date(inv.periode);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (history[monthKey]) {
+                    history[monthKey].revenue += inv.jumlah;
+                }
+            });
+
+            expenses.filter(e => e.tanggal).forEach(e => {
+                const d = new Date(e.tanggal);
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (history[monthKey]) {
+                    history[monthKey].expenses += e.jumlah;
+                }
+            });
+            
+            Object.keys(history).forEach(monthKey => {
+                history[monthKey].profit = history[monthKey].revenue - history[monthKey].expenses;
+                history[monthKey].customers = customers.filter(c => c.joinDate && new Date(c.joinDate) <= new Date(monthKey + '-28')).length; // Approx end of month
+            });
+
+            const revenueByPackage = {};
+            packages.forEach(p => revenueByPackage[p.nama] = 0);
+            invoices.filter(inv => inv.status === 'lunas').forEach(inv => {
+                const cust = customers.find(c => c.id === inv.pelangganId);
+                if (cust) {
+                    const pkg = packages.find(p => p.id === cust.paketId);
+                    if (pkg) revenueByPackage[pkg.nama] += inv.jumlah;
+                }
+            });
+
+            const expensesByCategory = {};
+            expenses.forEach(e => {
+                expensesByCategory[e.kategori] = (expensesByCategory[e.kategori] || 0) + e.jumlah;
+            });
+            
+            if(Object.keys(expensesByCategory).length > 0) {
+                 document.getElementById('kpi-top-expense-category').textContent = Object.entries(expensesByCategory).sort(([,a],[,b]) => b - a)[0][0];
+            } else {
+                 document.getElementById('kpi-top-expense-category').textContent = '-';
+            }
+
+            return { history, revenueByPackage, expensesByCategory };
+        }
+        
+        let analyticsCharts = {}; // Store chart instances to destroy them later
+        function renderAnalyticsCharts(chartData) {
+             // Destroy existing charts if they exist
+            Object.values(analyticsCharts).forEach(chart => chart.destroy());
+
+            const { history, revenueByPackage, expensesByCategory } = chartData;
+            const colorPalette = ['#4f46e5', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#d946ef'];
+            const labels = Object.keys(history).map(k => new Date(k + '-02').toLocaleString('id-ID', { month: 'short', year: 'numeric' }));
+            
+            const profitData = Object.values(history).map(h => h.profit);
+            const revenueData = Object.values(history).map(h => h.revenue);
+            const allDataPoints = [...profitData, ...revenueData];
+            const dataMax = Math.max(0, ...allDataPoints), dataMin = Math.min(0, ...allDataPoints);
+            const padding = (dataMax - dataMin) * 0.1;
+            const calculatedMax = dataMax + padding, calculatedMin = dataMin - padding;
+
+            analyticsCharts.revenueProfit = new Chart(document.getElementById('revenue-profit-chart').getContext('2d'), {
+                type: 'bar', data: { labels, datasets: [{ label: 'Pendapatan', data: revenueData, backgroundColor: '#3b82f6' }, { label: 'Laba Kotor', data: profitData, backgroundColor: '#10b981' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false, min: calculatedMin, max: calculatedMax } } }
+            });
+
+            analyticsCharts.revenueComp = new Chart(document.getElementById('revenue-composition-chart').getContext('2d'), {
+                type: 'doughnut', data: { labels: Object.keys(revenueByPackage), datasets: [{ label: 'Pendapatan', data: Object.values(revenueByPackage), backgroundColor: colorPalette }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            analyticsCharts.customerGrowth = new Chart(document.getElementById('customer-growth-chart').getContext('2d'), {
+                type: 'line', data: { labels, datasets: [{ label: 'Total Pelanggan', data: Object.values(history).map(h => h.customers), borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            analyticsCharts.expensesComp = new Chart(document.getElementById('expenses-composition-chart').getContext('2d'), {
+                type: 'pie', data: { labels: Object.keys(expensesByCategory), datasets: [{ label: 'Pengeluaran', data: Object.values(expensesByCategory), backgroundColor: colorPalette.reverse() }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function initAnalytics() {
+            const data = { customers: allCustomers, packages: allPackages, invoices: allInvoices, expenses: allExpenses };
+
+            if (data.customers.length === 0 && data.packages.length === 0) {
+                 document.getElementById('loading-indicator-analytics').style.display = 'block';
+                 document.getElementById('analytics-content-container').style.display = 'none';
+                 return;
+            }
+
+            document.getElementById('loading-indicator-analytics').style.display = 'none';
+            document.getElementById('analytics-content-container').style.display = 'block';
+
+            document.getElementById('current-date-analytics').textContent = (new Date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            calculateAnalytics(data);
+            const chartData = prepareChartData(data);
+            renderAnalyticsCharts(chartData);
+
+            analyticsInitialized = true;
+        }
+
+        // --- AUTH & APP INIT ---
         onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
         function showApp(user) {
             authContainer.classList.add('hidden');
@@ -1174,6 +1451,11 @@
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-active'));
             document.getElementById(`content-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('tab-active');
+            
+            if (tabId === 'analytics') {
+                initAnalytics();
+            }
+            
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             if (sidebar.classList.contains('open')) {
@@ -1192,7 +1474,7 @@
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
-        const formatRupiah = (angka) => !angka && angka !== 0 ? '-' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        const formatRupiah = (angka) => !angka && angka !== 0 ? 'Rp 0' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
         const formatPhoneNumber = (phone) => {
             if (!phone) return null;
@@ -1758,6 +2040,38 @@
             document.getElementById('btn-export-tagihan-csv').addEventListener('click', exportTagihanToCsv);
             document.getElementById('btn-export-laporan-pdf').addEventListener('click', exportLaporanToPdf);
 
+            // Listener untuk Kalkulator BEP
+            const calculateBepBtn = document.getElementById('calculate-bep-btn');
+            calculateBepBtn.addEventListener('click', function() {
+                const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+                const lifespan = parseFloat(document.getElementById('lifespan').value);
+                const ispCost = parseFloat(document.getElementById('isp-cost').value);
+                const opsCost = parseFloat(document.getElementById('ops-cost').value);
+                const subscriptionPrice = parseFloat(document.getElementById('subscription-price').value);
+
+                const bepUnitResultEl = document.getElementById('bep-unit-result');
+                const bepRupiahResultEl = document.getElementById('bep-rupiah-result');
+                const bepStatusEl = document.getElementById('bep-status');
+                
+                const allInputsValid = !isNaN(initialInvestment) && !isNaN(lifespan) && !isNaN(ispCost) && !isNaN(opsCost) && !isNaN(subscriptionPrice);
+                if (!allInputsValid || lifespan <= 0 || subscriptionPrice <= 0) {
+                    bepStatusEl.textContent = 'Pastikan semua kolom diisi dengan angka yang valid.';
+                    bepStatusEl.classList.remove('text-gray-400','text-green-500');
+                    bepStatusEl.classList.add('text-red-500');
+                    return;
+                }
+                const monthlyDepreciation = initialInvestment / lifespan;
+                const totalFixedCosts = ispCost + opsCost + monthlyDepreciation;
+                const bepInUnits = Math.ceil(totalFixedCosts / subscriptionPrice);
+                const bepInRupiah = bepInUnits * subscriptionPrice;
+
+                bepUnitResultEl.textContent = bepInUnits.toLocaleString('id-ID');
+                bepRupiahResultEl.textContent = formatRupiah(bepInRupiah);
+                bepStatusEl.textContent = `Pelanggan ke-${(bepInUnits + 1).toLocaleString('id-ID')} akan menjadi keuntungan pertama Anda.`;
+                bepStatusEl.classList.remove('text-gray-400', 'text-red-500');
+                bepStatusEl.classList.add('text-green-500');
+            });
+
 
             document.getElementById('form-pelanggan').addEventListener('submit', (e) => { 
                 e.preventDefault(); 
@@ -2082,4 +2396,3 @@
     </script>
 </body>
 </html>
-
