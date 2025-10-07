@@ -115,6 +115,10 @@
                 <a href="#" id="tab-laporan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
                 </a>
+                <!-- MENU BARU -->
+                 <a href="#" id="tab-status-jaringan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                    <i data-lucide="wifi" class="w-5 h-5 mr-3"></i> Status Jaringan
+                </a>
                 <a href="analytics.html" class="flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Analytics
                 </a>
@@ -409,6 +413,31 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Network Status Content -->
+                <div id="content-status-jaringan" class="tab-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <h2 class="text-2xl md:text-3xl font-bold">Manajemen Status Jaringan</h2>
+                        <button id="btn-add-status-jaringan" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Buat Pembaruan
+                        </button>
+                    </div>
+                    <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                        <table class="w-full text-left min-w-[700px]">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="p-4">Tanggal</th>
+                                    <th class="p-4">Judul</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="status-jaringan-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -501,6 +530,36 @@
                 <div class="flex justify-end gap-4">
                     <button type="button" id="btn-cancel-tagihan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
                     <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Network Status Modal -->
+    <div id="modal-status-jaringan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+            <h3 id="modal-status-jaringan-title" class="text-2xl font-bold mb-6">Buat Pembaruan Status</h3>
+            <form id="form-status-jaringan">
+                <input type="hidden" id="status-jaringan-id">
+                <div class="mb-4">
+                    <label for="status-jaringan-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Pembaruan</label>
+                    <input type="text" id="status-jaringan-title" class="w-full p-2 border rounded-lg" required placeholder="Contoh: Perbaikan di Area Ciledug">
+                </div>
+                <div class="mb-4">
+                    <label for="status-jaringan-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                    <textarea id="status-jaringan-description" rows="3" class="w-full p-2 border rounded-lg" required placeholder="Jelaskan detail gangguan atau pemeliharaan..."></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="status-jaringan-status" class="block text-sm font-medium text-gray-700 mb-1">Jenis Status</label>
+                    <select id="status-jaringan-status" class="w-full p-2 border rounded-lg bg-white" required>
+                        <option value="Normal">Normal</option>
+                        <option value="Gangguan Sebagian">Gangguan Sebagian</option>
+                        <option value="Gangguan Umum">Gangguan Umum</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="btn-cancel-status-jaringan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan & Publikasikan</button>
                 </div>
             </form>
         </div>
@@ -657,23 +716,17 @@
     
         let userIsLoggedIn = false;
         let appListenersAttached = false;
-        let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [];
-        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses;
+        let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [], allNetworkStatus = [];
+        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses, unsubscribeNetworkStatus;
         let deleteCallback = null;
         let verificationInvoiceId = null;
         let chatContext = {};
         
-        // State untuk filter
-        let customerSearchTerm = '';
-        let customerPackageFilter = 'semua';
-        let invoiceSearchTerm = '';
-        let invoiceStatusFilter = 'semua';
+        let customerSearchTerm = '', customerPackageFilter = 'semua';
+        let invoiceSearchTerm = '', invoiceStatusFilter = 'semua';
 
-        // State untuk paginasi
-        let pelangganCurrentPage = 1;
-        let pelangganItemsPerPage = 10;
-        let tagihanCurrentPage = 1;
-        let tagihanItemsPerPage = 10;
+        let pelangganCurrentPage = 1, pelangganItemsPerPage = 10;
+        let tagihanCurrentPage = 1, tagihanItemsPerPage = 10;
 
         let lineChartInstance, pieChartInstance;
 
@@ -683,6 +736,43 @@
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
 
+        // --- Network Status Functions ---
+        function loadNetworkStatus() {
+            const q = query(getCollectionRef('network_status'));
+            if (unsubscribeNetworkStatus) unsubscribeNetworkStatus();
+            unsubscribeNetworkStatus = onSnapshot(q, (snapshot) => {
+                allNetworkStatus = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderNetworkStatus();
+            });
+        }
+        async function saveNetworkStatus(data) {
+             try {
+                const statusData = { 
+                    title: data.title, 
+                    description: data.description, 
+                    status: data.status,
+                    timestamp: serverTimestamp() // Always use server time for new/updated status
+                };
+                if (data.id) {
+                    await setDoc(doc(db, dataContainerPath, 'network_status', data.id), statusData, { merge: true });
+                    showToast("Status jaringan berhasil diperbarui.");
+                } else {
+                    await addDoc(getCollectionRef('network_status'), statusData);
+                    showToast("Status jaringan baru berhasil dipublikasikan.");
+                }
+                closeModal(document.getElementById('modal-status-jaringan'));
+            } catch (error) { 
+                console.error("Error saving network status:", error); 
+                showToast("Gagal menyimpan data status.", "error"); 
+            }
+        }
+        async function deleteNetworkStatus(id) {
+            try {
+                await deleteDoc(doc(db, dataContainerPath, 'network_status', id));
+                showToast("Data status berhasil dihapus.");
+            } catch (e) { console.error("Error deleting status:", e); showToast("Gagal menghapus data.", "error"); }
+        }
+        
         function generateUniqueCustomerId() {
             let newId;
             let isUnique = false;
@@ -812,7 +902,7 @@
             let generatedCount = 0;
             let skippedCount = 0;
 
-            const nextPeriodEndDate = new Date(year, month + 1, 7); // Month is 0-indexed, but day logic makes it tricky. Let's use month + 1 and day 7.
+            const nextPeriodEndDate = new Date(year, month + 1, 7);
             const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
 
             for (const customer of allCustomers) {
@@ -900,7 +990,6 @@
             } catch(e) { console.error("Error updating invoice:", e); showToast("Gagal memperbarui status tagihan.", "error"); }
         }
         
-        // --- Functions for Expenses (CRUD) ---
         function loadExpenses() {
             const q = query(getCollectionRef('expenses'));
             if (unsubscribeExpenses) unsubscribeExpenses();
@@ -921,7 +1010,7 @@
                     createdAt: serverTimestamp()
                 };
                 if (data.id) {
-                    delete expenseData.createdAt; // Don't update createdAt on edit
+                    delete expenseData.createdAt;
                     await setDoc(doc(db, dataContainerPath, 'expenses', data.id), expenseData, { merge: true });
                     showToast("Data pengeluaran berhasil diperbarui.");
                 } else {
@@ -961,6 +1050,7 @@
             if (unsubscribePackages) unsubscribePackages();
             if (unsubscribeInvoices) unsubscribeInvoices();
             if (unsubscribeExpenses) unsubscribeExpenses();
+            if (unsubscribeNetworkStatus) unsubscribeNetworkStatus();
         }
         
         function initApp() { 
@@ -970,7 +1060,7 @@
             populateLaporanDateFilters(); 
             switchTab('dashboard'); 
         }
-        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); loadExpenses(); }
+        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); loadExpenses(); loadNetworkStatus(); }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1159,6 +1249,34 @@
             lucide.createIcons();
         }
 
+        function renderNetworkStatus() {
+            const tbody = document.getElementById('status-jaringan-table-body');
+            const statusClasses = {
+                'Normal': 'bg-green-100 text-green-800', 'Gangguan Sebagian': 'bg-yellow-100 text-yellow-800',
+                'Gangguan Umum': 'bg-red-100 text-red-800', 'Tidak Diketahui': 'bg-gray-100 text-gray-800'
+            };
+            
+            const sortedStatus = [...allNetworkStatus].sort((a, b) => {
+                const dateA = a.timestamp ? a.timestamp.toDate() : new Date(0);
+                const dateB = b.timestamp ? b.timestamp.toDate() : new Date(0);
+                return dateB - dateA;
+            });
+            
+            tbody.innerHTML = !sortedStatus.length ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada pembaruan.</td></tr>` :
+                sortedStatus.map(s => {
+                    const timestamp = s.timestamp ? s.timestamp.toDate().toLocaleString('id-ID', {dateStyle: 'medium', timeStyle: 'short'}) : 'N/A';
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">${timestamp}</td>
+                        <td class="p-4 font-semibold">${s.title}</td>
+                        <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClasses[s.status] || statusClasses['Tidak Diketahui']}">${s.status}</span></td>
+                        <td class="p-4 flex gap-3">
+                            <button class="btn-edit-status-jaringan text-blue-600 hover:text-blue-800" data-id="${s.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-status-jaringan text-red-600 hover:text-red-800" data-id="${s.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </td></tr>`;
+                }).join('');
+            lucide.createIcons();
+        }
+
         function renderLaporan() {
             const bulanEl = document.getElementById('laporan-filter-bulan');
             const tahunEl = document.getElementById('laporan-filter-tahun');
@@ -1166,7 +1284,6 @@
             const tahun = tahunEl.value;
             document.getElementById('laporan-periode-text').textContent = `${bulanEl.options[bulanEl.selectedIndex].text} ${tahun}`;
 
-            // Pemasukan
             const pemasukanFiltered = allInvoices.filter(inv => { 
                 const p = new Date(inv.periode); 
                 return inv.status === 'lunas' && p.getMonth() == bulan && p.getFullYear() == tahun; 
@@ -1174,7 +1291,6 @@
             const totalPemasukan = pemasukanFiltered.reduce((sum, inv) => sum + inv.jumlah, 0);
             document.getElementById('laporan-total-pemasukan').textContent = formatRupiah(totalPemasukan);
             
-            // Pengeluaran
             const pengeluaranFiltered = allExpenses.filter(exp => {
                 const p = new Date(exp.tanggal);
                 return p.getMonth() == bulan && p.getFullYear() == tahun;
@@ -1182,14 +1298,12 @@
             const totalPengeluaran = pengeluaranFiltered.reduce((sum, exp) => sum + exp.jumlah, 0);
             document.getElementById('laporan-total-pengeluaran').textContent = formatRupiah(totalPengeluaran);
             
-            // Laba Rugi
             const labaRugi = totalPemasukan - totalPengeluaran;
             const labaRugiEl = document.getElementById('laporan-laba-rugi');
             labaRugiEl.textContent = formatRupiah(labaRugi);
             labaRugiEl.classList.toggle('text-red-600', labaRugi < 0);
             labaRugiEl.classList.toggle('text-indigo-600', labaRugi >= 0);
 
-            // Render Tabel Pemasukan
             const pemasukanTbody = document.getElementById('laporan-pemasukan-table-body');
             pemasukanTbody.innerHTML = !pemasukanFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pemasukan.</td></tr>` : 
                 pemasukanFiltered.map(inv => {
@@ -1197,7 +1311,6 @@
                     return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${getBillingPeriodText(inv, c)}</td><td class="p-4">${formatRupiah(inv.jumlah)}</td></tr>`;
                 }).join('');
             
-            // Render Tabel Pengeluaran
             const pengeluaranTbody = document.getElementById('laporan-pengeluaran-table-body');
             pengeluaranTbody.innerHTML = !pengeluaranFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pengeluaran.</td></tr>` :
                 pengeluaranFiltered.sort((a,b) => a.tanggal.localeCompare(b.tanggal)).map(exp => {
@@ -1419,6 +1532,13 @@
                 document.getElementById('modal-pengeluaran-title').textContent = 'Tambah Pengeluaran Baru';
                 openModal(document.getElementById('modal-pengeluaran'));
             });
+             document.getElementById('btn-add-status-jaringan').addEventListener('click', () => {
+                const form = document.getElementById('form-status-jaringan');
+                form.reset();
+                document.getElementById('status-jaringan-id').value = '';
+                document.getElementById('modal-status-jaringan-title').textContent = 'Buat Pembaruan Status';
+                openModal(document.getElementById('modal-status-jaringan'));
+            });
 
             document.getElementById('btn-open-generate-modal').addEventListener('click', () => {
                 const bulanSelect = document.getElementById('generate-bulan');
@@ -1448,8 +1568,9 @@
             document.getElementById('btn-cancel-generate').addEventListener('click', () => closeModal(document.getElementById('modal-generate-tagihan')));
             document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
             document.getElementById('btn-cancel-chat').addEventListener('click', () => closeModal(document.getElementById('modal-chat-options')));
+            document.getElementById('btn-cancel-status-jaringan').addEventListener('click', () => closeModal(document.getElementById('modal-status-jaringan')));
 
-            // Listener untuk filter
+
             document.getElementById('pelanggan-search-input').addEventListener('input', (e) => {
                 customerSearchTerm = e.target.value;
                 pelangganCurrentPage = 1;
@@ -1471,7 +1592,6 @@
                 renderInvoices();
             });
 
-            // Listener untuk paginasi
             document.getElementById('pelanggan-per-page').addEventListener('change', e => {
                 pelangganItemsPerPage = parseInt(e.target.value, 10);
                 pelangganCurrentPage = 1;
@@ -1503,7 +1623,6 @@
                 renderInvoices();
             });
             
-            // Listener untuk Export
             document.getElementById('btn-export-pelanggan-csv').addEventListener('click', exportPelangganToCsv);
             document.getElementById('btn-export-tagihan-csv').addEventListener('click', exportTagihanToCsv);
             document.getElementById('btn-export-laporan-pdf').addEventListener('click', exportLaporanToPdf);
@@ -1539,6 +1658,15 @@
                     kategori: document.getElementById('pengeluaran-kategori').value,
                     deskripsi: document.getElementById('pengeluaran-deskripsi').value,
                     jumlah: document.getElementById('pengeluaran-jumlah').value
+                });
+            });
+            document.getElementById('form-status-jaringan').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveNetworkStatus({
+                    id: document.getElementById('status-jaringan-id').value,
+                    title: document.getElementById('status-jaringan-title').value,
+                    description: document.getElementById('status-jaringan-description').value,
+                    status: document.getElementById('status-jaringan-status').value
                 });
             });
             document.getElementById('form-generate-tagihan').addEventListener('submit', (e) => {
@@ -1615,6 +1743,18 @@
                 } else if (btn.classList.contains('btn-delete-pengeluaran')) {
                     deleteCallback = () => deleteExpense(id);
                     document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus data pengeluaran ini?";
+                    openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-edit-status-jaringan')) {
+                    const s = allNetworkStatus.find(status => status.id === id); if (!s) return;
+                    document.getElementById('status-jaringan-id').value = s.id;
+                    document.getElementById('status-jaringan-title').value = s.title;
+                    document.getElementById('status-jaringan-description').value = s.description;
+                    document.getElementById('status-jaringan-status').value = s.status;
+                    document.getElementById('modal-status-jaringan-title').textContent = 'Edit Pembaruan Status';
+                    openModal(document.getElementById('modal-status-jaringan'));
+                } else if (btn.classList.contains('btn-delete-status-jaringan')) {
+                    deleteCallback = () => deleteNetworkStatus(id);
+                    document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus pembaruan status ini?";
                     openModal(document.getElementById('modal-konfirmasi'));
                 }
             });
@@ -1788,5 +1928,3 @@
     </script>
 </body>
 </html>
-
-
