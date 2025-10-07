@@ -115,12 +115,11 @@
                 <a href="#" id="tab-laporan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Laporan Keuangan
                 </a>
-                <!-- MENU BARU -->
-                 <a href="#" id="tab-status-jaringan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                <a href="#" id="tab-status-jaringan" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="wifi" class="w-5 h-5 mr-3"></i> Status Jaringan
                 </a>
-                <a href="analytics.html" class="flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i> Analytics
+                 <a href="#" id="tab-blog" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                    <i data-lucide="newspaper" class="w-5 h-5 mr-3"></i> Blog
                 </a>
             </nav>
             <div class="p-6">
@@ -438,6 +437,30 @@
                     </div>
                 </div>
 
+                <!-- Blog Content -->
+                <div id="content-blog" class="tab-content hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <h2 class="text-2xl md:text-3xl font-bold">Manajemen Artikel Blog</h2>
+                        <button id="btn-add-artikel" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah Artikel Baru
+                        </button>
+                    </div>
+                    <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+                        <table class="w-full text-left min-w-[700px]">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="p-4">Judul Artikel</th>
+                                    <th class="p-4">Kategori</th>
+                                    <th class="p-4">Tanggal Publikasi</th>
+                                    <th class="p-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="artikel-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -564,6 +587,39 @@
             </form>
         </div>
     </div>
+    
+    <!-- Blog Article Modal -->
+    <div id="modal-artikel" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-3xl">
+            <h3 id="modal-artikel-title" class="text-2xl font-bold mb-6">Tambah Artikel Baru</h3>
+            <form id="form-artikel" class="max-h-[80vh] overflow-y-auto pr-4">
+                <input type="hidden" id="artikel-id">
+                <div class="mb-4">
+                    <label for="artikel-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Artikel</label>
+                    <input type="text" id="artikel-title" class="w-full p-2 border rounded-lg" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="artikel-kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                        <input type="text" id="artikel-kategori" class="w-full p-2 border rounded-lg" required placeholder="Contoh: Tips & Trik">
+                    </div>
+                     <div>
+                        <label for="artikel-gambar-url" class="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
+                        <input type="url" id="artikel-gambar-url" class="w-full p-2 border rounded-lg" required placeholder="https://placehold.co/...">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="artikel-konten" class="block text-sm font-medium text-gray-700 mb-1">Konten Artikel (mendukung HTML)</label>
+                    <textarea id="artikel-konten" rows="10" class="w-full p-2 border rounded-lg font-mono text-sm" required placeholder="Gunakan tag HTML seperti <p>, <h3>, <ul>, <li> untuk format."></textarea>
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" id="btn-cancel-artikel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan & Publikasikan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <div id="modal-konfirmasi" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
@@ -696,7 +752,7 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
-            collection, query, where, getDocs, writeBatch, serverTimestamp, deleteField
+            collection, query, where, getDocs, writeBatch, serverTimestamp, deleteField, orderBy
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     
         const { jsPDF } = window.jspdf;
@@ -716,8 +772,8 @@
     
         let userIsLoggedIn = false;
         let appListenersAttached = false;
-        let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [], allNetworkStatus = [];
-        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses, unsubscribeNetworkStatus;
+        let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [], allNetworkStatus = [], allBlogPosts = [];
+        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses, unsubscribeNetworkStatus, unsubscribeBlogPosts;
         let deleteCallback = null;
         let verificationInvoiceId = null;
         let chatContext = {};
@@ -735,10 +791,51 @@
         
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
+        
+        // --- Blog Functions (CMS) ---
+        function loadBlogPosts() {
+            const q = query(getCollectionRef('articles'), orderBy('createdAt', 'desc'));
+            if (unsubscribeBlogPosts) unsubscribeBlogPosts();
+            unsubscribeBlogPosts = onSnapshot(q, (snapshot) => {
+                allBlogPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderBlogPosts();
+            });
+        }
+        async function saveBlogPost(data) {
+            try {
+                const postData = {
+                    title: data.title,
+                    category: data.category,
+                    imageUrl: data.imageUrl,
+                    content: data.content, // HTML content
+                    createdAt: serverTimestamp()
+                };
+                if (data.id) {
+                    // Don't update createdAt on edit, keep the original
+                    const originalPost = allBlogPosts.find(p => p.id === data.id);
+                    postData.createdAt = originalPost.createdAt || serverTimestamp();
+                    await setDoc(doc(db, dataContainerPath, 'articles', data.id), postData, { merge: true });
+                    showToast("Artikel berhasil diperbarui.");
+                } else {
+                    await addDoc(getCollectionRef('articles'), postData);
+                    showToast("Artikel baru berhasil dipublikasikan.");
+                }
+                closeModal(document.getElementById('modal-artikel'));
+            } catch (error) {
+                console.error("Error saving blog post:", error);
+                showToast("Gagal menyimpan artikel.", "error");
+            }
+        }
+        async function deleteBlogPost(id) {
+            try {
+                await deleteDoc(doc(db, dataContainerPath, 'articles', id));
+                showToast("Artikel berhasil dihapus.");
+            } catch (e) { console.error("Error deleting post:", e); showToast("Gagal menghapus artikel.", "error"); }
+        }
 
         // --- Network Status Functions ---
         function loadNetworkStatus() {
-            const q = query(getCollectionRef('network_status'));
+            const q = query(getCollectionRef('network_status'), orderBy('timestamp', 'desc'));
             if (unsubscribeNetworkStatus) unsubscribeNetworkStatus();
             unsubscribeNetworkStatus = onSnapshot(q, (snapshot) => {
                 allNetworkStatus = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -751,9 +848,11 @@
                     title: data.title, 
                     description: data.description, 
                     status: data.status,
-                    timestamp: serverTimestamp() // Always use server time for new/updated status
+                    timestamp: serverTimestamp()
                 };
                 if (data.id) {
+                    const originalStatus = allNetworkStatus.find(s => s.id === data.id);
+                    statusData.timestamp = originalStatus.timestamp || serverTimestamp();
                     await setDoc(doc(db, dataContainerPath, 'network_status', data.id), statusData, { merge: true });
                     showToast("Status jaringan berhasil diperbarui.");
                 } else {
@@ -1051,6 +1150,7 @@
             if (unsubscribeInvoices) unsubscribeInvoices();
             if (unsubscribeExpenses) unsubscribeExpenses();
             if (unsubscribeNetworkStatus) unsubscribeNetworkStatus();
+            if (unsubscribeBlogPosts) unsubscribeBlogPosts();
         }
         
         function initApp() { 
@@ -1060,7 +1160,14 @@
             populateLaporanDateFilters(); 
             switchTab('dashboard'); 
         }
-        function loadData() { loadCustomers(); loadPackages(); loadInvoices(); loadExpenses(); loadNetworkStatus(); }
+        function loadData() { 
+            loadCustomers(); 
+            loadPackages(); 
+            loadInvoices(); 
+            loadExpenses(); 
+            loadNetworkStatus(); 
+            loadBlogPosts();
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1256,14 +1363,8 @@
                 'Gangguan Umum': 'bg-red-100 text-red-800', 'Tidak Diketahui': 'bg-gray-100 text-gray-800'
             };
             
-            const sortedStatus = [...allNetworkStatus].sort((a, b) => {
-                const dateA = a.timestamp ? a.timestamp.toDate() : new Date(0);
-                const dateB = b.timestamp ? b.timestamp.toDate() : new Date(0);
-                return dateB - dateA;
-            });
-            
-            tbody.innerHTML = !sortedStatus.length ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada pembaruan.</td></tr>` :
-                sortedStatus.map(s => {
+            tbody.innerHTML = !allNetworkStatus.length ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada pembaruan.</td></tr>` :
+                allNetworkStatus.map(s => {
                     const timestamp = s.timestamp ? s.timestamp.toDate().toLocaleString('id-ID', {dateStyle: 'medium', timeStyle: 'short'}) : 'N/A';
                     return `<tr class="border-b hover:bg-gray-50">
                         <td class="p-4">${timestamp}</td>
@@ -1272,6 +1373,23 @@
                         <td class="p-4 flex gap-3">
                             <button class="btn-edit-status-jaringan text-blue-600 hover:text-blue-800" data-id="${s.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5"></i></button>
                             <button class="btn-delete-status-jaringan text-red-600 hover:text-red-800" data-id="${s.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </td></tr>`;
+                }).join('');
+            lucide.createIcons();
+        }
+
+        function renderBlogPosts() {
+            const tbody = document.getElementById('artikel-table-body');
+             tbody.innerHTML = !allBlogPosts.length ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada artikel.</td></tr>` :
+                allBlogPosts.map(p => {
+                    const timestamp = p.createdAt ? p.createdAt.toDate().toLocaleString('id-ID', {dateStyle: 'medium', timeStyle: 'short'}) : 'N/A';
+                    return `<tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-semibold">${p.title}</td>
+                        <td class="p-4">${p.category}</td>
+                        <td class="p-4">${timestamp}</td>
+                        <td class="p-4 flex gap-3">
+                            <button class="btn-edit-artikel text-blue-600 hover:text-blue-800" data-id="${p.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="btn-delete-artikel text-red-600 hover:text-red-800" data-id="${p.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                         </td></tr>`;
                 }).join('');
             lucide.createIcons();
@@ -1506,8 +1624,7 @@
             document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
             document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { 
                 e.preventDefault(); 
-                // PERBAIKAN BUG DI SINI
-                const tabId = el.id.substring(4); // Mengambil semua karakter setelah "tab-"
+                const tabId = el.id.substring(4);
                 switchTab(tabId);
             }));
             
@@ -1537,13 +1654,21 @@
                 document.getElementById('modal-pengeluaran-title').textContent = 'Tambah Pengeluaran Baru';
                 openModal(document.getElementById('modal-pengeluaran'));
             });
-             document.getElementById('btn-add-status-jaringan').addEventListener('click', () => {
+            document.getElementById('btn-add-status-jaringan').addEventListener('click', () => {
                 const form = document.getElementById('form-status-jaringan');
                 form.reset();
                 document.getElementById('status-jaringan-id').value = '';
                 document.getElementById('modal-status-jaringan-title').textContent = 'Buat Pembaruan Status';
                 openModal(document.getElementById('modal-status-jaringan'));
             });
+            document.getElementById('btn-add-artikel').addEventListener('click', () => {
+                const form = document.getElementById('form-artikel');
+                form.reset();
+                document.getElementById('artikel-id').value = '';
+                document.getElementById('modal-artikel-title').textContent = 'Tambah Artikel Baru';
+                openModal(document.getElementById('modal-artikel'));
+            });
+
 
             document.getElementById('btn-open-generate-modal').addEventListener('click', () => {
                 const bulanSelect = document.getElementById('generate-bulan');
@@ -1574,6 +1699,7 @@
             document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
             document.getElementById('btn-cancel-chat').addEventListener('click', () => closeModal(document.getElementById('modal-chat-options')));
             document.getElementById('btn-cancel-status-jaringan').addEventListener('click', () => closeModal(document.getElementById('modal-status-jaringan')));
+            document.getElementById('btn-cancel-artikel').addEventListener('click', () => closeModal(document.getElementById('modal-artikel')));
 
 
             document.getElementById('pelanggan-search-input').addEventListener('input', (e) => {
@@ -1674,6 +1800,16 @@
                     status: document.getElementById('status-jaringan-status').value
                 });
             });
+             document.getElementById('form-artikel').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveBlogPost({
+                    id: document.getElementById('artikel-id').value,
+                    title: document.getElementById('artikel-title').value,
+                    category: document.getElementById('artikel-kategori').value,
+                    imageUrl: document.getElementById('artikel-gambar-url').value,
+                    content: document.getElementById('artikel-konten').value
+                });
+            });
             document.getElementById('form-generate-tagihan').addEventListener('submit', (e) => {
                 e.preventDefault();
                 const bulan = document.getElementById('generate-bulan').value;
@@ -1760,6 +1896,19 @@
                 } else if (btn.classList.contains('btn-delete-status-jaringan')) {
                     deleteCallback = () => deleteNetworkStatus(id);
                     document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus pembaruan status ini?";
+                    openModal(document.getElementById('modal-konfirmasi'));
+                } else if (btn.classList.contains('btn-edit-artikel')) {
+                    const p = allBlogPosts.find(post => post.id === id); if (!p) return;
+                    document.getElementById('artikel-id').value = p.id;
+                    document.getElementById('artikel-title').value = p.title;
+                    document.getElementById('artikel-kategori').value = p.category;
+                    document.getElementById('artikel-gambar-url').value = p.imageUrl;
+                    document.getElementById('artikel-konten').value = p.content;
+                    document.getElementById('modal-artikel-title').textContent = 'Edit Artikel';
+                    openModal(document.getElementById('modal-artikel'));
+                } else if (btn.classList.contains('btn-delete-artikel')) {
+                    deleteCallback = () => deleteBlogPost(id);
+                    document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus artikel ini?";
                     openModal(document.getElementById('modal-konfirmasi'));
                 }
             });
