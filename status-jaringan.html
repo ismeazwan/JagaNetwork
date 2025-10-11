@@ -1,0 +1,166 @@
+<!-- Bagian Konten Status Jaringan -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Status Jaringan</h2>
+    <button id="btn-add-status-jaringan" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Buat Pembaruan
+    </button>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[700px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">Tanggal</th>
+                <th class="p-4">Judul</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="status-jaringan-table-body">
+            <!-- Data akan dirender di sini -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Status Jaringan -->
+<div id="modal-status-jaringan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 id="modal-status-jaringan-title" class="text-2xl font-bold mb-6">Buat Pembaruan Status</h3>
+        <form id="form-status-jaringan">
+            <input type="hidden" id="status-jaringan-id">
+            <div class="mb-4">
+                <label for="status-jaringan-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Pembaruan</label>
+                <input type="text" id="status-jaringan-title" class="w-full p-2 border rounded-lg" required placeholder="Contoh: Perbaikan di Area Ciledug">
+            </div>
+            <div class="mb-4">
+                <label for="status-jaringan-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea id="status-jaringan-description" rows="3" class="w-full p-2 border rounded-lg" required placeholder="Jelaskan detail gangguan atau pemeliharaan..."></textarea>
+            </div>
+            <div class="mb-6">
+                <label for="status-jaringan-status" class="block text-sm font-medium text-gray-700 mb-1">Jenis Status</label>
+                <select id="status-jaringan-status" class="w-full p-2 border rounded-lg bg-white" required>
+                    <option value="Normal">Normal</option>
+                    <option value="Gangguan Sebagian">Gangguan Sebagian</option>
+                    <option value="Gangguan Umum">Gangguan Umum</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-status-jaringan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan & Publikasikan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="modal-konfirmasi-status" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Data?</h3>
+            <p class="text-gray-600 mt-2">Yakin ingin menghapus pembaruan status ini?</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus-status" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus-status" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    let deleteCallback = null;
+
+    function renderNetworkStatus() {
+        const tableBody = document.getElementById('status-jaringan-table-body');
+        if (!tableBody) return;
+
+        const statusClasses = {
+            'Normal': 'bg-green-100 text-green-800', 
+            'Gangguan Sebagian': 'bg-yellow-100 text-yellow-800',
+            'Gangguan Umum': 'bg-red-100 text-red-800', 
+            'Tidak Diketahui': 'bg-gray-100 text-gray-800'
+        };
+
+        const sortedStatus = [...window.allNetworkStatus].sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
+
+        tableBody.innerHTML = sortedStatus.length === 0
+            ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada pembaruan.</td></tr>`
+            : sortedStatus.map(s => {
+                const timestamp = s.timestamp ? s.timestamp.toDate().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+                return `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">${timestamp}</td>
+                    <td class="p-4 font-semibold">${s.title}</td>
+                    <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClasses[s.status] || statusClasses['Tidak Diketahui']}">${s.status}</span></td>
+                    <td class="p-4 flex gap-3">
+                        <button class="btn-edit-status-jaringan" data-id="${s.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                        <button class="btn-delete-status-jaringan" data-id="${s.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                    </td></tr>`;
+            }).join('');
+        
+        lucide.createIcons();
+    }
+
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+
+    function initPageListeners() {
+        const modal = document.getElementById('modal-status-jaringan');
+        const confirmModal = document.getElementById('modal-konfirmasi-status');
+
+        document.getElementById('btn-add-status-jaringan').addEventListener('click', () => {
+            const form = document.getElementById('form-status-jaringan');
+            form.reset();
+            document.getElementById('status-jaringan-id').value = '';
+            document.getElementById('modal-status-jaringan-title').textContent = 'Buat Pembaruan Status';
+            openModal(modal);
+        });
+
+        document.getElementById('form-status-jaringan').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.saveNetworkStatus({
+                id: document.getElementById('status-jaringan-id').value,
+                title: document.getElementById('status-jaringan-title').value,
+                description: document.getElementById('status-jaringan-description').value,
+                status: document.getElementById('status-jaringan-status').value
+            });
+            closeModal(modal);
+        });
+
+        document.getElementById('btn-cancel-status-jaringan').addEventListener('click', () => closeModal(modal));
+        document.getElementById('btn-cancel-hapus-status').addEventListener('click', () => closeModal(confirmModal));
+        document.getElementById('btn-confirm-hapus-status').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeModal(confirmModal);
+        });
+
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            
+            if (btn.classList.contains('btn-edit-status-jaringan')) {
+                const status = window.allNetworkStatus.find(s => s.id === id);
+                if (!status) return;
+                document.getElementById('status-jaringan-id').value = status.id;
+                document.getElementById('status-jaringan-title').value = status.title;
+                document.getElementById('status-jaringan-description').value = status.description;
+                document.getElementById('status-jaringan-status').value = status.status;
+                document.getElementById('modal-status-jaringan-title').textContent = 'Edit Pembaruan Status';
+                openModal(modal);
+            } else if (btn.classList.contains('btn-delete-status-jaringan')) {
+                deleteCallback = () => window.deleteNetworkStatus(id);
+                openModal(confirmModal);
+            }
+        });
+    }
+
+    renderNetworkStatus();
+    initPageListeners();
+
+    window.addEventListener('dataChanged', (e) => {
+        if (e.detail.collection === 'network_status') {
+            renderNetworkStatus();
+        }
+    });
+</script>
