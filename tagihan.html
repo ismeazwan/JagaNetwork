@@ -1,0 +1,346 @@
+<!-- Bagian Konten Tagihan -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Tagihan</h2>
+     <button id="btn-export-tagihan-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm">
+        <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export CSV
+    </button>
+ </div>
+ <div class="bg-white p-4 rounded-lg shadow mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="md:col-span-2">
+            <input type="text" id="tagihan-search-input" placeholder="🔍 Cari pelanggan atau periode..." class="w-full p-2 border rounded-lg">
+        </div>
+        <div class="md:col-span-1">
+            <select id="tagihan-status-filter" class="w-full p-2 border rounded-lg bg-white">
+                <option value="semua">Semua Status</option>
+                <option value="lunas">Lunas</option>
+                <option value="belum lunas">Belum Lunas</option>
+                <option value="menunggu konfirmasi">Menunggu Konfirmasi</option>
+            </select>
+        </div>
+        <div class="md:col-span-2 flex items-center justify-end gap-2 w-full">
+            <button id="btn-generate-prorate" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center justify-center w-1/2 md:w-auto text-sm">
+                <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> Prorate
+            </button>
+            <button id="btn-open-generate-modal" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center justify-center w-1/2 md:w-auto text-sm">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Bulanan
+            </button>
+        </div>
+    </div>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[700px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">Pelanggan</th>
+                <th class="p-4">Periode Layanan</th>
+                <th class="p-4">Jumlah</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tagihan-table-body">
+            <!-- Data tagihan dirender di sini -->
+        </tbody>
+    </table>
+</div>
+<div id="tagihan-pagination-controls" class="flex flex-col sm:flex-row items-center justify-between mt-6">
+    <div class="flex items-center gap-2 mb-4 sm:mb-0">
+        <label for="tagihan-per-page" class="text-sm">Tampil:</label>
+        <select id="tagihan-per-page" class="p-2 border rounded-lg bg-white text-sm">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="tagihan-prev-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">&lt; Sebelumnya</button>
+        <span id="tagihan-page-info" class="text-sm font-medium">Halaman 1 dari 1</span>
+        <button id="tagihan-next-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">Berikutnya &gt;</button>
+    </div>
+</div>
+
+<!-- Modal-modal untuk Tagihan -->
+<div id="modal-tagihan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 id="modal-tagihan-title" class="text-2xl font-bold mb-6">Edit Tagihan</h3>
+        <form id="form-tagihan">
+            <input type="hidden" id="tagihan-id">
+            <div class="mb-4">
+                <label for="tagihan-pelanggan-nama" class="block text-sm font-medium text-gray-700 mb-1">Pelanggan</label>
+                <input type="text" id="tagihan-pelanggan-nama" class="w-full p-2 border rounded-lg bg-gray-100" disabled>
+            </div>
+            <div class="mb-4">
+                <label for="tagihan-periode" class="block text-sm font-medium text-gray-700 mb-1">Periode Akhir Layanan</label>
+                <input type="date" id="tagihan-periode" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-6">
+                <label for="tagihan-jumlah" class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                <input type="number" id="tagihan-jumlah" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-tagihan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="modal-verifikasi" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 class="text-2xl font-bold mb-6">Verifikasi Pembayaran</h3>
+        <p class="mb-2">Pelanggan: <span id="verifikasi-nama-pelanggan" class="font-semibold"></span></p>
+        <p class="mb-4">Jumlah: <span id="verifikasi-jumlah" class="font-semibold"></span></p>
+        <div class="mb-6">
+            <p class="font-semibold mb-2">Bukti Pembayaran:</p>
+            <a id="verifikasi-link-bukti" href="#" target="_blank" class="text-indigo-600 hover:underline mb-2 block">Lihat Gambar Penuh</a>
+            <img id="verifikasi-gambar-bukti" src="" alt="Bukti Pembayaran" class="w-full h-auto max-h-80 object-contain border rounded-lg">
+        </div>
+        <div class="flex justify-end gap-4">
+            <button type="button" id="btn-tolak-pembayaran" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Tolak</button>
+            <button type="button" id="btn-konfirmasi-pembayaran" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Konfirmasi</button>
+        </div>
+    </div>
+</div>
+<div id="modal-generate-tagihan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 class="text-2xl font-bold mb-6">Generate Tagihan Bulanan</h3>
+        <form id="form-generate-tagihan">
+            <div class="mb-4">
+                <label for="generate-bulan" class="block text-sm font-medium text-gray-700 mb-1">Pilih Bulan</label>
+                <select id="generate-bulan" class="w-full p-2 border rounded-lg bg-white" required></select>
+            </div>
+            <div class="mb-6">
+                <label for="generate-tahun" class="block text-sm font-medium text-gray-700 mb-1">Pilih Tahun</label>
+                <select id="generate-tahun" class="w-full p-2 border rounded-lg bg-white" required></select>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-generate" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Generate</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="modal-konfirmasi-tagihan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Data?</h3>
+            <p id="konfirmasi-pesan-tagihan" class="text-gray-600 mt-2">Yakin ingin menghapus tagihan ini?</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus-tagihan" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus-tagihan" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+
+
+<script type="module">
+    // --- State & Variabel Halaman ---
+    let searchTerm = '', statusFilter = 'semua';
+    let currentPage = 1, itemsPerPage = 10;
+    let deleteCallback = null;
+    let verificationInvoiceId = null;
+
+    // --- Fungsi Render ---
+    function renderInvoices() {
+        const tableBody = document.getElementById('tagihan-table-body');
+        if (!tableBody) return;
+
+        let filtered = [...window.allInvoices];
+        if (statusFilter !== 'semua') {
+            filtered = filtered.filter(inv => inv.status === statusFilter);
+        }
+        if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            filtered = filtered.filter(inv => {
+                const customer = window.allCustomers.find(c => c.id === inv.pelangganId);
+                const periodText = window.getBillingPeriodText(inv, customer).toLowerCase();
+                return (customer && customer.nama.toLowerCase().includes(lower)) || periodText.includes(lower);
+            });
+        }
+
+        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * itemsPerPage;
+        const paginatedItems = filtered.slice(start, start + itemsPerPage);
+
+        tableBody.innerHTML = paginatedItems.length === 0
+            ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Tidak ada tagihan yang cocok.</td></tr>`
+            : paginatedItems.sort((a,b) => b.periode.localeCompare(a.periode)).map(inv => {
+                const customer = window.allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                let statusClass, statusText, actionBtn = '', editDeleteBtns = '';
+                switch(inv.status) {
+                    case 'lunas':
+                        statusClass = 'bg-green-100 text-green-800'; statusText = 'Lunas';
+                        actionBtn = `<span class="text-sm text-gray-500">Lunas</span>`;
+                        break;
+                    case 'menunggu konfirmasi':
+                        statusClass = 'bg-yellow-100 text-yellow-800'; statusText = 'Menunggu Konfirmasi';
+                        actionBtn = `<button class="btn-verifikasi bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-xs sm:text-sm" data-id="${inv.id}">Verifikasi</button>`;
+                        break;
+                    default:
+                        statusClass = 'bg-red-100 text-red-800'; statusText = 'Belum Lunas';
+                        actionBtn = `<button class="btn-bayar bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-xs sm:text-sm" data-id="${inv.id}">Bayar</button>`;
+                        editDeleteBtns = `
+                            <button class="btn-edit-tagihan" data-id="${inv.id}"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                            <button class="btn-delete-tagihan" data-id="${inv.id}"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                        `;
+                        break;
+                }
+                return `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">${customer.nama}</td><td class="p-4">${window.getBillingPeriodText(inv, customer)}</td>
+                    <td class="p-4">${window.formatRupiah(inv.jumlah)} ${inv.isProrated ? '<span class="text-xs text-indigo-600">(Prorata)</span>' : ''}</td>
+                    <td class="p-4"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusClass}">${statusText}</span></td>
+                    <td class="p-4 flex items-center gap-2 sm:gap-3">${actionBtn}${editDeleteBtns}</td></tr>`;
+            }).join('');
+        
+        updatePaginationControls(currentPage, totalPages);
+        lucide.createIcons();
+    }
+
+    // --- Fungsi Utilitas Halaman ---
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+    function updatePaginationControls(currentPage, totalPages) {
+        document.getElementById('tagihan-page-info').textContent = `Halaman ${currentPage} dari ${totalPages}`;
+        document.getElementById('tagihan-prev-page').disabled = currentPage === 1;
+        document.getElementById('tagihan-next-page').disabled = currentPage >= totalPages;
+    }
+
+    // --- Inisialisasi Event Listener ---
+    function initPageListeners() {
+        document.getElementById('tagihan-search-input').addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            currentPage = 1;
+            renderInvoices();
+        });
+        document.getElementById('tagihan-status-filter').addEventListener('change', (e) => {
+            statusFilter = e.target.value;
+            currentPage = 1;
+            renderInvoices();
+        });
+        document.getElementById('tagihan-per-page').addEventListener('change', e => {
+            itemsPerPage = parseInt(e.target.value, 10);
+            currentPage = 1;
+            renderInvoices();
+        });
+        document.getElementById('tagihan-prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderInvoices();
+            }
+        });
+        document.getElementById('tagihan-next-page').addEventListener('click', () => {
+            const totalPages = Math.ceil(window.allInvoices.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderInvoices();
+            }
+        });
+
+        // Event listener untuk tombol generate dan prorate
+        document.getElementById('btn-generate-prorate').addEventListener('click', window.generateProrateInvoices);
+        document.getElementById('btn-open-generate-modal').addEventListener('click', () => {
+            const bulanSelect = document.getElementById('generate-bulan');
+            const tahunSelect = document.getElementById('generate-tahun');
+            const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+            const currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
+            bulanSelect.innerHTML = months.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+            let yearOptions = '';
+            for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
+            tahunSelect.innerHTML = yearOptions;
+            openModal(document.getElementById('modal-generate-tagihan'));
+        });
+
+        // Form dan Modal Listeners
+        document.getElementById('form-tagihan').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.saveInvoice({
+                id: document.getElementById('tagihan-id').value,
+                jumlah: document.getElementById('tagihan-jumlah').value,
+                periode: document.getElementById('tagihan-periode').value
+            });
+            closeModal(document.getElementById('modal-tagihan'));
+        });
+         document.getElementById('form-generate-tagihan').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const bulan = document.getElementById('generate-bulan').value;
+            const tahun = document.getElementById('generate-tahun').value;
+            window.generateInvoices(parseInt(tahun, 10), parseInt(bulan, 10));
+            closeModal(document.getElementById('modal-generate-tagihan'));
+        });
+
+        // Tombol batal modal
+        document.getElementById('btn-cancel-tagihan').addEventListener('click', () => closeModal(document.getElementById('modal-tagihan')));
+        document.getElementById('btn-cancel-generate').addEventListener('click', () => closeModal(document.getElementById('modal-generate-tagihan')));
+        document.getElementById('btn-cancel-hapus-tagihan').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi-tagihan')));
+        
+        // Tombol konfirmasi hapus
+        document.getElementById('btn-confirm-hapus-tagihan').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeModal(document.getElementById('modal-konfirmasi-tagihan'));
+        });
+
+        // Tombol verifikasi
+        document.getElementById('btn-konfirmasi-pembayaran').addEventListener('click', () => {
+            if (verificationInvoiceId) {
+                window.updateInvoiceStatus(verificationInvoiceId, 'lunas');
+                closeModal(document.getElementById('modal-verifikasi'));
+                verificationInvoiceId = null;
+            }
+        });
+        document.getElementById('btn-tolak-pembayaran').addEventListener('click', () => {
+            if (verificationInvoiceId) {
+                window.updateInvoiceStatus(verificationInvoiceId, 'belum lunas', true);
+                closeModal(document.getElementById('modal-verifikasi'));
+                verificationInvoiceId = null;
+            }
+        });
+
+
+        // Delegasi event untuk tombol di dalam tabel
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.id;
+
+            if (btn.classList.contains('btn-edit-tagihan')) {
+                const inv = window.allInvoices.find(i => i.id === id); if (!inv) return;
+                const customer = window.allCustomers.find(c => c.id === inv.pelangganId);
+                document.getElementById('tagihan-id').value = inv.id;
+                document.getElementById('tagihan-pelanggan-nama').value = customer ? customer.nama : 'Pelanggan Terhapus';
+                document.getElementById('tagihan-periode').value = inv.periode;
+                document.getElementById('tagihan-jumlah').value = inv.jumlah;
+                openModal(document.getElementById('modal-tagihan'));
+            } else if (btn.classList.contains('btn-delete-tagihan')) {
+                deleteCallback = () => window.deleteInvoice(id);
+                openModal(document.getElementById('modal-konfirmasi-tagihan'));
+            } else if (btn.classList.contains('btn-bayar')) {
+                window.updateInvoiceStatus(id, 'lunas');
+            } else if (btn.classList.contains('btn-verifikasi')) {
+                const inv = window.allInvoices.find(i => i.id === id); if (!inv) return;
+                const customer = window.allCustomers.find(c => c.id === inv.pelangganId);
+                verificationInvoiceId = id;
+                document.getElementById('verifikasi-nama-pelanggan').textContent = customer ? customer.nama : 'Terhapus';
+                document.getElementById('verifikasi-jumlah').textContent = window.formatRupiah(inv.jumlah);
+                document.getElementById('verifikasi-link-bukti').href = inv.proofOfPaymentURL;
+                document.getElementById('verifikasi-gambar-bukti').src = inv.proofOfPaymentURL;
+                openModal(document.getElementById('modal-verifikasi'));
+            }
+        });
+    }
+
+    // Inisialisasi
+    renderInvoices();
+    initPageListeners();
+
+    // Listener untuk data change
+    window.addEventListener('dataChanged', (e) => {
+        if (['invoices', 'customers', 'packages'].includes(e.detail.collection)) {
+            renderInvoices();
+        }
+    });
+</script>
