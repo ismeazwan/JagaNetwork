@@ -1,0 +1,325 @@
+<!-- Bagian Konten Pelanggan -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Pelanggan</h2>
+    <div class="flex gap-2">
+         <button id="btn-export-pelanggan-csv" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm">
+            <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export CSV
+        </button>
+        <button id="btn-add-pelanggan" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah
+        </button>
+    </div>
+</div>
+<div class="bg-white p-4 rounded-lg shadow mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <input type="text" id="pelanggan-search-input" placeholder="🔍 Cari berdasarkan nama atau ID..." class="w-full p-2 border rounded-lg">
+        <select id="pelanggan-paket-filter" class="w-full p-2 border rounded-lg bg-white"></select>
+    </div>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[700px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">ID Pelanggan</th>
+                <th class="p-4">Nama</th>
+                <th class="p-4">Alamat</th>
+                <th class="p-4">No. HP</th>
+                <th class="p-4">Paket</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="pelanggan-table-body">
+            <!-- Data pelanggan akan dirender di sini oleh JavaScript -->
+        </tbody>
+    </table>
+</div>
+<div id="pelanggan-pagination-controls" class="flex flex-col sm:flex-row items-center justify-between mt-6">
+    <div class="flex items-center gap-2 mb-4 sm:mb-0">
+        <label for="pelanggan-per-page" class="text-sm">Tampil:</label>
+        <select id="pelanggan-per-page" class="p-2 border rounded-lg bg-white text-sm">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+    <div class="flex items-center gap-2">
+        <button id="pelanggan-prev-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">&lt; Sebelumnya</button>
+        <span id="pelanggan-page-info" class="text-sm font-medium">Halaman 1 dari 1</span>
+        <button id="pelanggan-next-page" class="px-3 py-1 border rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">Berikutnya &gt;</button>
+    </div>
+</div>
+
+<!-- Semua modal yang relevan dengan Pelanggan -->
+<div id="modal-pelanggan" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 id="modal-pelanggan-title" class="text-2xl font-bold mb-6">Tambah Pelanggan Baru</h3>
+        <form id="form-pelanggan">
+            <input type="hidden" id="pelanggan-id">
+            <div class="mb-4">
+                <label for="id-pelanggan-display" class="block text-sm font-medium text-gray-700 mb-1">ID Pelanggan</label>
+                <input type="text" id="id-pelanggan-display" class="w-full p-2 border rounded-lg bg-gray-100" readonly>
+            </div>
+            <div class="mb-4">
+                <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Pelanggan</label>
+                <input type="text" id="nama" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-4">
+                <label for="alamat" class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                <textarea id="alamat" rows="2" class="w-full p-2 border rounded-lg" required></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="hp" class="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
+                <input type="tel" id="hp" class="w-full p-2 border rounded-lg" required>
+            </div>
+             <div class="mb-4">
+                <label for="paket-pelanggan" class="block text-sm font-medium text-gray-700 mb-1">Paket Internet</label>
+                <select id="paket-pelanggan" class="w-full p-2 border rounded-lg" required>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="join-date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Bergabung</label>
+                <input type="date" id="join-date" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-pelanggan" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="modal-konfirmasi" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Data?</h3>
+            <p id="konfirmasi-pesan" class="text-gray-600 mt-2">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+<div id="modal-chat-options" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-md">
+        <h3 class="text-2xl font-bold mb-6">Kirim Pesan WhatsApp</h3>
+        <p class="mb-4 text-gray-600">Pilih template pesan untuk dikirim ke <span id="chat-customer-name" class="font-semibold"></span>.</p>
+        <div class="space-y-3">
+            <button id="btn-send-customer-data" class="w-full text-left p-4 border rounded-lg hover:bg-gray-50 flex items-center">
+                <i data-lucide="user-square" class="w-5 h-5 mr-3 text-indigo-600"></i>
+                <div>
+                    <p class="font-semibold">Kirim Data Pelanggan</p>
+                    <p class="text-sm text-gray-500">Kirim detail ID, nama, dan paket pelanggan.</p>
+                </div>
+            </button>
+            <button id="btn-send-invoice-info" class="w-full text-left p-4 border rounded-lg hover:bg-gray-50 flex items-center">
+                <i data-lucide="file-text" class="w-5 h-5 mr-3 text-green-600"></i>
+                <div>
+                    <p class="font-semibold">Kirim Info Tagihan</p>
+                    <p class="text-sm text-gray-500">Kirim rincian tagihan yang belum lunas.</p>
+                </div>
+            </button>
+        </div>
+        <div class="flex justify-end mt-6">
+             <button type="button" id="btn-cancel-chat" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+        </div>
+    </div>
+</div>
+
+
+<script type="module">
+    // --- State & Variabel Spesifik Halaman ---
+    let customerSearchTerm = '', customerPackageFilter = 'semua';
+    let currentPage = 1, itemsPerPage = 10;
+    let deleteCallback = null;
+    let chatContext = {};
+
+    // --- Elemen DOM ---
+    const tableBody = document.getElementById('pelanggan-table-body');
+    const searchInput = document.getElementById('pelanggan-search-input');
+    const packageFilter = document.getElementById('pelanggan-paket-filter');
+    // ... (tambahkan elemen lain jika perlu)
+
+    // --- Fungsi Render ---
+    function renderCustomers() {
+        if (!tableBody) return;
+
+        let filtered = [...window.allCustomers];
+
+        // Terapkan filter dan pencarian
+        if (customerSearchTerm) {
+            const lower = customerSearchTerm.toLowerCase();
+            filtered = filtered.filter(c => c.nama.toLowerCase().includes(lower) || (c.customerId && c.customerId.includes(lower)));
+        }
+        if (customerPackageFilter !== 'semua') {
+            filtered = filtered.filter(c => c.paketId === customerPackageFilter);
+        }
+
+        // Logika Paginasi
+        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * itemsPerPage;
+        const paginatedItems = filtered.slice(start, start + itemsPerPage);
+
+        // Render tabel
+        tableBody.innerHTML = paginatedItems.length === 0 
+            ? `<tr><td colspan="6" class="p-8 text-center text-gray-500">Tidak ada pelanggan yang cocok.</td></tr>` 
+            : paginatedItems.sort((a,b) => a.nama.localeCompare(b.nama)).map(c => {
+                const pkg = window.allPackages.find(p => p.id === c.paketId) || { nama: 'N/A' };
+                return `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4 font-mono text-sm text-gray-600">${c.customerId || '-'}</td>
+                    <td class="p-4">${c.nama}</td><td class="p-4">${c.alamat}</td><td class="p-4">${c.hp}</td>
+                    <td class="p-4">${pkg.nama}</td>
+                    <td class="p-4 flex gap-3">
+                        <button class="btn-chat" data-customer-id="${c.id}" title="Kirim WhatsApp"><i data-lucide="message-circle" class="w-5 h-5 text-green-600 hover:text-green-800"></i></button>
+                        <button class="btn-edit-pelanggan" data-id="${c.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                        <button class="btn-delete-pelanggan" data-id="${c.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                    </td></tr>`;
+            }).join('');
+        
+        updatePaginationControls(currentPage, totalPages);
+        lucide.createIcons();
+    }
+
+    // --- Fungsi Utilitas Halaman ---
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+    
+    function populatePaketFilter() {
+        if (!packageFilter) return;
+        packageFilter.innerHTML = '<option value="semua">Semua Paket</option>';
+        window.allPackages.sort((a,b) => a.nama.localeCompare(b.nama)).forEach(p => {
+            packageFilter.innerHTML += `<option value="${p.id}">${p.nama}</option>`;
+        });
+    }
+
+    function updatePaginationControls(currentPage, totalPages) {
+        document.getElementById('pelanggan-page-info').textContent = `Halaman ${currentPage} dari ${totalPages}`;
+        document.getElementById('pelanggan-prev-page').disabled = currentPage === 1;
+        document.getElementById('pelanggan-next-page').disabled = currentPage >= totalPages;
+    }
+
+    // --- Inisialisasi Event Listener ---
+    function initPageListeners() {
+        // Filter & Search
+        searchInput.addEventListener('input', (e) => {
+            customerSearchTerm = e.target.value;
+            currentPage = 1;
+            renderCustomers();
+        });
+        packageFilter.addEventListener('change', (e) => {
+            customerPackageFilter = e.target.value;
+            currentPage = 1;
+            renderCustomers();
+        });
+
+        // Paginasi
+        document.getElementById('pelanggan-per-page').addEventListener('change', e => {
+            itemsPerPage = parseInt(e.target.value, 10);
+            currentPage = 1;
+            renderCustomers();
+        });
+        document.getElementById('pelanggan-prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCustomers();
+            }
+        });
+        document.getElementById('pelanggan-next-page').addEventListener('click', () => {
+             const totalPages = Math.ceil(window.allCustomers.length / itemsPerPage);
+            if(currentPage < totalPages) {
+                currentPage++;
+                renderCustomers();
+            }
+        });
+
+        // Aksi Tombol Utama
+        document.getElementById('btn-add-pelanggan').addEventListener('click', () => {
+            const form = document.getElementById('form-pelanggan');
+            form.reset();
+            document.getElementById('pelanggan-id').value = '';
+            document.getElementById('id-pelanggan-display').value = window.generateUniqueCustomerId();
+            document.getElementById('join-date').value = new Date().toISOString().split('T')[0];
+            
+            let pkgSelect = document.getElementById('paket-pelanggan');
+            pkgSelect.innerHTML = '<option value="">-- Pilih Paket --</option>' + window.allPackages.map(p => `<option value="${p.id}">${p.nama}</option>`).join('');
+            
+            document.getElementById('modal-pelanggan-title').textContent = 'Tambah Pelanggan Baru'; 
+            openModal(document.getElementById('modal-pelanggan')); 
+        });
+
+        // Aksi Form & Modal
+        document.getElementById('form-pelanggan').addEventListener('submit', (e) => { 
+            e.preventDefault(); 
+            window.saveCustomer({ 
+                id: document.getElementById('pelanggan-id').value, 
+                customerId: document.getElementById('id-pelanggan-display').value,
+                nama: document.getElementById('nama').value, 
+                alamat: document.getElementById('alamat').value, 
+                hp: document.getElementById('hp').value, 
+                paketId: document.getElementById('paket-pelanggan').value, 
+                joinDate: document.getElementById('join-date').value 
+            }); 
+            closeModal(document.getElementById('modal-pelanggan'));
+        });
+        document.getElementById('btn-cancel-pelanggan').addEventListener('click', () => closeModal(document.getElementById('modal-pelanggan')));
+        document.getElementById('btn-cancel-hapus').addEventListener('click', () => closeModal(document.getElementById('modal-konfirmasi')));
+        document.getElementById('btn-confirm-hapus').addEventListener('click', () => { 
+            if (deleteCallback) deleteCallback(); 
+            closeModal(document.getElementById('modal-konfirmasi'));
+        });
+        document.getElementById('btn-cancel-chat').addEventListener('click', () => closeModal(document.getElementById('modal-chat-options')));
+
+        // Event Delegation untuk tombol di tabel
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            
+            const id = btn.dataset.id;
+            const customerId = btn.dataset.customerId;
+
+            if (btn.classList.contains('btn-edit-pelanggan')) {
+                const c = window.allCustomers.find(cust => cust.id === id);
+                if (!c) return;
+                document.getElementById('pelanggan-id').value = c.id; 
+                document.getElementById('id-pelanggan-display').value = c.customerId || 'N/A';
+                document.getElementById('nama').value = c.nama; 
+                document.getElementById('alamat').value = c.alamat; 
+                document.getElementById('hp').value = c.hp; 
+                document.getElementById('join-date').value = c.joinDate;
+                let pkgSelect = document.getElementById('paket-pelanggan');
+                pkgSelect.innerHTML = window.allPackages.map(p => `<option value="${p.id}" ${p.id === c.paketId ? 'selected' : ''}>${p.nama}</option>`).join('');
+                document.getElementById('modal-pelanggan-title').textContent = 'Edit Data Pelanggan'; 
+                openModal(document.getElementById('modal-pelanggan'));
+            } else if (btn.classList.contains('btn-delete-pelanggan')) {
+                deleteCallback = () => window.deleteCustomer(id);
+                document.getElementById('konfirmasi-pesan').textContent = "Yakin ingin menghapus pelanggan ini?";
+                openModal(document.getElementById('modal-konfirmasi'));
+            } else if (btn.classList.contains('btn-chat')) {
+                const customer = window.allCustomers.find(c => c.id === customerId);
+                if (customer) {
+                    chatContext = { customerId: customer.id };
+                    document.getElementById('chat-customer-name').textContent = customer.nama;
+                    openModal(document.getElementById('modal-chat-options'));
+                }
+            }
+        });
+    }
+
+    // --- Inisialisasi Halaman ---
+    populatePaketFilter();
+    renderCustomers();
+    initPageListeners();
+
+    // Listener untuk memperbarui data secara real-time
+    window.addEventListener('dataChanged', (e) => {
+        if (e.detail.collection === 'customers' || e.detail.collection === 'packages') {
+            renderCustomers();
+            if (e.detail.collection === 'packages') {
+                populatePaketFilter();
+            }
+        }
+    });
+</script>
