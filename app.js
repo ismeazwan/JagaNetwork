@@ -247,6 +247,40 @@ window.generateProrateInvoices = async function() {
     if(skippedCount > 0) window.showToast(`${skippedCount} pelanggan dilewati (sudah punya tagihan).`, 'info');
 }
 
+window.saveExpense = async function(data) {
+    try {
+        const expenseData = {
+            tanggal: data.tanggal,
+            kategori: data.kategori,
+            deskripsi: data.deskripsi,
+            jumlah: Number(data.jumlah),
+            createdAt: serverTimestamp()
+        };
+        if (data.id) {
+            delete expenseData.createdAt;
+            await setDoc(doc(db, dataContainerPath, 'expenses', data.id), expenseData, { merge: true });
+            window.showToast("Data pengeluaran berhasil diperbarui.");
+        } else {
+            await addDoc(getCollectionRef('expenses'), expenseData);
+            window.showToast("Pengeluaran baru berhasil ditambahkan.");
+        }
+    } catch (error) {
+        console.error("Error saving expense:", error);
+        window.showToast("Gagal menyimpan data pengeluaran.", "error");
+    }
+}
+
+window.deleteExpense = async function(id) {
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'expenses', id));
+        window.showToast("Data pengeluaran berhasil dihapus.");
+    } catch (e) {
+        console.error("Error deleting expense:", e);
+        window.showToast("Gagal menghapus data.", "error");
+    }
+}
+
+
 // --- Logika Navigasi dan Pemuatan Konten ---
 async function loadContent(page) {
     try {
