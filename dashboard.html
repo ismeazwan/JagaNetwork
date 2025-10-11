@@ -1,0 +1,192 @@
+<h2 class="text-2xl md:text-3xl font-bold mb-6">Dashboard</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-500">Total Pelanggan</p>
+            <p id="total-pelanggan" class="text-3xl font-bold">0</p>
+        </div>
+        <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full">
+            <i data-lucide="users" class="w-6 h-6"></i>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-500">Pemasukan Bulan Ini</p>
+            <p id="total-pemasukan" class="text-3xl font-bold">Rp 0</p>
+        </div>
+         <div class="bg-green-100 text-green-600 p-3 rounded-full">
+            <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-500">Pengeluaran Bulan Ini</p>
+            <p id="total-pengeluaran-dashboard" class="text-3xl font-bold">Rp 0</p>
+        </div>
+         <div class="bg-red-100 text-red-600 p-3 rounded-full">
+            <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-500">Tagihan Lunas</p>
+            <p id="tagihan-lunas" class="text-3xl font-bold">0</p>
+        </div>
+         <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
+            <i data-lucide="check-circle" class="w-6 h-6"></i>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-500">Tagihan Belum Lunas</p>
+            <p id="tagihan-belum-lunas" class="text-3xl font-bold">0</p>
+        </div>
+         <div class="bg-orange-100 text-orange-600 p-3 rounded-full">
+            <i data-lucide="x-circle" class="w-6 h-6"></i>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-8">
+    <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">Pendapatan & Pelanggan Baru (12 Bulan Terakhir)</h3>
+        <canvas id="lineChart"></canvas>
+    </div>
+    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">Distribusi Paket Layanan</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
+</div>
+
+<script type="module">
+    // Script ini spesifik untuk dashboard.html
+
+    // Pastikan Chart.js tersedia
+    if (!window.Chart) {
+        console.error('Chart.js is not loaded!');
+    }
+
+    let lineChartInstance, pieChartInstance;
+
+    function updateDashboardKPIs() {
+        document.getElementById('total-pelanggan').textContent = window.allCustomers.length;
+        
+        const today = new Date();
+        const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        const invoicesThisMonth = window.allInvoices.filter(inv => {
+            const pDate = new Date(inv.periode);
+            return pDate.getFullYear() === today.getFullYear() && pDate.getMonth() === today.getMonth();
+        });
+
+        const paidThisMonth = invoicesThisMonth.filter(inv => inv.status === 'lunas');
+        const totalPemasukan = paidThisMonth.reduce((sum, inv) => sum + inv.jumlah, 0);
+        document.getElementById('total-pemasukan').textContent = window.formatRupiah(totalPemasukan);
+        
+        document.getElementById('tagihan-lunas').textContent = paidThisMonth.length;
+        document.getElementById('tagihan-belum-lunas').textContent = invoicesThisMonth.filter(inv => inv.status === 'belum lunas').length;
+
+        const expensesThisMonth = window.allExpenses.filter(exp => {
+            if (!exp.tanggal) return false;
+            const expDate = new Date(exp.tanggal);
+            return expDate.getFullYear() === today.getFullYear() && expDate.getMonth() === today.getMonth();
+        });
+        const totalPengeluaran = expensesThisMonth.reduce((sum, exp) => sum + exp.jumlah, 0);
+        document.getElementById('total-pengeluaran-dashboard').textContent = window.formatRupiah(totalPengeluaran);
+    }
+
+    function renderOrUpdateCharts() {
+        const lineCtx = document.getElementById('lineChart')?.getContext('2d');
+        const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+
+        if (!lineCtx || !pieCtx) return;
+
+        // Data untuk Line Chart
+        const monthLabels = [];
+        const revenueData = [];
+        const newCustomerData = [];
+        const today = new Date();
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            monthLabels.push(date.toLocaleString('id-ID', { month: 'short', year: 'numeric' }));
+
+            const monthRevenue = window.allInvoices
+                .filter(inv => {
+                    const invDate = new Date(inv.periode);
+                    return inv.status === 'lunas' && invDate.getFullYear() === date.getFullYear() && invDate.getMonth() === date.getMonth();
+                })
+                .reduce((sum, inv) => sum + inv.jumlah, 0);
+            revenueData.push(monthRevenue);
+
+            const newCustomers = window.allCustomers.filter(c => {
+                if (!c.joinDate) return false;
+                const joinDate = new Date(c.joinDate);
+                return joinDate.getFullYear() === date.getFullYear() && joinDate.getMonth() === date.getMonth();
+            }).length;
+            newCustomerData.push(newCustomers);
+        }
+
+        // Data untuk Pie Chart
+        const packageCounts = {};
+        window.allCustomers.forEach(customer => {
+            packageCounts[customer.paketId] = (packageCounts[customer.paketId] || 0) + 1;
+        });
+        const pieLabels = [];
+        const pieData = [];
+        const colorPalette = ['#4f46e5', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+        let colorIndex = 0;
+        for (const pkgId in packageCounts) {
+            const pkg = window.allPackages.find(p => p.id === pkgId);
+            if (pkg) {
+                pieLabels.push(pkg.nama);
+                pieData.push(packageCounts[pkgId]);
+                pieData.push(colorPalette[colorIndex % colorPalette.length]);
+                colorIndex++;
+            }
+        }
+
+
+        // Render atau Update Line Chart
+        if (lineChartInstance) {
+            lineChartInstance.data.labels = monthLabels;
+            lineChartInstance.data.datasets[0].data = revenueData;
+            lineChartInstance.data.datasets[1].data = newCustomerData;
+            lineChartInstance.update();
+        } else {
+            lineChartInstance = new Chart(lineCtx, {
+                type: 'line',
+                data: { labels: monthLabels, datasets: [
+                    { label: 'Pendapatan', data: revenueData, borderColor: 'rgb(79, 70, 229)', backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.1, yAxisID: 'y' },
+                    { label: 'Pelanggan Baru', data: newCustomerData, borderColor: 'rgb(22, 163, 74)', backgroundColor: 'rgba(22, 163, 74, 0.1)', tension: 0.1, yAxisID: 'y1' }
+                ]},
+                options: { responsive: true, scales: {
+                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Pendapatan (Rp)' } },
+                    y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Jumlah Pelanggan' }, grid: { drawOnChartArea: false } }
+                }}
+            });
+        }
+
+        // Render atau Update Pie Chart
+        if (pieChartInstance) {
+            pieChartInstance.data.labels = pieLabels;
+            pieChartInstance.data.datasets[0].data = pieData;
+            pieChartInstance.update();
+        } else {
+             pieChartInstance = new Chart(pieCtx, {
+                type: 'pie',
+                data: { labels: pieLabels, datasets: [{ label: 'Pelanggan', data: pieData, backgroundColor: colorPalette }] },
+                options: { responsive: true }
+            });
+        }
+    }
+
+    function renderAll() {
+        updateDashboardKPIs();
+        renderOrUpdateCharts();
+    }
+
+    // Render awal saat halaman dimuat
+    renderAll();
+
+    // Listener untuk memperbarui data secara real-time
+    window.addEventListener('dataChanged', renderAll);
+</script>
