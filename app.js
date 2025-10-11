@@ -124,6 +124,40 @@ window.deleteCustomer = async function(id) {
     }
 }
 
+window.savePackage = async function(data) {
+    try {
+        const pkgData = { 
+            nama: data.nama, 
+            kecepatan: data.kecepatan, 
+            harga: Number(data.harga), 
+            hargaProrate: Number(data.hargaProrate) || 0
+        };
+        if (data.id) {
+            await setDoc(doc(db, dataContainerPath, 'packages', data.id), pkgData);
+            window.showToast("Data paket berhasil diperbarui.");
+        } else {
+            await addDoc(getCollectionRef('packages'), pkgData);
+            window.showToast("Paket baru berhasil ditambahkan.");
+        }
+    } catch (error) { 
+        console.error("Error saving package:", error); 
+        window.showToast("Gagal menyimpan data.", "error"); 
+    }
+}
+
+window.deletePackage = async function(id) {
+    if (window.allCustomers.some(c => c.paketId === id)) {
+        return window.showToast("Paket tidak bisa dihapus, masih digunakan pelanggan.", "error");
+    }
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'packages', id));
+        window.showToast("Data paket berhasil dihapus.");
+    } catch (e) { 
+        console.error("Error deleting package:", e); 
+        window.showToast("Gagal menghapus data.", "error"); 
+    }
+}
+
 
 // --- Logika Navigasi dan Pemuatan Konten ---
 async function loadContent(page) {
