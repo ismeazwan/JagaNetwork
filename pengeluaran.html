@@ -1,0 +1,173 @@
+<!-- Bagian Konten Pengeluaran -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Pengeluaran</h2>
+    <button id="btn-add-pengeluaran" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah Pengeluaran
+    </button>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[700px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">Tanggal</th>
+                <th class="p-4">Kategori</th>
+                <th class="p-4">Deskripsi</th>
+                <th class="p-4">Jumlah</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="pengeluaran-table-body">
+            <!-- Data pengeluaran akan dirender di sini -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Pengeluaran -->
+<div id="modal-pengeluaran" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 id="modal-pengeluaran-title" class="text-2xl font-bold mb-6">Tambah Pengeluaran Baru</h3>
+        <form id="form-pengeluaran">
+            <input type="hidden" id="pengeluaran-id">
+            <div class="mb-4">
+                <label for="pengeluaran-tanggal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                <input type="date" id="pengeluaran-tanggal" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-4">
+                <label for="pengeluaran-kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                <select id="pengeluaran-kategori" class="w-full p-2 border rounded-lg bg-white" required>
+                    <option value="Pembelian Alat">Pembelian Alat</option>
+                    <option value="Biaya Listrik">Biaya Listrik</option>
+                    <option value="Gaji Karyawan">Gaji Karyawan</option>
+                    <option value="Transportasi">Transportasi</option>
+                    <option value="Promosi & Pemasaran">Promosi & Pemasaran</option>
+                    <option value="Lain-lain">Lain-lain</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="pengeluaran-deskripsi" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea id="pengeluaran-deskripsi" rows="2" class="w-full p-2 border rounded-lg" required></textarea>
+            </div>
+            <div class="mb-6">
+                <label for="pengeluaran-jumlah" class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
+                <input type="number" id="pengeluaran-jumlah" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-pengeluaran" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="modal-konfirmasi-pengeluaran" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Data?</h3>
+            <p class="text-gray-600 mt-2">Yakin ingin menghapus data pengeluaran ini?</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus-pengeluaran" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus-pengeluaran" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    let deleteCallback = null;
+
+    function renderExpenses() {
+        const tableBody = document.getElementById('pengeluaran-table-body');
+        if (!tableBody) return;
+
+        const sortedExpenses = [...window.allExpenses].sort((a, b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+        
+        tableBody.innerHTML = sortedExpenses.length === 0
+            ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada data pengeluaran.</td></tr>`
+            : sortedExpenses.map(e => {
+                const tanggalFormatted = e.tanggal 
+                    ? new Date(e.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'N/A';
+                return `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">${tanggalFormatted}</td>
+                    <td class="p-4">${e.kategori || ''}</td>
+                    <td class="p-4">${e.deskripsi || ''}</td>
+                    <td class="p-4">${window.formatRupiah(e.jumlah)}</td>
+                    <td class="p-4 flex gap-3">
+                        <button class="btn-edit-pengeluaran" data-id="${e.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                        <button class="btn-delete-pengeluaran" data-id="${e.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                    </td></tr>`;
+            }).join('');
+        
+        lucide.createIcons();
+    }
+
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+
+    function initPageListeners() {
+        const modal = document.getElementById('modal-pengeluaran');
+        const confirmModal = document.getElementById('modal-konfirmasi-pengeluaran');
+
+        document.getElementById('btn-add-pengeluaran').addEventListener('click', () => {
+            const form = document.getElementById('form-pengeluaran');
+            form.reset();
+            document.getElementById('pengeluaran-id').value = '';
+            document.getElementById('pengeluaran-tanggal').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modal-pengeluaran-title').textContent = 'Tambah Pengeluaran Baru';
+            openModal(modal);
+        });
+
+        document.getElementById('form-pengeluaran').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.saveExpense({
+                id: document.getElementById('pengeluaran-id').value,
+                tanggal: document.getElementById('pengeluaran-tanggal').value,
+                kategori: document.getElementById('pengeluaran-kategori').value,
+                deskripsi: document.getElementById('pengeluaran-deskripsi').value,
+                jumlah: document.getElementById('pengeluaran-jumlah').value
+            });
+            closeModal(modal);
+        });
+
+        document.getElementById('btn-cancel-pengeluaran').addEventListener('click', () => closeModal(modal));
+        document.getElementById('btn-cancel-hapus-pengeluaran').addEventListener('click', () => closeModal(confirmModal));
+        document.getElementById('btn-confirm-hapus-pengeluaran').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeModal(confirmModal);
+        });
+
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            
+            if (btn.classList.contains('btn-edit-pengeluaran')) {
+                const exp = window.allExpenses.find(e => e.id === id);
+                if (!exp) return;
+                document.getElementById('pengeluaran-id').value = exp.id;
+                document.getElementById('pengeluaran-tanggal').value = exp.tanggal;
+                document.getElementById('pengeluaran-kategori').value = exp.kategori;
+                document.getElementById('pengeluaran-deskripsi').value = exp.deskripsi;
+                document.getElementById('pengeluaran-jumlah').value = exp.jumlah;
+                document.getElementById('modal-pengeluaran-title').textContent = 'Edit Pengeluaran';
+                openModal(modal);
+            } else if (btn.classList.contains('btn-delete-pengeluaran')) {
+                deleteCallback = () => window.deleteExpense(id);
+                openModal(confirmModal);
+            }
+        });
+    }
+
+    renderExpenses();
+    initPageListeners();
+
+    window.addEventListener('dataChanged', (e) => {
+        if (e.detail.collection === 'expenses') {
+            renderExpenses();
+        }
+    });
+</script>
