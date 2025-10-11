@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .no-scroll { overflow: hidden; }
         .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
         .tab-active { border-color: #4f46e5; color: #4f46e5; background-color: #eef2ff; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -1414,6 +1415,7 @@
             authContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
             appContainer.classList.add('flex');
+            document.body.classList.remove('no-scroll');
             document.getElementById('user-email').textContent = user.email;
             if (!userIsLoggedIn) { userIsLoggedIn = true; initApp(); }
         }
@@ -1421,6 +1423,7 @@
             authContainer.classList.remove('hidden');
             appContainer.classList.add('hidden');
             appContainer.classList.remove('flex');
+            document.body.classList.add('no-scroll');
             userIsLoggedIn = false; appListenersAttached = false;
             if (unsubscribeCustomers) unsubscribeCustomers();
             if (unsubscribePackages) unsubscribePackages();
