@@ -369,9 +369,9 @@ async function loadContent(page) {
     }
 }
 
-function handleNavigation() {
+async function handleNavigation() {
     const hash = window.location.hash.substring(1) || 'dashboard';
-    loadContent(hash);
+    await loadContent(hash);
     document.querySelectorAll('.tab-item').forEach(el => {
         el.classList.toggle('tab-active', el.getAttribute('href') === `#${hash}`);
     });
@@ -380,17 +380,18 @@ function handleNavigation() {
 // --- Manajemen Autentikasi ---
 onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
 
-function showApp(user) {
+async function showApp(user) {
     authContainer.classList.add('hidden');
     appContainer.classList.remove('hidden');
     appContainer.classList.add('flex');
     document.body.classList.remove('no-scroll');
     document.getElementById('user-email').textContent = user.email;
     
-    // Memuat UI terlebih dahulu, baru mengambil data
-    handleNavigation();
+    // Memuat UI terlebih dahulu, dan TUNGGU sampai selesai
+    await handleNavigation();
     window.addEventListener('hashchange', handleNavigation);
     setupAppListeners();
+    // BARU mengambil data setelah UI siap
     startAllListeners();
 }
 
