@@ -1,0 +1,161 @@
+<!-- Bagian Konten Paket -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Paket Internet</h2>
+    <button id="btn-add-paket" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center w-full sm:w-auto">
+        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Paket
+    </button>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[600px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">Nama Paket</th>
+                <th class="p-4">Kecepatan</th>
+                <th class="p-4">Harga</th>
+                <th class="p-4">Harga Harian Prorate</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="paket-table-body">
+            <!-- Data paket akan dirender di sini -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Paket -->
+<div id="modal-paket" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-lg">
+        <h3 id="modal-paket-title" class="text-2xl font-bold mb-6">Tambah Paket Baru</h3>
+        <form id="form-paket">
+            <input type="hidden" id="paket-id">
+            <div class="mb-4">
+                <label for="nama-paket" class="block text-sm font-medium text-gray-700 mb-1">Nama Paket</label>
+                <input type="text" id="nama-paket" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-4">
+                <label for="kecepatan" class="block text-sm font-medium text-gray-700 mb-1">Kecepatan (misal: 10 Mbps)</label>
+                <input type="text" id="kecepatan" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-6">
+                <label for="harga" class="block text-sm font-medium text-gray-700 mb-1">Harga Bulanan (Rp)</label>
+                <input type="number" id="harga" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="mb-6">
+                <label for="harga-prorate" class="block text-sm font-medium text-gray-700 mb-1">Harga Harian Prorate (Opsional)</label>
+                <input type="number" id="harga-prorate" class="w-full p-2 border rounded-lg" placeholder="Tarif harian untuk bulan pertama">
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-paket" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus (Bisa dipakai bersama halaman lain) -->
+<div id="modal-konfirmasi-paket" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Data?</h3>
+            <p id="konfirmasi-pesan-paket" class="text-gray-600 mt-2">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus-paket" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus-paket" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    let deleteCallback = null;
+
+    const tableBody = document.getElementById('paket-table-body');
+    const modal = document.getElementById('modal-paket');
+    const confirmModal = document.getElementById('modal-konfirmasi-paket');
+
+    function renderPackages() {
+        if (!tableBody) return;
+
+        tableBody.innerHTML = window.allPackages.length === 0
+            ? `<tr><td colspan="5" class="p-8 text-center text-gray-500">Belum ada paket.</td></tr>`
+            : [...window.allPackages].sort((a,b) => a.nama.localeCompare(b.nama)).map(p => `<tr class="border-b hover:bg-gray-50">
+                <td class="p-4">${p.nama}</td>
+                <td class="p-4">${p.kecepatan}</td>
+                <td class="p-4">${window.formatRupiah(p.harga)}</td>
+                <td class="p-4">${window.formatRupiah(p.hargaProrate)}</td>
+                <td class="p-4 flex gap-2">
+                    <button class="btn-edit-paket" data-id="${p.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                    <button class="btn-delete-paket" data-id="${p.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                </td></tr>`).join('');
+        
+        lucide.createIcons();
+    }
+
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+
+    function initPageListeners() {
+        document.getElementById('btn-add-paket').addEventListener('click', () => {
+            document.getElementById('form-paket').reset();
+            document.getElementById('paket-id').value = '';
+            document.getElementById('modal-paket-title').textContent = 'Tambah Paket Baru';
+            openModal(modal);
+        });
+
+        document.getElementById('form-paket').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.savePackage({
+                id: document.getElementById('paket-id').value,
+                nama: document.getElementById('nama-paket').value,
+                kecepatan: document.getElementById('kecepatan').value,
+                harga: document.getElementById('harga').value,
+                hargaProrate: document.getElementById('harga-prorate').value
+            });
+            closeModal(modal);
+        });
+
+        document.getElementById('btn-cancel-paket').addEventListener('click', () => closeModal(modal));
+        document.getElementById('btn-cancel-hapus-paket').addEventListener('click', () => closeModal(confirmModal));
+        document.getElementById('btn-confirm-hapus-paket').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeModal(confirmModal);
+        });
+
+        // Event delegation for table buttons
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const id = btn.dataset.id;
+            if (btn.classList.contains('btn-edit-paket')) {
+                const p = window.allPackages.find(pkg => pkg.id === id);
+                if (!p) return;
+                document.getElementById('paket-id').value = p.id;
+                document.getElementById('nama-paket').value = p.nama;
+                document.getElementById('kecepatan').value = p.kecepatan;
+                document.getElementById('harga').value = p.harga;
+                document.getElementById('harga-prorate').value = p.hargaProrate || '';
+                document.getElementById('modal-paket-title').textContent = 'Edit Data Paket';
+                openModal(modal);
+            } else if (btn.classList.contains('btn-delete-paket')) {
+                deleteCallback = () => window.deletePackage(id);
+                document.getElementById('konfirmasi-pesan-paket').textContent = "Yakin ingin menghapus paket ini?";
+                openModal(confirmModal);
+            }
+        });
+    }
+
+    // Initial render and setup
+    renderPackages();
+    initPageListeners();
+
+    // Listen for global data changes
+    window.addEventListener('dataChanged', (e) => {
+        if (e.detail.collection === 'packages') {
+            renderPackages();
+        }
+    });
+</script>
