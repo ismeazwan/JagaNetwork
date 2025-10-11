@@ -1,0 +1,163 @@
+<!-- Bagian Konten Blog -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Manajemen Artikel Blog</h2>
+    <button id="btn-add-artikel" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center text-sm">
+        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Tambah Artikel Baru
+    </button>
+</div>
+<div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+    <table class="w-full text-left min-w-[700px]">
+        <thead>
+            <tr class="border-b">
+                <th class="p-4">Judul Artikel</th>
+                <th class="p-4">Kategori</th>
+                <th class="p-4">Tanggal Publikasi</th>
+                <th class="p-4">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="artikel-table-body">
+            <!-- Data akan dirender di sini -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Artikel Blog -->
+<div id="modal-artikel" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 w-11/12 max-w-3xl">
+        <h3 id="modal-artikel-title" class="text-2xl font-bold mb-6">Tambah Artikel Baru</h3>
+        <form id="form-artikel" class="max-h-[80vh] overflow-y-auto pr-4">
+            <input type="hidden" id="artikel-id">
+            <div class="mb-4">
+                <label for="artikel-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Artikel</label>
+                <input type="text" id="artikel-title" class="w-full p-2 border rounded-lg" required>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="artikel-kategori" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                    <input type="text" id="artikel-kategori" class="w-full p-2 border rounded-lg" required placeholder="Contoh: Tips & Trik">
+                </div>
+                 <div>
+                    <label for="artikel-gambar-url" class="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
+                    <input type="url" id="artikel-gambar-url" class="w-full p-2 border rounded-lg" required placeholder="https://placehold.co/...">
+                </div>
+            </div>
+            <div class="mb-6">
+                <label for="artikel-konten" class="block text-sm font-medium text-gray-700 mb-1">Konten Artikel (mendukung HTML)</label>
+                <textarea id="artikel-konten" rows="10" class="w-full p-2 border rounded-lg font-mono text-sm" required placeholder="Gunakan tag HTML seperti <p>, <h3>, <ul>, <li> untuk format."></textarea>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="button" id="btn-cancel-artikel" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan & Publikasikan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="modal-konfirmasi-artikel" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+         <div class="text-center">
+            <div class="bg-red-100 p-3 rounded-full inline-block">
+                <i data-lucide="alert-triangle" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mt-4">Hapus Artikel?</h3>
+            <p class="text-gray-600 mt-2">Yakin ingin menghapus artikel ini?</p>
+         </div>
+         <div class="flex justify-center gap-4 mt-6">
+            <button id="btn-cancel-hapus-artikel" class="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+            <button id="btn-confirm-hapus-artikel" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Hapus</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    let deleteCallback = null;
+
+    function renderBlogPosts() {
+        const tableBody = document.getElementById('artikel-table-body');
+        if (!tableBody) return;
+
+        const sortedPosts = [...window.allBlogPosts].sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+
+        tableBody.innerHTML = sortedPosts.length === 0
+            ? `<tr><td colspan="4" class="p-8 text-center text-gray-500">Belum ada artikel.</td></tr>`
+            : sortedPosts.map(p => {
+                const timestamp = p.createdAt ? p.createdAt.toDate().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+                return `<tr class="border-b hover:bg-gray-50">
+                    <td class="p-4 font-semibold">${p.title}</td>
+                    <td class="p-4">${p.category}</td>
+                    <td class="p-4">${timestamp}</td>
+                    <td class="p-4 flex gap-3">
+                        <button class="btn-edit-artikel" data-id="${p.id}" title="Edit"><i data-lucide="edit" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i></button>
+                        <button class="btn-delete-artikel" data-id="${p.id}" title="Hapus"><i data-lucide="trash-2" class="w-5 h-5 text-red-600 hover:text-red-800"></i></button>
+                    </td></tr>`;
+            }).join('');
+        
+        lucide.createIcons();
+    }
+
+    function openModal(modal) { modal.style.display = 'flex'; }
+    function closeModal(modal) { modal.style.display = 'none'; }
+
+    function initPageListeners() {
+        const modal = document.getElementById('modal-artikel');
+        const confirmModal = document.getElementById('modal-konfirmasi-artikel');
+
+        document.getElementById('btn-add-artikel').addEventListener('click', () => {
+            const form = document.getElementById('form-artikel');
+            form.reset();
+            document.getElementById('artikel-id').value = '';
+            document.getElementById('modal-artikel-title').textContent = 'Tambah Artikel Baru';
+            openModal(modal);
+        });
+
+        document.getElementById('form-artikel').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.saveBlogPost({
+                id: document.getElementById('artikel-id').value,
+                title: document.getElementById('artikel-title').value,
+                category: document.getElementById('artikel-kategori').value,
+                imageUrl: document.getElementById('artikel-gambar-url').value,
+                content: document.getElementById('artikel-konten').value
+            });
+            closeModal(modal);
+        });
+
+        document.getElementById('btn-cancel-artikel').addEventListener('click', () => closeModal(modal));
+        document.getElementById('btn-cancel-hapus-artikel').addEventListener('click', () => closeModal(confirmModal));
+        document.getElementById('btn-confirm-hapus-artikel').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+            closeModal(confirmModal);
+        });
+
+        document.querySelector('.table-responsive').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            
+            if (btn.classList.contains('btn-edit-artikel')) {
+                const post = window.allBlogPosts.find(p => p.id === id);
+                if (!post) return;
+                document.getElementById('artikel-id').value = post.id;
+                document.getElementById('artikel-title').value = post.title;
+                document.getElementById('artikel-kategori').value = post.category;
+                document.getElementById('artikel-gambar-url').value = post.imageUrl;
+                document.getElementById('artikel-konten').value = post.content;
+                document.getElementById('modal-artikel-title').textContent = 'Edit Artikel';
+                openModal(modal);
+            } else if (btn.classList.contains('btn-delete-artikel')) {
+                deleteCallback = () => window.deleteBlogPost(id);
+                openModal(confirmModal);
+            }
+        });
+    }
+
+    renderBlogPosts();
+    initPageListeners();
+
+    window.addEventListener('dataChanged', (e) => {
+        if (e.detail.collection === 'articles') {
+            renderBlogPosts();
+        }
+    });
+</script>
