@@ -1,0 +1,141 @@
+<!-- Bagian Konten Laporan Keuangan -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+    <h2 class="text-2xl md:text-3xl font-bold">Laporan Keuangan</h2>
+    <div class="flex items-center gap-2">
+         <select id="laporan-filter-bulan" class="p-2 border rounded-lg bg-white"></select>
+         <select id="laporan-filter-tahun" class="p-2 border rounded-lg bg-white"></select>
+         <button id="btn-export-laporan-pdf" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 flex items-center text-sm">
+            <i data-lucide="download" class="w-4 h-4 mr-2"></i> Export PDF
+        </button>
+    </div>
+</div>
+<div id="laporan-export-area">
+    <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Ringkasan Keuangan Periode <span id="laporan-periode-text"></span></h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <p class="text-sm text-gray-500">Total Pemasukan</p>
+            <p id="laporan-total-pemasukan" class="text-3xl font-bold text-green-600">Rp 0</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <p class="text-sm text-gray-500">Total Pengeluaran</p>
+            <p id="laporan-total-pengeluaran" class="text-3xl font-bold text-red-600">Rp 0</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow col-span-1 sm:col-span-2 lg:col-span-2">
+            <p class="text-sm text-gray-500">Laba / Rugi Bersih</p>
+            <p id="laporan-laba-rugi" class="text-3xl font-bold text-indigo-600">Rp 0</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+            <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pemasukan (Transaksi Lunas)</h3>
+            <table class="w-full text-left min-w-[400px]">
+                <thead><tr class="border-b"><th class="p-4">Pelanggan</th><th class="p-4">Periode</th><th class="p-4">Jumlah</th></tr></thead>
+                <tbody id="laporan-pemasukan-table-body"></tbody>
+            </table>
+        </div>
+        <div class="bg-white p-2 md:p-6 rounded-lg shadow table-responsive">
+            <h3 class="text-xl font-bold mb-4 px-4 pt-4 md:px-0 md:pt-0">Detail Pengeluaran</h3>
+            <table class="w-full text-left min-w-[400px]">
+                <thead><tr class="border-b"><th class="p-4">Tanggal</th><th class="p-4">Kategori</th><th class="p-4">Jumlah</th></tr></thead>
+                <tbody id="laporan-pengeluaran-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    const { jsPDF } = window.jspdf;
+
+    function renderLaporan() {
+        const bulanEl = document.getElementById('laporan-filter-bulan');
+        const tahunEl = document.getElementById('laporan-filter-tahun');
+        if (!bulanEl || !tahunEl) return;
+
+        const bulan = bulanEl.value;
+        const tahun = tahunEl.value;
+        document.getElementById('laporan-periode-text').textContent = `${bulanEl.options[bulanEl.selectedIndex].text} ${tahun}`;
+
+        const pemasukanFiltered = window.allInvoices.filter(inv => { 
+            const p = new Date(inv.periode + 'T00:00:00'); 
+            return inv.status === 'lunas' && p.getMonth() == bulan && p.getFullYear() == tahun; 
+        });
+        const totalPemasukan = pemasukanFiltered.reduce((sum, inv) => sum + inv.jumlah, 0);
+        document.getElementById('laporan-total-pemasukan').textContent = window.formatRupiah(totalPemasukan);
+        
+        const pengeluaranFiltered = window.allExpenses.filter(exp => {
+            if (!exp.tanggal) return false;
+            const p = new Date(exp.tanggal + 'T00:00:00');
+            return p.getMonth() == bulan && p.getFullYear() == tahun;
+        });
+        const totalPengeluaran = pengeluaranFiltered.reduce((sum, exp) => sum + exp.jumlah, 0);
+        document.getElementById('laporan-total-pengeluaran').textContent = window.formatRupiah(totalPengeluaran);
+        
+        const labaRugi = totalPemasukan - totalPengeluaran;
+        const labaRugiEl = document.getElementById('laporan-laba-rugi');
+        labaRugiEl.textContent = window.formatRupiah(labaRugi);
+        labaRugiEl.classList.toggle('text-red-600', labaRugi < 0);
+        labaRugiEl.classList.toggle('text-indigo-600', labaRugi >= 0);
+
+        const pemasukanTbody = document.getElementById('laporan-pemasukan-table-body');
+        pemasukanTbody.innerHTML = !pemasukanFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pemasukan.</td></tr>` : 
+            pemasukanFiltered.map(inv => {
+                const c = window.allCustomers.find(c => c.id === inv.pelangganId) || { nama: 'Terhapus' };
+                return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${c.nama}</td><td class="p-4">${window.getBillingPeriodText(inv, c)}</td><td class="p-4">${window.formatRupiah(inv.jumlah)}</td></tr>`;
+            }).join('');
+        
+        const pengeluaranTbody = document.getElementById('laporan-pengeluaran-table-body');
+        pengeluaranTbody.innerHTML = !pengeluaranFiltered.length ? `<tr><td colspan="3" class="p-8 text-center text-gray-500">Tidak ada pengeluaran.</td></tr>` :
+            pengeluaranFiltered.sort((a,b) => (a.tanggal || '').localeCompare(b.tanggal || '')).map(exp => {
+                 const tanggalFormatted = new Date(exp.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short'});
+                return `<tr class="border-b hover:bg-gray-50"><td class="p-4">${tanggalFormatted}</td><td class="p-4">${exp.kategori}</td><td class="p-4">${window.formatRupiah(exp.jumlah)}</td></tr>`;
+            }).join('');
+    }
+
+    function populateLaporanDateFilters() {
+        const bulan = document.getElementById('laporan-filter-bulan');
+        const tahun = document.getElementById('laporan-filter-tahun');
+        if (!bulan || !tahun) return;
+
+        const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+        const currentYear = new Date().getFullYear(), currentMonth = new Date().getMonth();
+        bulan.innerHTML = months.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${m}</option>`).join('');
+        let yearOptions = '';
+        for (let i = currentYear - 2; i <= currentYear + 1; i++) yearOptions += `<option value="${i}" ${i === currentYear ? 'selected' : ''}>${i}</option>`;
+        tahun.innerHTML = yearOptions;
+    }
+
+    function exportLaporanToPdf() {
+        window.showToast("Membuat file PDF...", "info");
+        const element = document.getElementById('laporan-export-area');
+        const bulanEl = document.getElementById('laporan-filter-bulan');
+        const tahunEl = document.getElementById('laporan-filter-tahun');
+        const bulanText = bulanEl.options[bulanEl.selectedIndex].text;
+        const tahunText = tahunEl.value;
+        const filename = `Laporan Keuangan - ${bulanText} ${tahunText}.pdf`;
+
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(filename);
+        });
+    }
+
+    function initPageListeners() {
+        document.getElementById('laporan-filter-bulan').addEventListener('change', renderLaporan); 
+        document.getElementById('laporan-filter-tahun').addEventListener('change', renderLaporan);
+        document.getElementById('btn-export-laporan-pdf').addEventListener('click', exportLaporanToPdf);
+    }
+
+    populateLaporanDateFilters();
+    renderLaporan();
+    initPageListeners();
+
+    window.addEventListener('dataChanged', (e) => {
+        if (['invoices', 'expenses'].includes(e.detail.collection)) {
+            renderLaporan();
+        }
+    });
+</script>
