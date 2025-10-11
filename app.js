@@ -5,8 +5,10 @@ import {
     signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { 
-    getFirestore, collection, query, onSnapshot
+    getFirestore, doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, 
+    collection, query, where, getDocs, writeBatch, serverTimestamp, deleteField, orderBy
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
 
 // Konfigurasi Firebase Anda
 const firebaseConfig = {
@@ -36,14 +38,15 @@ const authContainer = document.getElementById('auth-container');
 const appContainer = document.getElementById('app-container');
 const mainContent = document.getElementById('main-content');
 
+// --- Path & Referensi Firestore ---
+const dataContainerPath = "jaganetwork_data/shared_workspace";
+const getCollectionRef = (name) => collection(db, dataContainerPath, name);
+
 // --- Manajemen Data & Listener ---
 let unsubscribers = [];
 
 function startAllListeners() {
-    if (unsubscribers.length > 0) return; // Mencegah duplikasi listener
-
-    const dataContainerPath = "jaganetwork_data/shared_workspace";
-    const getCollectionRef = (name) => collection(db, dataContainerPath, name);
+    if (unsubscribers.length > 0) return;
 
     const collectionsToListen = [
         { name: 'customers', globalVar: 'allCustomers' },
@@ -53,9 +56,13 @@ function startAllListeners() {
     ];
 
     collectionsToListen.forEach(c => {
-        const unsub = onSnapshot(query(getCollectionRef(c.name)), (snapshot) => {
+        const q = query(getCollectionRef(c.name));
+        const unsub = onSnapshot(q, (snapshot) => {
             window[c.globalVar] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Kirim event kustom untuk memberitahu halaman aktif bahwa data telah berubah
             window.dispatchEvent(new CustomEvent('dataChanged', { detail: { collection: c.name } }));
+        }, (error) => {
+            console.error(`Error listening to ${c.name}:`, error);
         });
         unsubscribers.push(unsub);
     });
@@ -66,8 +73,59 @@ function stopAllListeners() {
     unsubscribers = [];
 }
 
-// --- Logika Navigasi dan Pemuatan Konten ---
+// --- FUNGSI CRUD GLOBAL (Dipanggil dari modul halaman) ---
+window.generateUniqueCustomerId = function() {
+    let newId;
+    let isUnique = false;
+    while (!isUnique) {
+        newId = String(Math.floor(10000 + Math.random() * 90000));
+        if (!window.allCustomers.some(c => c.customerId === newId)) {
+            isUnique = true;
+        }
+    }
+    return newId;
+}
 
+window.saveCustomer = async function(data) {
+    try {
+        const customerData = { 
+            customerId: data.customerId, 
+            nama: data.nama, 
+            alamat: data.alamat, 
+            hp: data.hp, 
+            paketId: data.paketId, 
+            joinDate: data.joinDate
+        };
+        if (data.id) {
+            await setDoc(doc(db, dataContainerPath, 'customers', data.id), customerData, { merge: true });
+            window.showToast("Data pelanggan berhasil diperbarui.");
+        } else {
+            await addDoc(getCollectionRef('customers'), customerData);
+            window.showToast("Pelanggan baru berhasil ditambahkan.");
+        }
+    } catch (error) { 
+        console.error("Error saving customer:", error); 
+        window.showToast("Gagal menyimpan data.", "error"); 
+    }
+}
+
+window.deleteCustomer = async function(id) {
+    const q = query(getCollectionRef('invoices'), where("pelangganId", "==", id));
+    const invoiceDocs = await getDocs(q);
+    if (!invoiceDocs.empty) {
+        return window.showToast("Pelanggan tidak bisa dihapus karena memiliki tagihan.", "error");
+    }
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'customers', id));
+        window.showToast("Data pelanggan berhasil dihapus.");
+    } catch (e) { 
+        console.error("Error deleting customer:", e); 
+        window.showToast("Gagal menghapus data.", "error"); 
+    }
+}
+
+
+// --- Logika Navigasi dan Pemuatan Konten ---
 async function loadContent(page) {
     try {
         const response = await fetch(`${page}.html`);
@@ -77,12 +135,14 @@ async function loadContent(page) {
         }
         mainContent.innerHTML = await response.text();
         
-        const scriptElement = mainContent.querySelector('script');
+        // Cari dan jalankan skrip modul dari konten yang dimuat
+        const scriptElement = mainContent.querySelector('script[type="module"]');
         if (scriptElement) {
             const dynamicScript = document.createElement('script');
-            dynamicScript.innerHTML = scriptElement.innerHTML;
             dynamicScript.type = 'module';
-            mainContent.appendChild(dynamicScript); // Menjalankan script halaman
+            dynamicScript.textContent = scriptElement.textContent; // Gunakan textContent
+            scriptElement.remove(); // Hapus skrip asli agar tidak dieksekusi browser secara otomatis
+            mainContent.appendChild(dynamicScript);
         }
         lucide.createIcons();
 
@@ -102,7 +162,6 @@ function handleNavigation() {
 }
 
 // --- Manajemen Autentikasi ---
-
 onAuthStateChanged(auth, (user) => {
     if (user) {
         showApp(user);
@@ -151,6 +210,17 @@ function setupAppListeners() {
         sidebar.classList.remove('open');
         backdrop.classList.add('hidden');
     });
+    
+    // Menutup sidebar mobile setelah item menu diklik
+    document.querySelectorAll('.tab-item').forEach(item => {
+        item.addEventListener('click', () => {
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                backdrop.classList.add('hidden');
+            }
+        });
+    });
+
     appListenersAttached = true;
 }
 
@@ -199,6 +269,7 @@ function setupAuthListeners() {
 // --- Fungsi Utilitas Global ---
 window.showToast = function(message, type = 'success') {
     const toast = document.getElementById('toast');
+    if(!toast) return;
     const msg = document.getElementById('toast-message');
     toast.className = 'fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-all duration-300 z-50';
     const typeClasses = { error: 'bg-red-600', info: 'bg-blue-600' };
@@ -211,6 +282,16 @@ window.showToast = function(message, type = 'success') {
 }
 
 window.formatRupiah = (angka) => !angka && angka !== 0 ? 'Rp 0' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+window.formatPhoneNumber = (phone) => {
+    if (!phone) return null;
+    let formatted = phone.replace(/[^0-9]/g, '');
+    if (formatted.startsWith('0')) {
+        formatted = '62' + formatted.substring(1);
+    } else if (formatted.startsWith('+62')) {
+        formatted = formatted.substring(1);
+    }
+    return formatted;
+};
 
 // Inisialisasi
 setupAuthListeners();
