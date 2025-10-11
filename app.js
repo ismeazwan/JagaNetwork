@@ -386,10 +386,12 @@ function showApp(user) {
     appContainer.classList.add('flex');
     document.body.classList.remove('no-scroll');
     document.getElementById('user-email').textContent = user.email;
-    startAllListeners();
+    
+    // Memuat UI terlebih dahulu, baru mengambil data
     handleNavigation();
     window.addEventListener('hashchange', handleNavigation);
     setupAppListeners();
+    startAllListeners();
 }
 
 function showAuth() {
