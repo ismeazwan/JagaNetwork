@@ -59,7 +59,6 @@ function startAllListeners() {
         const q = query(getCollectionRef(c.name));
         const unsub = onSnapshot(q, (snapshot) => {
             window[c.globalVar] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Kirim event kustom untuk memberitahu halaman aktif bahwa data telah berubah
             window.dispatchEvent(new CustomEvent('dataChanged', { detail: { collection: c.name } }));
         }, (error) => {
             console.error(`Error listening to ${c.name}:`, error);
@@ -73,7 +72,7 @@ function stopAllListeners() {
     unsubscribers = [];
 }
 
-// --- FUNGSI CRUD GLOBAL (Dipanggil dari modul halaman) ---
+// --- FUNGSI CRUD GLOBAL ---
 window.generateUniqueCustomerId = function() {
     let newId;
     let isUnique = false;
@@ -89,12 +88,8 @@ window.generateUniqueCustomerId = function() {
 window.saveCustomer = async function(data) {
     try {
         const customerData = { 
-            customerId: data.customerId, 
-            nama: data.nama, 
-            alamat: data.alamat, 
-            hp: data.hp, 
-            paketId: data.paketId, 
-            joinDate: data.joinDate
+            customerId: data.customerId, nama: data.nama, alamat: data.alamat, hp: data.hp, 
+            paketId: data.paketId, joinDate: data.joinDate
         };
         if (data.id) {
             await setDoc(doc(db, dataContainerPath, 'customers', data.id), customerData, { merge: true });
@@ -111,10 +106,7 @@ window.saveCustomer = async function(data) {
 
 window.deleteCustomer = async function(id) {
     const q = query(getCollectionRef('invoices'), where("pelangganId", "==", id));
-    const invoiceDocs = await getDocs(q);
-    if (!invoiceDocs.empty) {
-        return window.showToast("Pelanggan tidak bisa dihapus karena memiliki tagihan.", "error");
-    }
+    if (!(await getDocs(q)).empty) return window.showToast("Pelanggan tidak bisa dihapus karena memiliki tagihan.", "error");
     try {
         await deleteDoc(doc(db, dataContainerPath, 'customers', id));
         window.showToast("Data pelanggan berhasil dihapus.");
@@ -127,9 +119,7 @@ window.deleteCustomer = async function(id) {
 window.savePackage = async function(data) {
     try {
         const pkgData = { 
-            nama: data.nama, 
-            kecepatan: data.kecepatan, 
-            harga: Number(data.harga), 
+            nama: data.nama, kecepatan: data.kecepatan, harga: Number(data.harga), 
             hargaProrate: Number(data.hargaProrate) || 0
         };
         if (data.id) {
@@ -158,6 +148,104 @@ window.deletePackage = async function(id) {
     }
 }
 
+window.saveInvoice = async function(data) {
+    try {
+        const invoiceData = {
+            jumlah: Number(data.jumlah),
+            periode: data.periode,
+        };
+        await updateDoc(doc(db, dataContainerPath, 'invoices', data.id), invoiceData);
+        window.showToast("Tagihan berhasil diperbarui.");
+    } catch (error) { 
+        console.error("Error saving invoice:", error); 
+        window.showToast("Gagal memperbarui tagihan.", "error"); 
+    }
+}
+
+window.deleteInvoice = async function(id) {
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'invoices', id));
+        window.showToast("Tagihan berhasil dihapus.");
+    } catch (e) { 
+        console.error("Error deleting invoice:", e); 
+        window.showToast("Gagal menghapus tagihan.", "error"); 
+    }
+}
+
+window.updateInvoiceStatus = async function(id, newStatus, clearProof = false) {
+    try {
+        const dataToUpdate = { status: newStatus };
+        if (clearProof) {
+            dataToUpdate.proofOfPaymentURL = deleteField();
+        }
+        await updateDoc(doc(db, dataContainerPath, 'invoices', id), dataToUpdate);
+        window.showToast("Status tagihan berhasil diperbarui.");
+    } catch(e) { 
+        console.error("Error updating invoice:", e); 
+        window.showToast("Gagal memperbarui status tagihan.", "error"); 
+    }
+}
+
+window.generateInvoices = async function(year, month) {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    if (!confirm(`Generate tagihan untuk periode ${monthNames[month]} ${year}?\nPastikan Anda belum men-generate tagihan untuk periode ini.`)) return;
+    
+    window.showToast(`Membuat tagihan untuk ${monthNames[month]} ${year}...`, "info");
+    const batch = writeBatch(db);
+    let generatedCount = 0, skippedCount = 0;
+    const nextPeriodEndDate = new Date(year, month + 1, 7);
+    const nextPeriodString = nextPeriodEndDate.toISOString().split('T')[0];
+
+    for (const customer of window.allCustomers) {
+        const pkg = window.allPackages.find(p => p.id === customer.paketId);
+        if (!pkg) { skippedCount++; continue; }
+
+        const alreadyExists = window.allInvoices.some(inv => inv.pelangganId === customer.id && inv.periode === nextPeriodString);
+        if (!alreadyExists) {
+            batch.set(doc(getCollectionRef('invoices')), {
+                pelangganId: customer.id, jumlah: pkg.harga, periode: nextPeriodString,
+                status: 'belum lunas', createdAt: serverTimestamp(), isProrated: false
+            });
+            generatedCount++;
+        } else {
+            skippedCount++;
+        }
+    }
+    if (generatedCount > 0) await batch.commit();
+    window.showToast(generatedCount > 0 ? `${generatedCount} tagihan bulanan baru digenerate.` : "Tidak ada tagihan baru.");
+    if (skippedCount > 0) window.showToast(`${skippedCount} pelanggan dilewati (tagihan sudah ada).`, 'info');
+}
+
+window.generateProrateInvoices = async function() {
+    if (!confirm(`Generate tagihan prorata untuk SEMUA pelanggan baru?\nHanya untuk yang belum pernah ditagih.`)) return;
+    
+    window.showToast("Memeriksa pelanggan baru...", "info");
+    const batch = writeBatch(db);
+    let generatedCount = 0, skippedCount = 0;
+
+    for (const customer of window.allCustomers) {
+        if (!customer.joinDate || window.allInvoices.some(inv => inv.pelangganId === customer.id)) {
+            skippedCount++; continue;
+        }
+        const pkg = window.allPackages.find(p => p.id === customer.paketId);
+        if (!pkg) { skippedCount++; continue; }
+        const joinDate = new Date(customer.joinDate + 'T00:00:00');
+        const joinDay = joinDate.getDate();
+        let endDateProrate = new Date(joinDate.getFullYear(), joinDate.getMonth() + (joinDay > 7 ? 1 : 0), 7);
+        const daysOfService = Math.round((endDateProrate - joinDate) / (1000 * 60 * 60 * 24)) + 1;
+        if (daysOfService <= 0) { skippedCount++; continue; }
+        const dailyProratePrice = pkg.hargaProrate > 0 ? pkg.hargaProrate : (pkg.harga / 30);
+        const proratedAmount = Math.round(dailyProratePrice * daysOfService);
+        batch.set(doc(getCollectionRef('invoices')), {
+            pelangganId: customer.id, jumlah: proratedAmount, periode: endDateProrate.toISOString().split('T')[0],
+            status: 'belum lunas', createdAt: serverTimestamp(), isProrated: true
+        });
+        generatedCount++;
+    }
+    if (generatedCount > 0) await batch.commit();
+    window.showToast(generatedCount > 0 ? `${generatedCount} tagihan prorata berhasil digenerate.` : "Tidak ada pelanggan baru.");
+    if(skippedCount > 0) window.showToast(`${skippedCount} pelanggan dilewati (sudah punya tagihan).`, 'info');
+}
 
 // --- Logika Navigasi dan Pemuatan Konten ---
 async function loadContent(page) {
@@ -169,40 +257,31 @@ async function loadContent(page) {
         }
         mainContent.innerHTML = await response.text();
         
-        // Cari dan jalankan skrip modul dari konten yang dimuat
         const scriptElement = mainContent.querySelector('script[type="module"]');
         if (scriptElement) {
             const dynamicScript = document.createElement('script');
             dynamicScript.type = 'module';
-            dynamicScript.textContent = scriptElement.textContent; // Gunakan textContent
-            scriptElement.remove(); // Hapus skrip asli agar tidak dieksekusi browser secara otomatis
+            dynamicScript.textContent = scriptElement.textContent;
+            scriptElement.remove();
             mainContent.appendChild(dynamicScript);
         }
         lucide.createIcons();
-
     } catch (error) {
         console.error('Error loading content:', error);
-        mainContent.innerHTML = `<p class="text-center text-red-500">Terjadi kesalahan saat memuat konten.</p>`;
+        mainContent.innerHTML = `<p class="text-center text-red-500">Terjadi kesalahan.</p>`;
     }
 }
 
 function handleNavigation() {
     const hash = window.location.hash.substring(1) || 'dashboard';
     loadContent(hash);
-    
     document.querySelectorAll('.tab-item').forEach(el => {
         el.classList.toggle('tab-active', el.getAttribute('href') === `#${hash}`);
     });
 }
 
 // --- Manajemen Autentikasi ---
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        showApp(user);
-    } else {
-        showAuth();
-    }
-});
+onAuthStateChanged(auth, (user) => user ? showApp(user) : showAuth());
 
 function showApp(user) {
     authContainer.classList.add('hidden');
@@ -210,7 +289,6 @@ function showApp(user) {
     appContainer.classList.add('flex');
     document.body.classList.remove('no-scroll');
     document.getElementById('user-email').textContent = user.email;
-    
     startAllListeners();
     handleNavigation();
     window.addEventListener('hashchange', handleNavigation);
@@ -230,9 +308,7 @@ function showAuth() {
 let appListenersAttached = false;
 function setupAppListeners() {
     if(appListenersAttached) return;
-
     document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
@@ -244,8 +320,6 @@ function setupAppListeners() {
         sidebar.classList.remove('open');
         backdrop.classList.add('hidden');
     });
-    
-    // Menutup sidebar mobile setelah item menu diklik
     document.querySelectorAll('.tab-item').forEach(item => {
         item.addEventListener('click', () => {
             if (sidebar.classList.contains('open')) {
@@ -254,7 +328,6 @@ function setupAppListeners() {
             }
         });
     });
-
     appListenersAttached = true;
 }
 
@@ -316,6 +389,17 @@ window.showToast = function(message, type = 'success') {
 }
 
 window.formatRupiah = (angka) => !angka && angka !== 0 ? 'Rp 0' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+window.getBillingPeriodText = function(invoice, customer) {
+    const endDate = new Date(invoice.periode + 'T00:00:00');
+    let startDate;
+    if (invoice.isProrated && customer?.joinDate) {
+        startDate = new Date(customer.joinDate + 'T00:00:00');
+    } else {
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 8);
+    }
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    return `${startDate.toLocaleDateString('id-ID', options)} - ${endDate.toLocaleDateString('id-ID', options)}`;
+}
 window.formatPhoneNumber = (phone) => {
     if (!phone) return null;
     let formatted = phone.replace(/[^0-9]/g, '');
