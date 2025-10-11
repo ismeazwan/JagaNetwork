@@ -53,6 +53,8 @@ function startAllListeners() {
         { name: 'packages', globalVar: 'allPackages' },
         { name: 'invoices', globalVar: 'allInvoices' },
         { name: 'expenses', globalVar: 'allExpenses' },
+        { name: 'network_status', globalVar: 'allNetworkStatus' },
+        { name: 'articles', globalVar: 'allBlogPosts' }
     ];
 
     collectionsToListen.forEach(c => {
@@ -278,6 +280,67 @@ window.deleteExpense = async function(id) {
         console.error("Error deleting expense:", e);
         window.showToast("Gagal menghapus data.", "error");
     }
+}
+
+window.saveNetworkStatus = async function(data) {
+     try {
+        const statusData = { 
+            title: data.title, 
+            description: data.description, 
+            status: data.status,
+            timestamp: serverTimestamp()
+        };
+        if (data.id) {
+            const originalStatus = window.allNetworkStatus.find(s => s.id === data.id);
+            statusData.timestamp = originalStatus.timestamp || serverTimestamp();
+            await setDoc(doc(db, dataContainerPath, 'network_status', data.id), statusData, { merge: true });
+            window.showToast("Status jaringan berhasil diperbarui.");
+        } else {
+            await addDoc(getCollectionRef('network_status'), statusData);
+            window.showToast("Status jaringan baru berhasil dipublikasikan.");
+        }
+    } catch (error) { 
+        console.error("Error saving network status:", error); 
+        window.showToast("Gagal menyimpan data status.", "error"); 
+    }
+}
+
+window.deleteNetworkStatus = async function(id) {
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'network_status', id));
+        window.showToast("Data status berhasil dihapus.");
+    } catch (e) { console.error("Error deleting status:", e); window.showToast("Gagal menghapus data.", "error"); }
+}
+
+window.saveBlogPost = async function(data) {
+    try {
+        const postData = {
+            title: data.title,
+            category: data.category,
+            imageUrl: data.imageUrl,
+            content: data.content,
+            createdAt: serverTimestamp()
+        };
+        if (data.id) {
+            const originalPost = window.allBlogPosts.find(p => p.id === data.id);
+            postData.createdAt = originalPost.createdAt || serverTimestamp();
+            await setDoc(doc(db, dataContainerPath, 'articles', data.id), postData, { merge: true });
+            window.showToast("Artikel berhasil diperbarui.");
+        } else {
+            await addDoc(getCollectionRef('articles'), postData);
+            window.showToast("Artikel baru berhasil dipublikasikan.");
+        }
+    } catch (error) {
+        console.error("Error saving blog post:", error);
+        window.showToast("Gagal menyimpan artikel.", "error");
+    }
+}
+
+window.deleteBlogPost = async function(id) {
+    try {
+        await deleteDoc(doc(db, dataContainerPath, 'articles', id));
+        window.showToast("Artikel berhasil dihapus.");
+    } catch (e) { console.error("Error deleting post:", e); window.showToast("Gagal menghapus artikel.", "error"); }
 }
 
 
