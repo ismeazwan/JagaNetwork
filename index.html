@@ -2235,9 +2235,9 @@
                 const phone = formatPhoneNumber(customer.hp);
                 if (!phone) return showToast('Nomor HP pelanggan tidak valid.', 'error');
 
-                const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A', kecepatan: '' };
+                const pkg = allPackages.find(p => p.id === customer.paketId) || { nama: 'N/A', kecepatan: '', harga: 0 };
 
-                const message = `Halo Kak *${customer.nama}* 👋\n\nTerima kasih telah menjadi pelanggan setia JagaNetwork! 🙏\n\nBerikut adalah detail data kepelangganan Anda:\n-----------------------------------\n👤 *Nama:* ${customer.nama}\n💳 *ID Pelanggan:* ${customer.customerId}\n🏠 *Alamat:* ${customer.alamat}\n🚀 *Paket Layanan:* ${pkg.nama} (${pkg.kecepatan})\n-----------------------------------\n\nJika ada data yang perlu diubah, silakan balas pesan ini.\n\nTerima kasih,\nAdmin JagaNetwork`;
+                const message = `Halo Kak *${customer.nama}* 👋\n\nTerima kasih telah menjadi pelanggan setia JagaNetwork! 🙏\n\nBerikut adalah detail data kepelangganan Anda:\n-----------------------------------\n👤 *Nama:* ${customer.nama}\n💳 *ID Pelanggan:* ${customer.customerId}\n🏠 *Alamat:* ${customer.alamat}\n🚀 *Paket Layanan:* ${pkg.nama} (${pkg.kecepatan})\n💰 *Harga Paket:* ${formatRupiah(pkg.harga)}/bulan\n-----------------------------------\n\nJika ada data yang perlu diubah, silakan balas pesan ini.\n\nTerima kasih,\nAdmin JagaNetwork`;
                 
                 const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
                 window.open(whatsappUrl, '_blank');
@@ -2396,3 +2396,4 @@
     </script>
 </body>
 </html>
+
