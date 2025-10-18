@@ -56,6 +56,10 @@
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
         }
+        /* Hide time inputs by default */
+        .time-inputs {
+            display: none;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -69,32 +73,21 @@
             </div>
             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                  <a href="index.html" class="w-full sm:w-auto bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 flex items-center justify-center shadow-sm">
-                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Kembali ke Beranda
+                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Kembali
                 </a>
+                <button id="notification-status-button" class="w-full sm:w-auto bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg hover:bg-yellow-200 flex items-center justify-center shadow-sm" title="Klik untuk mengaktifkan notifikasi">
+                    <i id="notification-icon" data-lucide="bell-off" class="w-5 h-5 mr-2"></i> 
+                    <span id="notification-text">Notifikasi Off</span>
+                </button>
                 <button id="add-event-button" class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center justify-center shadow-sm">
-                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Acara Baru
+                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Acara
                 </button>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Calendar Container -->
-            <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
-                <div id='calendar'></div>
-            </div>
-
-            <!-- Upcoming Events Widget -->
-            <div class="lg:col-span-1">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
-                        <i data-lucide="bell" class="w-5 h-5 mr-3 text-indigo-600"></i>
-                        Acara Mendatang (7 Hari)
-                    </h3>
-                    <div id="upcoming-events-list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                        <!-- Events will be populated here -->
-                    </div>
-                </div>
-            </div>
+        <!-- Calendar Container -->
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <div id='calendar'></div>
         </div>
     </div>
 
@@ -108,16 +101,34 @@
                     <label for="event-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Acara</label>
                     <input type="text" id="event-title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
                 </div>
+                
+                <div class="mb-4 flex items-center">
+                    <input type="checkbox" id="event-all-day" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                    <label for="event-all-day" class="ml-2 block text-sm text-gray-900">Sepanjang Hari</label>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label for="event-start" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                        <input type="date" id="event-start" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                        <label for="event-start-date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="event-start-date" class="w-full p-2 border border-gray-300 rounded-lg" required>
                     </div>
-                    <div>
-                        <label for="event-end" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai (Opsional)</label>
-                        <input type="date" id="event-end" class="w-full p-2 border border-gray-300 rounded-lg">
+                    <div class="time-inputs">
+                        <label for="event-start-time" class="block text-sm font-medium text-gray-700 mb-1">Waktu Mulai</label>
+                        <input type="time" id="event-start-time" class="w-full p-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="event-end-date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai (Opsional)</label>
+                        <input type="date" id="event-end-date" class="w-full p-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="time-inputs">
+                        <label for="event-end-time" class="block text-sm font-medium text-gray-700 mb-1">Waktu Selesai</label>
+                        <input type="time" id="event-end-time" class="w-full p-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+
                  <div class="mb-4">
                     <label for="event-category" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
                     <select id="event-category" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
@@ -185,6 +196,8 @@
         let unsubscribeEvents, unsubscribeCustomers;
         let allRawEvents = [];
         let allCustomers = [];
+        let notificationInterval = null;
+
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
         
@@ -204,12 +217,13 @@
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
                 },
                 buttonText: {
                     today: 'Hari Ini',
                     month: 'Bulan',
                     week: 'Minggu',
+                    day: 'Hari',
                     list: 'Agenda'
                 },
                 editable: true,
@@ -234,7 +248,6 @@
             unsubscribeCustomers = onSnapshot(q, (snapshot) => {
                 allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCalendarEvents();
-                renderUpcomingEvents();
             });
         }
 
@@ -244,7 +257,6 @@
             unsubscribeEvents = onSnapshot(getCollectionRef('calendar_events'), (snapshot) => {
                 allRawEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCalendarEvents();
-                renderUpcomingEvents();
             });
         }
 
@@ -264,84 +276,55 @@
                 const event = {
                     id: data.id,
                     title: eventTitle,
-                    description: data.description || '',
                     start: data.start,
+                    end: data.end,
+                    allDay: data.allDay,
+                    extendedProps: {
+                         description: data.description || '',
+                         raw_start: data.start,
+                         raw_end: data.end
+                    },
                     backgroundColor: color,
                     borderColor: color
                 };
-                
-                if (data.end) {
-                     const endDate = new Date(data.end);
-                     endDate.setDate(endDate.getDate() + 1); // Make end date exclusive for FullCalendar
-                     event.end = endDate.toISOString().split('T')[0];
-                }
                 return event;
             });
             
             calendar.removeAllEvents();
             calendar.addEventSource(calendarEvents);
         }
-
-        function renderUpcomingEvents() {
-            const listEl = document.getElementById('upcoming-events-list');
-            if (!listEl) return;
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0); // Start of today
-            const sevenDaysFromNow = new Date(now);
-            sevenDaysFromNow.setDate(now.getDate() + 7);
-
-            const upcomingEvents = allRawEvents
-                .filter(event => {
-                    const startDate = new Date(event.start + 'T00:00:00');
-                    return startDate >= now && startDate <= sevenDaysFromNow;
-                })
-                .sort((a, b) => new Date(a.start) - new Date(b.start));
-
-            if (upcomingEvents.length === 0) {
-                listEl.innerHTML = `<p class="text-gray-500 text-center py-4">Tidak ada acara dalam 7 hari ke depan.</p>`;
-                return;
-            }
-
-            listEl.innerHTML = upcomingEvents.map(event => {
-                const startDate = new Date(event.start + 'T00:00:00');
-                const dayName = startDate.toLocaleDateString('id-ID', { weekday: 'long' });
-                const dateFormatted = startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-
-                const color = categoryColors[event.category] || categoryColors['general'];
-                
-                let eventTitle = event.title;
-                let customerInfo = '';
-                if (event.customerId) {
-                    const customer = allCustomers.find(c => c.id === event.customerId);
-                    if (customer) {
-                        customerInfo = `<p class="text-xs text-gray-500 mt-1 flex items-center"><i data-lucide="user" class="w-3 h-3 mr-1.5"></i>${customer.nama}</p>`;
-                    }
-                }
-
-                return `
-                    <div class="flex items-start gap-3">
-                        <div class="flex-shrink-0 text-center w-14">
-                            <p class="font-bold text-lg text-indigo-600">${dateFormatted.split(' ')[0]}</p>
-                            <p class="text-xs text-gray-500">${dateFormatted.split(' ')[1]}</p>
-                        </div>
-                        <div class="border-l-4 rounded pl-3 py-1" style="border-color: ${color};">
-                            <p class="font-semibold text-gray-800">${eventTitle}</p>
-                            <p class="text-sm text-gray-600">${dayName}</p>
-                            ${customerInfo}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            lucide.createIcons();
-        }
         
         async function saveEvent(data) {
             try {
+                let startDateTime = null;
+                let endDateTime = null;
+                
+                if (data.allDay) {
+                    startDateTime = data.startDate;
+                    // FullCalendar's end date is exclusive for all-day events
+                    if (data.endDate) {
+                        const tempEnd = new Date(data.endDate + 'T00:00:00');
+                        tempEnd.setDate(tempEnd.getDate() + 1);
+                        endDateTime = tempEnd.toISOString().split('T')[0];
+                    }
+                } else {
+                    if (data.startTime) {
+                        startDateTime = `${data.startDate}T${data.startTime}`;
+                    } else {
+                        startDateTime = data.startDate;
+                    }
+                    if (data.endDate && data.endTime) {
+                        endDateTime = `${data.endDate}T${data.endTime}`;
+                    } else {
+                        endDateTime = null;
+                    }
+                }
+
                 const eventData = {
                     title: data.title,
-                    start: data.start,
-                    end: data.end || null,
+                    start: startDateTime,
+                    end: endDateTime,
+                    allDay: data.allDay,
                     description: data.description,
                     category: data.category,
                     customerId: data.customerId || null,
@@ -400,7 +383,9 @@
         function openModalForNewEvent(dateStr) {
             form.reset();
             document.getElementById('event-id').value = '';
-            document.getElementById('event-start').value = dateStr;
+            document.getElementById('event-start-date').value = dateStr;
+            document.getElementById('event-all-day').checked = true;
+            toggleTimeInputs(true);
             populateCustomerDropdown();
             document.getElementById('modal-title').textContent = 'Tambah Acara Baru';
             document.getElementById('delete-event-button').classList.add('hidden');
@@ -415,12 +400,34 @@
             }
 
             form.reset();
+            const { start, end, allDay } = rawEventData;
+            
             document.getElementById('event-id').value = rawEventData.id;
             document.getElementById('event-title').value = rawEventData.title;
-            document.getElementById('event-start').value = rawEventData.start;
-            document.getElementById('event-end').value = rawEventData.end || '';
             document.getElementById('event-description').value = rawEventData.description || '';
             document.getElementById('event-category').value = rawEventData.category || 'general';
+            document.getElementById('event-all-day').checked = allDay;
+            toggleTimeInputs(allDay);
+
+            if (start) {
+                const startDate = new Date(start);
+                document.getElementById('event-start-date').value = startDate.toISOString().split('T')[0];
+                if (!allDay) {
+                    document.getElementById('event-start-time').value = startDate.toTimeString().substring(0, 5);
+                }
+            }
+            if (end) {
+                const endDate = new Date(end);
+                // Adjust for FullCalendar's exclusive end date on all-day events
+                if (allDay) {
+                    endDate.setDate(endDate.getDate() - 1);
+                }
+                document.getElementById('event-end-date').value = endDate.toISOString().split('T')[0];
+                 if (!allDay) {
+                    document.getElementById('event-end-time').value = endDate.toTimeString().substring(0, 5);
+                }
+            }
+
             populateCustomerDropdown(rawEventData.customerId);
             
             document.getElementById('modal-title').textContent = 'Edit Acara';
@@ -431,7 +438,99 @@
         function closeModal() {
             modal.style.display = 'none';
         }
+
+        function toggleTimeInputs(isAllDay) {
+            document.querySelectorAll('.time-inputs').forEach(el => {
+                el.style.display = isAllDay ? 'none' : 'block';
+            });
+        }
         
+        // --- NOTIFICATION LOGIC ---
+        function updateNotificationStatusUI() {
+            const button = document.getElementById('notification-status-button');
+            const icon = document.getElementById('notification-icon');
+            const text = document.getElementById('notification-text');
+            
+            if (!('Notification' in window)) {
+                button.classList.add('hidden');
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                button.className = 'w-full sm:w-auto bg-green-100 text-green-800 px-4 py-2 rounded-lg flex items-center justify-center shadow-sm';
+                icon.setAttribute('data-lucide', 'bell');
+                text.textContent = 'Notifikasi On';
+                startNotificationChecker();
+            } else {
+                 button.className = 'w-full sm:w-auto bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg hover:bg-yellow-200 flex items-center justify-center shadow-sm';
+                icon.setAttribute('data-lucide', 'bell-off');
+                text.textContent = 'Notifikasi Off';
+                stopNotificationChecker();
+            }
+            lucide.createIcons();
+        }
+
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                showToast("Browser ini tidak mendukung notifikasi desktop.", "error");
+                return;
+            }
+
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showToast("Notifikasi berhasil diaktifkan!", "success");
+                    }
+                    updateNotificationStatusUI();
+                });
+            } else {
+                updateNotificationStatusUI();
+            }
+        }
+
+        function startNotificationChecker() {
+            if (notificationInterval) clearInterval(notificationInterval); // Clear any existing interval
+            notificationInterval = setInterval(checkUpcomingEvents, 60000); // Check every 60 seconds
+            console.log("Notification checker started.");
+        }
+        
+        function stopNotificationChecker() {
+             if (notificationInterval) clearInterval(notificationInterval);
+             console.log("Notification checker stopped.");
+        }
+        
+        function checkUpcomingEvents() {
+            const now = new Date();
+            const fifteenMinutesFromNow = new Date(now.getTime() + 15 * 60000);
+            
+            const notifiedEvents = JSON.parse(localStorage.getItem('notifiedEvents') || '{}');
+
+            allRawEvents.forEach(event => {
+                if (event.allDay || !event.start) return;
+
+                const eventStart = new Date(event.start);
+                
+                if (eventStart > now && eventStart <= fifteenMinutesFromNow) {
+                    const eventDateStr = eventStart.toISOString().split('T')[0];
+                    // Check if already notified for this event on this specific day
+                    if (notifiedEvents[event.id] === eventDateStr) {
+                        return;
+                    }
+
+                    const time = eventStart.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                    const title = `Pengingat: ${event.title}`;
+                    const body = `Acara dijadwalkan pada pukul ${time}.`;
+                    
+                    new Notification(title, { body });
+
+                    // Mark as notified for today
+                    notifiedEvents[event.id] = eventDateStr;
+                    localStorage.setItem('notifiedEvents', JSON.stringify(notifiedEvents));
+                }
+            });
+        }
+
+
         // --- HELPER & EVENT LISTENERS ---
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -450,6 +549,8 @@
         });
 
         document.getElementById('cancel-button').addEventListener('click', closeModal);
+        document.getElementById('notification-status-button').addEventListener('click', requestNotificationPermission);
+        document.getElementById('event-all-day').addEventListener('change', (e) => toggleTimeInputs(e.target.checked));
         
         document.getElementById('delete-event-button').addEventListener('click', () => {
             const eventId = document.getElementById('event-id').value;
@@ -463,8 +564,11 @@
             const eventData = {
                 id: document.getElementById('event-id').value,
                 title: document.getElementById('event-title').value,
-                start: document.getElementById('event-start').value,
-                end: document.getElementById('event-end').value,
+                allDay: document.getElementById('event-all-day').checked,
+                startDate: document.getElementById('event-start-date').value,
+                startTime: document.getElementById('event-start-time').value,
+                endDate: document.getElementById('event-end-date').value,
+                endTime: document.getElementById('event-end-time').value,
                 description: document.getElementById('event-description').value,
                 category: document.getElementById('event-category').value,
                 customerId: document.getElementById('event-customer').value,
@@ -476,6 +580,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 initializeCalendar();
+                requestNotificationPermission(); // Ask for permission on load
             } else {
                 signInAnonymously(auth).catch((error) => {
                     console.error("Anonymous sign-in failed:", error);
