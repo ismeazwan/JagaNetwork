@@ -77,15 +77,30 @@
             </div>
         </header>
 
-        <!-- Calendar Container -->
-        <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
-            <div id='calendar'></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Calendar Container -->
+            <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-lg shadow-md">
+                <div id='calendar'></div>
+            </div>
+
+            <!-- Upcoming Events Widget -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                        <i data-lucide="bell" class="w-5 h-5 mr-3 text-indigo-600"></i>
+                        Acara Mendatang (7 Hari)
+                    </h3>
+                    <div id="upcoming-events-list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- Events will be populated here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Modal for Adding/Editing Event -->
     <div id="event-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
-        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 w-11/12 max-w-lg transform transition-all">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 w-11/12 max-w-lg transform transition-all max-h-[90vh] overflow-y-auto">
             <h3 id="modal-title" class="text-2xl font-bold mb-6 text-gray-800">Tambah Acara Baru</h3>
             <form id="event-form">
                 <input type="hidden" id="event-id">
@@ -113,6 +128,12 @@
                         <option value="pribadi">Pribadi</option>
                     </select>
                 </div>
+                <div class="mb-4">
+                    <label for="event-customer" class="block text-sm font-medium text-gray-700 mb-1">Tautkan ke Pelanggan (Opsional)</label>
+                    <select id="event-customer" class="w-full p-2 border border-gray-300 rounded-lg bg-white">
+                        <option value="">-- Tidak ada --</option>
+                    </select>
+                </div>
                 <div class="mb-6">
                     <label for="event-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
                     <textarea id="event-description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Detail acara..."></textarea>
@@ -138,7 +159,7 @@
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, 
-            collection, serverTimestamp
+            collection, serverTimestamp, query
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
@@ -161,8 +182,9 @@
         const form = document.getElementById('event-form');
         
         let calendar;
-        let unsubscribeEvents;
+        let unsubscribeEvents, unsubscribeCustomers;
         let allRawEvents = [];
+        let allCustomers = [];
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
         
@@ -202,37 +224,116 @@
             });
             calendar.render();
             loadEvents();
+            loadCustomers();
         }
         
         // --- CRUD OPERASI DENGAN FIRESTORE ---
+        function loadCustomers() {
+            if (unsubscribeCustomers) unsubscribeCustomers();
+            const q = query(getCollectionRef('customers'));
+            unsubscribeCustomers = onSnapshot(q, (snapshot) => {
+                allCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCalendarEvents();
+                renderUpcomingEvents();
+            });
+        }
+
         function loadEvents() {
             if (unsubscribeEvents) unsubscribeEvents();
             
             unsubscribeEvents = onSnapshot(getCollectionRef('calendar_events'), (snapshot) => {
                 allRawEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const calendarEvents = allRawEvents.map(data => {
-                    const color = categoryColors[data.category] || categoryColors['general'];
-                    const event = {
-                        id: data.id,
-                        title: data.title,
-                        description: data.description || '',
-                        start: data.start,
-                        backgroundColor: color,
-                        borderColor: color
-                    };
-                    
-                    if (data.end) {
-                         const endDate = new Date(data.end);
-                         endDate.setDate(endDate.getDate() + 1); // Make end date exclusive for FullCalendar
-                         event.end = endDate.toISOString().split('T')[0];
-                    }
-                    return event;
-                });
-                
-                calendar.removeAllEvents();
-                calendar.addEventSource(calendarEvents);
+                renderCalendarEvents();
+                renderUpcomingEvents();
             });
+        }
+
+        function renderCalendarEvents() {
+            if (!calendar) return;
+
+            const calendarEvents = allRawEvents.map(data => {
+                const color = categoryColors[data.category] || categoryColors['general'];
+                let eventTitle = data.title;
+                if (data.customerId) {
+                    const customer = allCustomers.find(c => c.id === data.customerId);
+                    if (customer) {
+                        eventTitle = `[${customer.nama}] ${data.title}`;
+                    }
+                }
+
+                const event = {
+                    id: data.id,
+                    title: eventTitle,
+                    description: data.description || '',
+                    start: data.start,
+                    backgroundColor: color,
+                    borderColor: color
+                };
+                
+                if (data.end) {
+                     const endDate = new Date(data.end);
+                     endDate.setDate(endDate.getDate() + 1); // Make end date exclusive for FullCalendar
+                     event.end = endDate.toISOString().split('T')[0];
+                }
+                return event;
+            });
+            
+            calendar.removeAllEvents();
+            calendar.addEventSource(calendarEvents);
+        }
+
+        function renderUpcomingEvents() {
+            const listEl = document.getElementById('upcoming-events-list');
+            if (!listEl) return;
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Start of today
+            const sevenDaysFromNow = new Date(now);
+            sevenDaysFromNow.setDate(now.getDate() + 7);
+
+            const upcomingEvents = allRawEvents
+                .filter(event => {
+                    const startDate = new Date(event.start + 'T00:00:00');
+                    return startDate >= now && startDate <= sevenDaysFromNow;
+                })
+                .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            if (upcomingEvents.length === 0) {
+                listEl.innerHTML = `<p class="text-gray-500 text-center py-4">Tidak ada acara dalam 7 hari ke depan.</p>`;
+                return;
+            }
+
+            listEl.innerHTML = upcomingEvents.map(event => {
+                const startDate = new Date(event.start + 'T00:00:00');
+                const dayName = startDate.toLocaleDateString('id-ID', { weekday: 'long' });
+                const dateFormatted = startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+                const color = categoryColors[event.category] || categoryColors['general'];
+                
+                let eventTitle = event.title;
+                let customerInfo = '';
+                if (event.customerId) {
+                    const customer = allCustomers.find(c => c.id === event.customerId);
+                    if (customer) {
+                        customerInfo = `<p class="text-xs text-gray-500 mt-1 flex items-center"><i data-lucide="user" class="w-3 h-3 mr-1.5"></i>${customer.nama}</p>`;
+                    }
+                }
+
+                return `
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0 text-center w-14">
+                            <p class="font-bold text-lg text-indigo-600">${dateFormatted.split(' ')[0]}</p>
+                            <p class="text-xs text-gray-500">${dateFormatted.split(' ')[1]}</p>
+                        </div>
+                        <div class="border-l-4 rounded pl-3 py-1" style="border-color: ${color};">
+                            <p class="font-semibold text-gray-800">${eventTitle}</p>
+                            <p class="text-sm text-gray-600">${dayName}</p>
+                            ${customerInfo}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
         }
         
         async function saveEvent(data) {
@@ -243,6 +344,7 @@
                     end: data.end || null,
                     description: data.description,
                     category: data.category,
+                    customerId: data.customerId || null,
                     lastModified: serverTimestamp()
                 };
 
@@ -272,12 +374,34 @@
                 showToast("Gagal menghapus acara.", "error");
             }
         }
+
+        // --- FUNGSI MODAL & DROPDOWN ---
+        function populateCustomerDropdown(selectedCustomerId = '') {
+            const select = document.getElementById('event-customer');
+            if (!select) return;
+
+            const firstOption = select.options[0];
+            select.innerHTML = '';
+            select.appendChild(firstOption);
+
+            allCustomers.sort((a, b) => a.nama.localeCompare(b.nama));
+
+            allCustomers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = `${customer.nama} (ID: ${customer.customerId})`;
+                if (customer.id === selectedCustomerId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
         
-        // --- FUNGSI MODAL ---
         function openModalForNewEvent(dateStr) {
             form.reset();
             document.getElementById('event-id').value = '';
             document.getElementById('event-start').value = dateStr;
+            populateCustomerDropdown();
             document.getElementById('modal-title').textContent = 'Tambah Acara Baru';
             document.getElementById('delete-event-button').classList.add('hidden');
             modal.style.display = 'flex';
@@ -297,6 +421,7 @@
             document.getElementById('event-end').value = rawEventData.end || '';
             document.getElementById('event-description').value = rawEventData.description || '';
             document.getElementById('event-category').value = rawEventData.category || 'general';
+            populateCustomerDropdown(rawEventData.customerId);
             
             document.getElementById('modal-title').textContent = 'Edit Acara';
             document.getElementById('delete-event-button').classList.remove('hidden');
@@ -342,6 +467,7 @@
                 end: document.getElementById('event-end').value,
                 description: document.getElementById('event-description').value,
                 category: document.getElementById('event-category').value,
+                customerId: document.getElementById('event-customer').value,
             };
             saveEvent(eventData);
         });
