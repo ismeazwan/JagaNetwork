@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender Acara - JagaNetwork</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- FullCalendar -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        /* Custom FullCalendar Styles */
+        :root {
+            --fc-border-color: #e5e7eb;
+            --fc-daygrid-event-dot-width: 8px;
+            --fc-list-event-dot-width: 10px;
+            --fc-event-bg-color: #4f46e5; /* indigo-600 */
+            --fc-event-border-color: #4f46e5;
+            --fc-event-text-color: #ffffff;
+            --fc-page-bg-color: #ffffff;
+            --fc-today-bg-color: rgba(79, 70, 229, 0.05); /* indigo-50 */
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .fc .fc-button-primary {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            transition: background-color 0.2s;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: #4338ca;
+            border-color: #4338ca;
+        }
+        .fc-daygrid-day.fc-day-today {
+            background-color: var(--fc-today-bg-color);
+        }
+        .fc-daygrid-day-number {
+            padding: 0.5em;
+        }
+        .fc-event {
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-600">Kalender Acara</h1>
+                <p class="text-gray-500 mt-1">Kelola jadwal, janji temu, dan agenda penting Anda.</p>
+            </div>
+            <button id="add-event-button" class="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center justify-center shadow-sm">
+                <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Tambah Acara Baru
+            </button>
+        </header>
+
+        <!-- Calendar Container -->
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+            <div id='calendar'></div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Event -->
+    <div id="event-modal" class="fixed inset-0 z-50 items-center justify-center hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 w-11/12 max-w-lg transform transition-all">
+            <h3 id="modal-title" class="text-2xl font-bold mb-6 text-gray-800">Tambah Acara Baru</h3>
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                <div class="mb-4">
+                    <label for="event-title" class="block text-sm font-medium text-gray-700 mb-1">Judul Acara</label>
+                    <input type="text" id="event-title" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" required>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="event-start" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="event-start" class="w-full p-2 border border-gray-300 rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="event-end" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai (Opsional)</label>
+                        <input type="date" id="event-end" class="w-full p-2 border border-gray-300 rounded-lg">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="event-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                    <textarea id="event-description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Detail acara..."></textarea>
+                </div>
+                <div class="flex justify-between items-center">
+                    <button type="button" id="delete-event-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hidden">Hapus</button>
+                    <div class="flex gap-4">
+                        <button type="button" id="cancel-button" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Simpan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-6 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <p id="toast-message"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, 
+            collection, serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- KONFIGURASI FIREBASE ---
+        // Ganti dengan konfigurasi Firebase Anda sendiri jika diperlukan.
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
+            authDomain: "database-jaganetwork.firebaseapp.com",
+            projectId: "database-jaganetwork",
+            storageBucket: "database-jaganetwork.appspot.com",
+            messagingSenderId: "912989992875",
+            appId: "1:912989992875:web:8c6cda77171889e1e644ee"
+        };
+        
+        // --- INISIALISASI ---
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const calendarEl = document.getElementById('calendar');
+        const modal = document.getElementById('event-modal');
+        const form = document.getElementById('event-form');
+        
+        let calendar;
+        let unsubscribeEvents;
+        const dataContainerPath = "jaganetwork_data/shared_workspace";
+        const getCollectionRef = (name) => collection(db, dataContainerPath, name);
+        
+        // --- FUNGSI UTAMA KALENDER ---
+        function initializeCalendar() {
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'id',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                buttonText: {
+                    today: 'Hari Ini',
+                    month: 'Bulan',
+                    week: 'Minggu',
+                    list: 'Agenda'
+                },
+                editable: true,
+                selectable: true,
+                dateClick: function(info) {
+                    openModalForNewEvent(info.dateStr);
+                },
+                eventClick: function(info) {
+                    openModalForEditEvent(info.event);
+                },
+                events: [],
+            });
+            calendar.render();
+            loadEvents();
+        }
+        
+        // --- CRUD OPERASI DENGAN FIRESTORE ---
+        function loadEvents() {
+            if (unsubscribeEvents) unsubscribeEvents();
+            
+            unsubscribeEvents = onSnapshot(getCollectionRef('calendar_events'), (snapshot) => {
+                const events = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const event = {
+                        id: doc.id,
+                        title: data.title,
+                        start: data.start,
+                        description: data.description || ''
+                    };
+                    // FullCalendar membutuhkan 'end' menjadi eksklusif, jadi tambahkan 1 hari
+                    if (data.end) {
+                        const endDate = new Date(data.end);
+                        endDate.setDate(endDate.getDate() + 1);
+                        event.end = endDate.toISOString().split('T')[0];
+                    }
+                    return event;
+                });
+                calendar.removeAllEvents();
+                calendar.addEventSource(events);
+            });
+        }
+        
+        async function saveEvent(data) {
+            try {
+                const eventData = {
+                    title: data.title,
+                    start: data.start,
+                    end: data.end || null, // Simpan null jika tidak ada end date
+                    description: data.description,
+                    lastModified: serverTimestamp()
+                };
+
+                if (data.id) { // Edit
+                    await setDoc(doc(db, dataContainerPath, 'calendar_events', data.id), eventData, { merge: true });
+                    showToast("Acara berhasil diperbarui.");
+                } else { // Tambah baru
+                    eventData.createdAt = serverTimestamp();
+                    await addDoc(getCollectionRef('calendar_events'), eventData);
+                    showToast("Acara baru berhasil ditambahkan.");
+                }
+                closeModal();
+            } catch (error) {
+                console.error("Error saving event:", error);
+                showToast("Gagal menyimpan acara.", "error");
+            }
+        }
+        
+        async function deleteEvent(id) {
+             if (!confirm("Apakah Anda yakin ingin menghapus acara ini?")) return;
+            try {
+                await deleteDoc(doc(db, dataContainerPath, 'calendar_events', id));
+                showToast("Acara berhasil dihapus.");
+                closeModal();
+            } catch (error) {
+                console.error("Error deleting event:", error);
+                showToast("Gagal menghapus acara.", "error");
+            }
+        }
+        
+        // --- FUNGSI MODAL ---
+        function openModalForNewEvent(dateStr) {
+            form.reset();
+            document.getElementById('event-id').value = '';
+            document.getElementById('event-start').value = dateStr;
+            document.getElementById('modal-title').textContent = 'Tambah Acara Baru';
+            document.getElementById('delete-event-button').classList.add('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function openModalForEditEvent(event) {
+            form.reset();
+            document.getElementById('event-id').value = event.id;
+            document.getElementById('event-title').value = event.title;
+            document.getElementById('event-start').value = event.startStr;
+            // FullCalendar membuat end date menjadi eksklusif. Kita perlu menguranginya 1 hari untuk ditampilkan di form.
+            if (event.endStr) {
+                let endDate = new Date(event.endStr);
+                endDate.setDate(endDate.getDate() - 1);
+                document.getElementById('event-end').value = endDate.toISOString().split('T')[0];
+            } else {
+                 document.getElementById('event-end').value = '';
+            }
+            document.getElementById('event-description').value = event.extendedProps.description || '';
+            document.getElementById('modal-title').textContent = 'Edit Acara';
+            document.getElementById('delete-event-button').classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        
+        // --- HELPER & EVENT LISTENERS ---
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            toast.className = 'fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-all duration-300 z-50';
+            const typeClasses = { error: 'bg-red-600', info: 'bg-blue-600' };
+            toast.classList.add(typeClasses[type] || 'bg-gray-800');
+            msgEl.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        }
+
+        document.getElementById('add-event-button').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            openModalForNewEvent(today);
+        });
+
+        document.getElementById('cancel-button').addEventListener('click', closeModal);
+        
+        document.getElementById('delete-event-button').addEventListener('click', () => {
+            const eventId = document.getElementById('event-id').value;
+            if (eventId) {
+                deleteEvent(eventId);
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const eventData = {
+                id: document.getElementById('event-id').value,
+                title: document.getElementById('event-title').value,
+                start: document.getElementById('event-start').value,
+                end: document.getElementById('event-end').value,
+                description: document.getElementById('event-description').value
+            };
+            saveEvent(eventData);
+        });
+
+        // --- AUTH & RUN ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("User is signed in:", user.uid);
+                initializeCalendar();
+            } else {
+                console.log("User not signed in, signing in anonymously.");
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Anonymous sign-in failed:", error);
+                    alert("Tidak dapat terhubung ke database. Fitur kalender tidak akan berfungsi.");
+                });
+            }
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
