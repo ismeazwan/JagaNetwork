@@ -229,39 +229,43 @@
         
         async function saveEvent(data) {
             try {
-                // Common properties for both new and existing events
-                const eventData = {
-                    title: data.title,
-                    start: data.start,
-                    description: data.description,
-                    recurring: data.recurring ? 'monthly' : null,
-                    lastModified: serverTimestamp()
-                };
-
-                if (data.id) { // Editing an existing event
+                if (data.id) {
+                    // EDITING an existing event
                     const eventRef = doc(db, dataContainerPath, 'calendar_events', data.id);
-                    const updatePayload = { ...eventData };
+                    const payload = {
+                        title: data.title,
+                        start: data.start,
+                        description: data.description,
+                        lastModified: serverTimestamp()
+                    };
 
                     if (data.recurring) {
-                        // For recurring events, we must delete the 'end' field
-                        updatePayload.end = deleteField();
+                        payload.recurring = 'monthly';
+                        payload.end = deleteField(); // Explicitly delete end date
                     } else {
-                        // For non-recurring, we set 'end' (it can be null)
-                        updatePayload.end = data.end || null;
+                        payload.recurring = null;
+                        payload.end = data.end || null; // Set end date (or null)
                     }
-                    
-                    await updateDoc(eventRef, updatePayload);
+                    await updateDoc(eventRef, payload);
                     showToast("Acara berhasil diperbarui.");
-                } else { // Creating a new event
-                    const createPayload = { ...eventData };
-                    createPayload.createdAt = serverTimestamp();
+
+                } else {
+                    // CREATING a new event
+                    const payload = {
+                        title: data.title,
+                        start: data.start,
+                        description: data.description,
+                        recurring: data.recurring ? 'monthly' : null,
+                        createdAt: serverTimestamp(),
+                        lastModified: serverTimestamp()
+                    };
 
                     if (!data.recurring) {
-                        createPayload.end = data.end || null;
+                        payload.end = data.end || null;
                     }
-                    // 'end' will be undefined for recurring, which is fine for a new doc.
-
-                    await addDoc(getCollectionRef('calendar_events'), createPayload);
+                    // For new recurring events, we just don't add the `end` property.
+                    
+                    await addDoc(getCollectionRef('calendar_events'), payload);
                     showToast("Acara baru berhasil ditambahkan.");
                 }
                 closeModal();
