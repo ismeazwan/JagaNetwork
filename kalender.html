@@ -51,6 +51,7 @@
         .fc-event {
             border-radius: 4px;
             font-weight: 500;
+            cursor: pointer;
         }
         .modal-backdrop {
             background-color: rgba(0, 0, 0, 0.5);
@@ -102,9 +103,13 @@
                         <input type="date" id="event-end" class="w-full p-2 border border-gray-300 rounded-lg">
                     </div>
                 </div>
-                <div class="mb-6">
+                <div class="mb-4">
                     <label for="event-description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
                     <textarea id="event-description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Detail acara..."></textarea>
+                </div>
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="event-recurring" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <label for="event-recurring" class="ml-2 block text-sm text-gray-900">Ulangi setiap bulan</label>
                 </div>
                 <div class="flex justify-between items-center">
                     <button type="button" id="delete-event-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 hidden">Hapus</button>
@@ -131,7 +136,6 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
-        // Ganti dengan konfigurasi Firebase Anda sendiri jika diperlukan.
         const firebaseConfig = {
             apiKey: "AIzaSyBeuxfhsPRqd3NJTp0zUfnuZGJEKLBh3g0",
             authDomain: "database-jaganetwork.firebaseapp.com",
@@ -152,6 +156,7 @@
         
         let calendar;
         let unsubscribeEvents;
+        let allRawEvents = []; // To hold original data from Firestore
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
         
@@ -190,24 +195,35 @@
             if (unsubscribeEvents) unsubscribeEvents();
             
             unsubscribeEvents = onSnapshot(getCollectionRef('calendar_events'), (snapshot) => {
-                const events = snapshot.docs.map(doc => {
-                    const data = doc.data();
+                allRawEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const calendarEvents = allRawEvents.map(data => {
                     const event = {
-                        id: doc.id,
+                        id: data.id,
                         title: data.title,
-                        start: data.start,
                         description: data.description || ''
                     };
-                    // FullCalendar membutuhkan 'end' menjadi eksklusif, jadi tambahkan 1 hari
-                    if (data.end) {
-                        const endDate = new Date(data.end);
-                        endDate.setDate(endDate.getDate() + 1);
-                        event.end = endDate.toISOString().split('T')[0];
+                    
+                    if (data.recurring === 'monthly') {
+                        // Handle recurring event
+                        const startDate = new Date(data.start + 'T00:00:00');
+                        event.daysOfMonth = [startDate.getDate()];
+                        event.startRecur = data.start;
+                        // Note: This makes the event recur indefinitely.
+                    } else {
+                        // Handle single event
+                        event.start = data.start;
+                        if (data.end) {
+                             const endDate = new Date(data.end);
+                             endDate.setDate(endDate.getDate() + 1); // Make end date exclusive for FullCalendar
+                             event.end = endDate.toISOString().split('T')[0];
+                        }
                     }
                     return event;
                 });
+                
                 calendar.removeAllEvents();
-                calendar.addEventSource(events);
+                calendar.addEventSource(calendarEvents);
             });
         }
         
@@ -216,10 +232,16 @@
                 const eventData = {
                     title: data.title,
                     start: data.start,
-                    end: data.end || null, // Simpan null jika tidak ada end date
+                    end: data.end || null,
                     description: data.description,
+                    recurring: data.recurring ? 'monthly' : null,
                     lastModified: serverTimestamp()
                 };
+
+                // Recurring events shouldn't have an end date
+                if (eventData.recurring) {
+                    eventData.end = null;
+                }
 
                 if (data.id) { // Edit
                     await setDoc(doc(db, dataContainerPath, 'calendar_events', data.id), eventData, { merge: true });
@@ -237,7 +259,7 @@
         }
         
         async function deleteEvent(id) {
-             if (!confirm("Apakah Anda yakin ingin menghapus acara ini?")) return;
+             if (!confirm("Apakah Anda yakin ingin menghapus acara ini? Tindakan ini akan menghapus semua jadwal berulangnya.")) return;
             try {
                 await deleteDoc(doc(db, dataContainerPath, 'calendar_events', id));
                 showToast("Acara berhasil dihapus.");
@@ -255,23 +277,28 @@
             document.getElementById('event-start').value = dateStr;
             document.getElementById('modal-title').textContent = 'Tambah Acara Baru';
             document.getElementById('delete-event-button').classList.add('hidden');
+            document.getElementById('event-end').disabled = false;
             modal.style.display = 'flex';
         }
 
         function openModalForEditEvent(event) {
-            form.reset();
-            document.getElementById('event-id').value = event.id;
-            document.getElementById('event-title').value = event.title;
-            document.getElementById('event-start').value = event.startStr;
-            // FullCalendar membuat end date menjadi eksklusif. Kita perlu menguranginya 1 hari untuk ditampilkan di form.
-            if (event.endStr) {
-                let endDate = new Date(event.endStr);
-                endDate.setDate(endDate.getDate() - 1);
-                document.getElementById('event-end').value = endDate.toISOString().split('T')[0];
-            } else {
-                 document.getElementById('event-end').value = '';
+            const rawEventData = allRawEvents.find(e => e.id === event.id);
+            if (!rawEventData) {
+                showToast("Tidak dapat menemukan data asli acara.", "error");
+                return;
             }
-            document.getElementById('event-description').value = event.extendedProps.description || '';
+
+            form.reset();
+            document.getElementById('event-id').value = rawEventData.id;
+            document.getElementById('event-title').value = rawEventData.title;
+            document.getElementById('event-start').value = rawEventData.start;
+            document.getElementById('event-end').value = rawEventData.end || '';
+            document.getElementById('event-description').value = rawEventData.description || '';
+            document.getElementById('event-recurring').checked = rawEventData.recurring === 'monthly';
+            
+            // Disable end date if it's a recurring event
+            document.getElementById('event-end').disabled = document.getElementById('event-recurring').checked;
+            
             document.getElementById('modal-title').textContent = 'Edit Acara';
             document.getElementById('delete-event-button').classList.remove('hidden');
             modal.style.display = 'flex';
@@ -306,6 +333,13 @@
                 deleteEvent(eventId);
             }
         });
+        
+        document.getElementById('event-recurring').addEventListener('change', (e) => {
+            document.getElementById('event-end').disabled = e.target.checked;
+            if (e.target.checked) {
+                document.getElementById('event-end').value = '';
+            }
+        });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -314,7 +348,8 @@
                 title: document.getElementById('event-title').value,
                 start: document.getElementById('event-start').value,
                 end: document.getElementById('event-end').value,
-                description: document.getElementById('event-description').value
+                description: document.getElementById('event-description').value,
+                recurring: document.getElementById('event-recurring').checked
             };
             saveEvent(eventData);
         });
@@ -322,10 +357,8 @@
         // --- AUTH & RUN ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log("User is signed in:", user.uid);
                 initializeCalendar();
             } else {
-                console.log("User not signed in, signing in anonymously.");
                 signInAnonymously(auth).catch((error) => {
                     console.error("Anonymous sign-in failed:", error);
                     alert("Tidak dapat terhubung ke database. Fitur kalender tidak akan berfungsi.");
