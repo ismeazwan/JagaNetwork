@@ -132,7 +132,7 @@
                     <i data-lucide="newspaper" class="w-5 h-5 mr-3"></i> Blog
                 </a>
                 <!-- MENU KALENDER BARU -->
-                <a href="kalender.html" class="flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
+                <a href="kalender.html" class="tab-item flex items-center py-3 px-6 text-gray-600 hover:bg-indigo-50">
                     <i data-lucide="calendar" class="w-5 h-5 mr-3"></i> Kalender
                 </a>
             </nav>
@@ -208,9 +208,20 @@
                             <h3 class="text-lg font-semibold mb-4">Pendapatan & Pelanggan Baru (12 Bulan Terakhir)</h3>
                             <canvas id="lineChart"></canvas>
                         </div>
-                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-lg font-semibold mb-4">Distribusi Paket Layanan</h3>
-                            <canvas id="pieChart"></canvas>
+                        <div class="lg:col-span-2 grid grid-rows-2 gap-6">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4">Distribusi Paket Layanan</h3>
+                                <canvas id="pieChart" class="max-h-[200px]"></canvas>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                    <i data-lucide="bell" class="w-5 h-5 mr-3 text-indigo-600"></i>
+                                    Agenda Mendatang
+                                </h3>
+                                <div id="upcoming-events-widget" class="space-y-3 max-h-[150px] overflow-y-auto pr-2">
+                                    <!-- Agenda will be populated by JS -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -899,7 +910,7 @@
         let userIsLoggedIn = false;
         let appListenersAttached = false;
         let allCustomers = [], allPackages = [], allInvoices = [], allExpenses = [], allNetworkStatus = [], allBlogPosts = [];
-        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses, unsubscribeNetworkStatus, unsubscribeBlogPosts;
+        let unsubscribeCustomers, unsubscribePackages, unsubscribeInvoices, unsubscribeExpenses, unsubscribeNetworkStatus, unsubscribeBlogPosts, unsubscribeCalendarEvents;
         let deleteCallback = null;
         let verificationInvoiceId = null;
         let chatContext = {};
@@ -918,7 +929,64 @@
         
         const dataContainerPath = "jaganetwork_data/shared_workspace";
         const getCollectionRef = (name) => collection(db, dataContainerPath, name);
+
+        const categoryColors = {
+            'tagihan': '#3b82f6', // Biru
+            'maintenance': '#f97316', // Oranye
+            'janji-temu': '#22c55e', // Hijau
+            'pribadi': '#6b7280', // Abu-abu
+            'general': '#4f46e5', // Indigo (Default)
+        };
         
+        // --- CALENDAR WIDGET FUNCTIONS ---
+        function loadCalendarEventsForWidget() {
+            const q = query(getCollectionRef('calendar_events'));
+            if (unsubscribeCalendarEvents) unsubscribeCalendarEvents();
+            unsubscribeCalendarEvents = onSnapshot(q, (snapshot) => {
+                const allRawEvents = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUpcomingEventsWidget(allRawEvents);
+            });
+        }
+        function renderUpcomingEventsWidget(allRawEvents) {
+            const listEl = document.getElementById('upcoming-events-widget');
+            if (!listEl) return;
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const sevenDaysFromNow = new Date(now);
+            sevenDaysFromNow.setDate(now.getDate() + 7);
+
+            const upcomingEvents = allRawEvents
+                .filter(event => {
+                    if (!event.start) return false;
+                    const startDate = new Date(event.start + 'T00:00:00');
+                    return startDate >= now && startDate <= sevenDaysFromNow;
+                })
+                .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            if (upcomingEvents.length === 0) {
+                listEl.innerHTML = `<p class="text-gray-500 text-center text-sm py-4">Tidak ada agenda.</p>`;
+                return;
+            }
+
+            listEl.innerHTML = upcomingEvents.map(event => {
+                const startDate = new Date(event.start + 'T00:00:00');
+                const dayName = startDate.toLocaleDateString('id-ID', { weekday: 'short' });
+                const dateFormatted = startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                const color = categoryColors[event.category] || categoryColors['general'];
+
+                return `
+                    <div class="flex items-start gap-3 text-sm">
+                        <div class="border-l-4 rounded pl-3 py-1 flex-grow" style="border-color: ${color};">
+                            <p class="font-semibold text-gray-800">${event.title}</p>
+                            <p class="text-xs text-gray-600">${dayName}, ${dateFormatted}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+
         // --- Blog Functions (CMS) ---
         function loadBlogPosts() {
             const q = query(getCollectionRef('articles'), orderBy('createdAt', 'desc'));
@@ -938,7 +1006,6 @@
                     createdAt: serverTimestamp()
                 };
                 if (data.id) {
-                    // Don't update createdAt on edit, keep the original
                     const originalPost = allBlogPosts.find(p => p.id === data.id);
                     postData.createdAt = originalPost.createdAt || serverTimestamp();
                     await setDoc(doc(db, dataContainerPath, 'articles', data.id), postData, { merge: true });
@@ -1435,6 +1502,7 @@
             if (unsubscribeExpenses) unsubscribeExpenses();
             if (unsubscribeNetworkStatus) unsubscribeNetworkStatus();
             if (unsubscribeBlogPosts) unsubscribeBlogPosts();
+            if (unsubscribeCalendarEvents) unsubscribeCalendarEvents();
         }
         
         function initApp() { 
@@ -1451,13 +1519,23 @@
             loadExpenses(); 
             loadNetworkStatus(); 
             loadBlogPosts();
+            loadCalendarEventsForWidget();
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-active'));
-            document.getElementById(`content-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).classList.add('tab-active');
+            
+            // Handle non-tab links like Kalender
+            const tabEl = document.getElementById(`tab-${tabId}`);
+            if (tabEl && tabEl.href.endsWith('#')) {
+                document.getElementById(`content-${tabId}`).classList.remove('hidden');
+                tabEl.classList.add('tab-active');
+            } else if (!tabEl) {
+                 // It might be the initial load on dashboard
+                document.getElementById('content-dashboard').classList.remove('hidden');
+                document.getElementById('tab-dashboard').classList.add('tab-active');
+            }
             
             if (tabId === 'analytics') {
                 initAnalytics();
@@ -1802,7 +1880,7 @@
             pieChartInstance = new Chart(pieCtx, {
                 type: 'pie',
                 data: { labels: [], datasets: [{ label: 'Pelanggan', data: [], backgroundColor: [] }] },
-                options: { responsive: true }
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
             });
         }
 
@@ -1912,9 +1990,11 @@
 
             document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
             document.querySelectorAll('.tab-item').forEach(el => el.addEventListener('click', (e) => { 
-                e.preventDefault(); 
-                const tabId = el.id.substring(4);
-                switchTab(tabId);
+                if (el.href.endsWith('#')) {
+                    e.preventDefault(); 
+                    const tabId = el.id.substring(4);
+                    switchTab(tabId);
+                }
             }));
             
             document.getElementById('btn-add-pelanggan').addEventListener('click', () => { 
@@ -2403,3 +2483,4 @@
     </script>
 </body>
 </html>
+
