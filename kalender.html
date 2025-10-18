@@ -132,7 +132,7 @@
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, 
-            collection, serverTimestamp 
+            collection, serverTimestamp, updateDoc, deleteField
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- KONFIGURASI FIREBASE ---
@@ -209,7 +209,7 @@
                         const startDate = new Date(data.start + 'T00:00:00');
                         event.daysOfMonth = [startDate.getDate()];
                         event.startRecur = data.start;
-                        // Note: This makes the event recur indefinitely.
+                        event.allDay = true;
                     } else {
                         // Handle single event
                         event.start = data.start;
@@ -232,22 +232,29 @@
                 const eventData = {
                     title: data.title,
                     start: data.start,
-                    end: data.end || null,
                     description: data.description,
                     recurring: data.recurring ? 'monthly' : null,
-                    lastModified: serverTimestamp()
                 };
 
-                // Recurring events shouldn't have an end date
-                if (eventData.recurring) {
+                // Only add end date if it's not recurring and it exists
+                if (!data.recurring && data.end) {
+                    eventData.end = data.end;
+                } else if (!data.recurring) {
                     eventData.end = null;
                 }
 
                 if (data.id) { // Edit
-                    await setDoc(doc(db, dataContainerPath, 'calendar_events', data.id), eventData, { merge: true });
+                    const eventRef = doc(db, dataContainerPath, 'calendar_events', data.id);
+                    await setDoc(eventRef, eventData, { merge: true });
+
+                    if (data.recurring) {
+                        // If it's recurring, ensure the 'end' field is removed.
+                        await updateDoc(eventRef, { end: deleteField() });
+                    }
                     showToast("Acara berhasil diperbarui.");
                 } else { // Tambah baru
                     eventData.createdAt = serverTimestamp();
+                    eventData.lastModified = serverTimestamp();
                     await addDoc(getCollectionRef('calendar_events'), eventData);
                     showToast("Acara baru berhasil ditambahkan.");
                 }
